@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>level-design-deck · editor</title>
+<style>
+:root { --fg:#1a1a1a; --muted:#666; --bg:#fafafa; --surface:#fff; --line:#e5e5e5; --accent:#0066cc; --error:#dc2626; --review:#d97706; --missing:#7c3aed; --extra:#2563eb; }
+*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+body{display:flex;height:100vh;color:var(--fg);background:var(--bg);font-size:13px;line-height:1.6}
+aside{width:340px;min-width:340px;background:var(--surface);border-right:1px solid var(--line);overflow-y:auto;padding:16px}
+aside h2{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+aside .stats{font-size:11px;color:var(--muted);margin-bottom:12px;font-family:"JetBrains Mono","Consolas",monospace}
+aside .alert{padding:8px 10px;margin-bottom:6px;border-left:3px solid var(--line);background:var(--bg);cursor:pointer;border-radius:0 4px 4px 0;font-size:12px}
+aside .alert:hover{background:#f0f0f0}
+aside .alert .level{display:inline-block;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-right:6px;padding:1px 6px;border-radius:3px;color:#fff}
+aside .alert.ERROR{border-left-color:var(--error)} aside .alert.ERROR .level{background:var(--error)}
+aside .alert.REVIEW{border-left-color:var(--review)} aside .alert.REVIEW .level{background:var(--review)}
+aside .alert.MISSING{border-left-color:var(--missing)} aside .alert.MISSING .level{background:var(--missing)}
+aside .alert.EXTRA{border-left-color:var(--extra)} aside .alert.EXTRA .level{background:var(--extra)}
+aside .alert .path{font-family:"JetBrains Mono","Consolas",monospace;font-size:11px;color:var(--accent);margin-bottom:2px}
+aside .alert .msg{color:var(--muted);font-size:11px}
+aside .empty{color:var(--muted);font-size:11px;font-style:italic;padding:8px 10px}
+main{flex:1;overflow-y:auto;padding:24px 32px}
+.toolbar{display:flex;gap:8px;align-items:center;padding-bottom:16px;border-bottom:1px solid var(--line);margin-bottom:24px;position:sticky;top:0;background:var(--bg);padding-top:0;z-index:10}
+.toolbar .title{font-weight:600;font-size:14px;flex:1}
+button{padding:6px 14px;border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:4px;cursor:pointer;font-size:12px}
+button:hover{background:#f0f0f0}
+button.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+button.primary:hover{background:#0052a3}
+button:disabled{opacity:0.5;cursor:not-allowed}
+fieldset{border:1px solid var(--line);border-radius:6px;padding:14px 16px;margin-bottom:16px;background:var(--surface)}
+legend{font-size:13px;font-weight:600;color:var(--accent);padding:0 8px}
+legend .schema-desc{color:var(--muted);font-weight:400;font-size:11px;margin-left:8px}
+.field{margin-bottom:12px}
+.field label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px;font-family:"JetBrains Mono","Consolas",monospace}
+.field label .required{color:var(--error);margin-left:4px}
+.field label .desc{color:var(--muted);font-family:-apple-system,sans-serif;font-weight:400;margin-left:8px;text-transform:none}
+.field input[type=text],.field textarea,.field select{width:100%;padding:6px 10px;border:1px solid var(--line);border-radius:4px;font-size:13px;font-family:inherit;background:#fff}
+.field textarea{resize:vertical;min-height:80px;line-height:1.6}
+.field input:focus,.field textarea:focus,.field select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px rgba(0,102,204,0.1)}
+.field.has-error input,.field.has-error textarea{border-color:var(--error)}
+.field.has-review input,.field.has-review textarea{border-color:var(--review)}
+.field .pattern-hint{font-size:10px;color:var(--muted);font-family:"JetBrains Mono",monospace;margin-top:2px}
+.array-item{border:1px dashed var(--line);border-radius:4px;padding:10px;margin-bottom:8px;background:#fafafa}
+.array-item .remove{float:right;font-size:11px;color:var(--error);cursor:pointer;background:none;border:none;padding:0}
+.array-add{font-size:11px;color:var(--accent);cursor:pointer;background:none;border:1px dashed var(--accent);padding:4px 12px;border-radius:4px}
+.tag-list{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.tag-list .tag{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;background:#f5f5f5;border-radius:12px;font-size:11px;font-family:"JetBrains Mono",monospace}
+.tag-list .tag .x{cursor:pointer;color:var(--muted)}
+.tag-list .tag .x:hover{color:var(--error)}
+.tag-list input{border:1px solid var(--line);border-radius:4px;padding:2px 8px;font-size:11px;width:160px}
+.toast{position:fixed;bottom:24px;right:24px;background:var(--fg);color:#fff;padding:10px 16px;border-radius:4px;font-size:12px;opacity:0;transition:opacity 0.2s;pointer-events:none}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+
+<aside>
+  <h2>检测告警</h2>
+  <div class="stats" id="stats">加载中...</div>
+  <div id="alerts"></div>
+</aside>
+
+<main>
+  <div class="toolbar">
+    <div class="title" id="page-title">lighting_req editor</div>
+    <button onclick="reloadAll()">↻ 重跑检测</button>
+    <button onclick="saveSpec()" class="primary" id="save-btn">保存</button>
+    <button onclick="renderHtml()">重渲染 HTML</button>
+  </div>
+  <div id="form"></div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SPEC_PATH = '/specs/demo_lighting_req.spec.json';
+const SCHEMA_PATH = '/schema/lighting_req.schema.json';
+const WARNINGS_PATH = '/outputs/.warnings.json';
+const DIFF_PATH = '/outputs/.diff.json';
+
+let SPEC = null, SCHEMA = null, ALERTS = [];
+
+async function loadAll() {
+  const [spec, schema, warn, diff] = await Promise.all([
+    fetch(SPEC_PATH).then(r => r.json()),
+    fetch(SCHEMA_PATH).then(r => r.json()),
+    fetch(WARNINGS_PATH).then(r => r.ok ? r.json() : {errors:[],reviews:[]}).catch(()=>({errors:[],reviews:[]})),
+    fetch(DIFF_PATH).then(r => r.ok ? r.json() : {missing:[],extra:[]}).catch(()=>({missing:[],extra:[]})),
+  ]);
+  SPEC = spec; SCHEMA = schema;
+  ALERTS = [
+    ...(warn.errors || []).map(a => ({...a, kind: 'ERROR', path: a.field_path})),
+    ...(warn.reviews || []).map(a => ({...a, kind: 'REVIEW', path: a.field_path})),
+    ...(diff.missing || []).map(a => ({...a, kind: 'MISSING', path: a.expected_spec_path, msg: a.msg})),
+    ...(diff.extra || []).map(a => ({...a, kind: 'EXTRA', path: a.spec_path, msg: a.msg})),
+  ];
+  renderForm();
+  renderAlerts();
+}
+
+function renderAlerts() {
+  const stats = document.getElementById('stats');
+  const counts = {ERROR:0, REVIEW:0, MISSING:0, EXTRA:0};
+  ALERTS.forEach(a => counts[a.kind] = (counts[a.kind]||0)+1);
+  stats.textContent = `errors=${counts.ERROR} reviews=${counts.REVIEW} missing=${counts.MISSING} extra=${counts.EXTRA}`;
+  const box = document.getElementById('alerts');
+  if (!ALERTS.length) { box.innerHTML = '<div class="empty">无告警 ✓</div>'; return; }
+  box.innerHTML = ALERTS.map(a => `
+    <div class="alert ${a.kind}" onclick="jumpTo('${a.path}')">
+      <span class="level">${a.kind}</span>
+      <div class="path">${a.path}</div>
+      <div class="msg">${escapeHtml(a.msg || '')}</div>
+    </div>
+  `).join('');
+}
+
+function jumpTo(path) {
+  const el = document.querySelector(`[data-path="${CSS.escape(path)}"]`);
+  if (el) {
+    el.scrollIntoView({behavior:'smooth', block:'center'});
+    const input = el.querySelector('input,textarea,select');
+    if (input) input.focus();
+  }
+}
+
+function renderForm() {
+  const root = document.getElementById('form');
+  root.innerHTML = renderObject(SPEC, SCHEMA, '');
+  document.getElementById('page-title').textContent = `lighting_req: ${SPEC.meta?.poi_id || '(no poi_id)'} v${SPEC.meta?.version || '?'}`;
+  bindInputs(root);
+}
+
+function renderObject(value, schema, path) {
+  const props = schema.properties || {};
+  const required = schema.required || [];
+  return Object.keys(props).map(key => {
+    const subPath = path ? `${path}.${key}` : key;
+    const subSchema = props[key];
+    const subValue = value && value[key];
+    const isReq = required.includes(key);
+    return renderField(subValue, subSchema, subPath, key, isReq);
+  }).join('');
+}
+
+function renderField(value, schema, path, key, isRequired) {
+  const desc = schema.description || '';
+  const t = schema.type;
+  const alertClass = ALERTS.some(a => a.path === path && a.kind === 'ERROR') ? 'has-error'
+                    : ALERTS.some(a => a.path === path && a.kind === 'REVIEW') ? 'has-review' : '';
+  if (t === 'object') {
+    return `<fieldset data-path="${path}">
+      <legend>${key}<span class="schema-desc">${escapeHtml(desc)}</span></legend>
+      ${renderObject(value || {}, schema, path)}
+    </fieldset>`;
+  }
+  if (t === 'array') {
+    const items = value || [];
+    const itemSchema = schema.items;
+    return `<div class="field ${alertClass}" data-path="${path}">
+      <label>${key}${isRequired?'<span class="required">*</span>':''}<span class="desc">${escapeHtml(desc)}</span></label>
+      ${itemSchema.type === 'string' ? renderStringTagList(items, path) : renderObjectArray(items, itemSchema, path)}
+    </div>`;
+  }
+  if (schema.enum) {
+    return `<div class="field ${alertClass}" data-path="${path}">
+      <label>${key}${isRequired?'<span class="required">*</span>':''}<span class="desc">${escapeHtml(desc)}</span></label>
+      <select data-bind="${path}">
+        ${schema.enum.map(o => `<option value="${o}" ${o===value?'selected':''}>${o}</option>`).join('')}
+      </select>
+    </div>`;
+  }
+  if (t === 'string') {
+    const minLen = schema.minLength || 0;
+    const usesTextarea = minLen >= 10 || (value && value.length > 60);
+    const patternHint = schema.pattern ? `<div class="pattern-hint">pattern: ${escapeHtml(schema.pattern)}</div>` : '';
+    const ctrl = usesTextarea
+      ? `<textarea data-bind="${path}" rows="3">${escapeHtml(value || '')}</textarea>`
+      : `<input type="text" data-bind="${path}" value="${escapeHtml(value || '')}">`;
+    return `<div class="field ${alertClass}" data-path="${path}">
+      <label>${key}${isRequired?'<span class="required">*</span>':''}<span class="desc">${escapeHtml(desc)}</span></label>
+      ${ctrl}${patternHint}
+    </div>`;
+  }
+  return `<div class="field" data-path="${path}"><label>${key} (unsupported type: ${t})</label></div>`;
+}
+
+function renderStringTagList(items, path) {
+  return `<div class="tag-list" data-array-path="${path}">
+    ${items.map((it,i) => `<span class="tag">${escapeHtml(it)}<span class="x" onclick="removeArrayItem('${path}',${i})">×</span></span>`).join('')}
+    <input type="text" placeholder="+ 添加 (回车)" onkeydown="if(event.key==='Enter'){addArrayItem('${path}',this.value);this.value=''}">
+  </div>`;
+}
+
+function renderObjectArray(items, itemSchema, path) {
+  return `<div data-array-path="${path}">
+    ${items.map((it,i) => `<div class="array-item">
+      <button class="remove" onclick="removeArrayItem('${path}',${i})">移除</button>
+      ${renderObject(it, itemSchema, `${path}[${i}]`)}
+    </div>`).join('')}
+    <button class="array-add" onclick="addArrayObjectItem('${path}')">+ 添加项</button>
+  </div>`;
+}
+
+function bindInputs(root) {
+  root.querySelectorAll('[data-bind]').forEach(el => {
+    el.addEventListener('input', () => {
+      setPath(SPEC, el.dataset.bind, el.value);
+    });
+  });
+}
+
+function setPath(obj, path, value) {
+  const parts = parsePath(path);
+  let cur = obj;
+  for (let i = 0; i < parts.length - 1; i++) cur = cur[parts[i]];
+  cur[parts[parts.length-1]] = value;
+}
+
+function getPath(obj, path) {
+  const parts = parsePath(path);
+  let cur = obj;
+  for (const p of parts) { if (cur == null) return undefined; cur = cur[p]; }
+  return cur;
+}
+
+function parsePath(path) {
+  return path.replace(/\[(\d+)\]/g, '.$1').split('.').filter(x => x !== '');
+}
+
+function addArrayItem(path, value) {
+  if (!value) return;
+  let arr = getPath(SPEC, path);
+  if (!Array.isArray(arr)) { setPath(SPEC, path, []); arr = getPath(SPEC, path); }
+  arr.push(value);
+  renderForm();
+}
+
+function addArrayObjectItem(path) {
+  let arr = getPath(SPEC, path);
+  if (!Array.isArray(arr)) { setPath(SPEC, path, []); arr = getPath(SPEC, path); }
+  arr.push({});
+  renderForm();
+}
+
+function removeArrayItem(path, idx) {
+  const arr = getPath(SPEC, path);
+  arr.splice(idx, 1);
+  renderForm();
+}
+
+async function saveSpec() {
+  const btn = document.getElementById('save-btn');
+  btn.disabled = true; btn.textContent = '保存中...';
+  try {
+    const r = await fetch(SPEC_PATH, {method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(SPEC, null, 2)});
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    toast('已保存 ✓');
+  } catch (e) {
+    toast('保存失败: ' + e.message);
+  }
+  btn.disabled = false; btn.textContent = '保存';
+}
+
+async function reloadAll() {
+  toast('重跑检测中...');
+  await fetch('/api/check', {method:'POST'});
+  await loadAll();
+  toast('检测完成 ✓');
+}
+
+async function renderHtml() {
+  toast('重渲染中...');
+  const r = await fetch('/api/render', {method:'POST'});
+  if (r.ok) toast('已渲染到 outputs/demo.html ✓ (浏览器另开标签查看)');
+  else toast('渲染失败');
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+let toastTimer;
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+loadAll().catch(e => alert('加载失败: ' + e.message + '\n请确认已跑 python3 tools/serve_editor.py'));
+</script>
+
+</body>
+</html>

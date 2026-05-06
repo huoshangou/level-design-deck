@@ -1,0 +1,57 @@
+{
+  "meta": {
+    "spec_id": "lighting_req_underground_parking_horror",
+    "poi_id": "underground_parking_horror",
+    "version": "0.1.0",
+    "owner": "level"
+  },
+  "map_constraint": {
+    "description": "清晨破晓的微光从坡道入口顶部格栅缓缓渗入（色温 5500K-6000K 偏冷白），与残留的应急荧光灯余光在停车场内交错；故障灯条已熄灭不再闪烁，整体亮度从极低逐步提升至中低，剪影感转为可辨识的轮廓；远端逐渐可见，强化夜晚已尽、求生告一段落的疲惫与希望感。",
+    "ir_refs": [
+      "FEEL.overall_tone",
+      "SPACE.environment_type"
+    ]
+  },
+  "level_constraint": {
+    "description": "出口指示牌的红色 EXIT 灯（约 6500K）作为常亮指引光，但部分指示灯故障熄灭以制造迷路感；关键决策点（楼梯口、坡道口）保留较强的应急灯（约 3000K 暖白）暗示'安全暂留区'；主要逃生路径地面用低亮的红色边线灯条暗示动线，与冷色环境形成对比。",
+    "ir_refs": [
+      "SPACE.regions",
+      "FLOW.nodes"
+    ]
+  },
+  "mission_constraint": {
+    "description": "玩家手电锥光为唯一可控强光，电量耗尽时画面急剧降亮提示警戒；丧尸接近时附近荧光灯急速闪烁红色（任务关键事件触发），并伴随屏幕边缘红色血雾叠加；任务关键物品（钥匙卡、爆炸物）由顶部局部射灯打亮，拾取后熄灭；出口大门解锁时绿色聚光灯打在门上作为终点指引。",
+    "ir_refs": [
+      "FLOW.nodes",
+      "FEEL.emotional_beats"
+    ]
+  },
+  "concept_art": {
+    "ambient_only": {
+      "status": "pending",
+      "notes": "原画第①版：环境光（应急荧光+故障闪烁）+常亮指引光（红色EXIT+逃生边线灯），等待原画排期"
+    },
+    "with_mission": {
+      "status": "pending",
+      "notes": "原画第②版：①+任务流程灯光（玩家手电、丧尸触发红光、关键物品射灯、出口绿色聚光），等待原画排期"
+    }
+  },
+  "position_notes": "1) 入口坡道：少量月光从地面格栅渗入，偏冷蓝。2) 主停车区：天花板荧光灯条多数损坏，少量正常+部分闪烁。3) 中央楼梯井：应急灯保持稳定弱光，玩家'安全感'暂留区。4) 配电室：完全黑暗，仅靠玩家手电。5) 出口大门走廊：丧尸事件触发后整段红色应急灯频闪。",
+  "ambience_refs": [
+    {
+      "region_id": "underground_parking_main_lot",
+      "description": "主停车区：荧光灯部分损坏闪烁、地面有油污反光、立柱后阴影深重",
+      "ref_image_url": ""
+    },
+    {
+      "region_id": "underground_parking_stairwell",
+      "description": "楼梯井：应急灯弱光稳定、墙面渗水反射冷蓝色、阶梯边缘隐约可见",
+      "ref_image_url": ""
+    },
+    {
+      "region_id": "underground_parking_exit_corridor",
+      "description": "出口走廊：EXIT 红色指示牌发光、地面红色边线灯条、远端绿色出口聚光",
+      "ref_image_url": ""
+    }
+  ]
+}

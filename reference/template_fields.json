@@ -1,0 +1,552 @@
+{
+  "source": "gameplay_template.html",
+  "extracted_at": "2026-05-06T03:09:34.334947+00:00",
+  "extractor_version": "0.1",
+  "stats": {
+    "total_fields": 37,
+    "radio_groups": 9,
+    "checkboxes": 25,
+    "named_tables": 6,
+    "sections": 10
+  },
+  "sections": [
+    {
+      "id": "version",
+      "title": "版本记录"
+    },
+    {
+      "id": "info",
+      "title": "玩法信息"
+    },
+    {
+      "id": "overview",
+      "title": "设计概述"
+    },
+    {
+      "id": "whitebox",
+      "title": "白盒视频"
+    },
+    {
+      "id": "related-docs",
+      "title": "关联文档"
+    },
+    {
+      "id": "requirements",
+      "title": "玩法需求"
+    },
+    {
+      "id": "multiplayer",
+      "title": "多人游玩"
+    },
+    {
+      "id": "config",
+      "title": "配置"
+    },
+    {
+      "id": "placement",
+      "title": "玩法布设规范"
+    },
+    {
+      "id": "reference",
+      "title": "补充参考图"
+    }
+  ],
+  "fields": [
+    {
+      "name": "gameplay_name_cn",
+      "section": "header",
+      "ctrl_type": "contenteditable"
+    },
+    {
+      "name": "gameplay_name_en",
+      "section": "header",
+      "ctrl_type": "contenteditable"
+    },
+    {
+      "name": "version_num",
+      "section": "header",
+      "ctrl_type": "contenteditable"
+    },
+    {
+      "name": "header_date",
+      "section": "header",
+      "ctrl_type": "date_input"
+    },
+    {
+      "name": "status",
+      "section": "header",
+      "ctrl_type": "contenteditable"
+    },
+    {
+      "name": "designer",
+      "section": "header",
+      "ctrl_type": "contenteditable"
+    },
+    {
+      "name": "info_version",
+      "section": "info",
+      "ctrl_type": "contenteditable"
+    },
+    {
+      "name": "info_setting",
+      "section": "info",
+      "ctrl_type": "contenteditable"
+    },
+    {
+      "name": "info_region",
+      "section": "info",
+      "ctrl_type": "contenteditable"
+    },
+    {
+      "name": "info_name_cn",
+      "section": "info",
+      "ctrl_type": "contenteditable"
+    },
+    {
+      "name": "info_name_en",
+      "section": "info",
+      "ctrl_type": "contenteditable"
+    },
+    {
+      "name": "design_goal",
+      "section": "overview",
+      "ctrl_type": "rich_editor"
+    },
+    {
+      "name": "gameplay_description",
+      "section": "overview",
+      "ctrl_type": "rich_editor"
+    },
+    {
+      "name": "validation_items",
+      "section": "overview",
+      "ctrl_type": "rich_editor"
+    },
+    {
+      "name": "whitebox_p4_path",
+      "section": "whitebox",
+      "ctrl_type": "static"
+    },
+    {
+      "name": "whitebox_filename",
+      "section": "whitebox",
+      "ctrl_type": "static"
+    },
+    {
+      "name": "ip_link",
+      "section": "related-docs",
+      "ctrl_type": "static"
+    },
+    {
+      "name": "mermaid_flowchart",
+      "section": "requirements",
+      "ctrl_type": "mermaid"
+    },
+    {
+      "name": "flowchart_description",
+      "section": "requirements",
+      "ctrl_type": "rich_editor"
+    },
+    {
+      "name": "gameplay_function",
+      "section": "requirements",
+      "ctrl_type": "rich_editor"
+    },
+    {
+      "name": "physics_requirement",
+      "section": "requirements",
+      "ctrl_type": "rich_editor"
+    },
+    {
+      "name": "3c_background",
+      "section": "requirements",
+      "ctrl_type": "rich_editor"
+    },
+    {
+      "name": "special_camera",
+      "section": "requirements",
+      "ctrl_type": "rich_editor"
+    },
+    {
+      "name": "character_action",
+      "section": "requirements",
+      "ctrl_type": "rich_editor"
+    },
+    {
+      "name": "reward_yn",
+      "section": "requirements",
+      "ctrl_type": "contenteditable"
+    },
+    {
+      "name": "reward_timing",
+      "section": "requirements",
+      "ctrl_type": "contenteditable"
+    },
+    {
+      "name": "reward_exploration",
+      "section": "requirements",
+      "ctrl_type": "contenteditable"
+    },
+    {
+      "name": "uiux_requirement",
+      "section": "requirements",
+      "ctrl_type": "rich_editor"
+    },
+    {
+      "name": "mission_requirement",
+      "section": "requirements",
+      "ctrl_type": "rich_editor"
+    },
+    {
+      "name": "combat_requirement",
+      "section": "requirements",
+      "ctrl_type": "rich_editor"
+    },
+    {
+      "name": "ai_requirement",
+      "section": "requirements",
+      "ctrl_type": "rich_editor"
+    },
+    {
+      "name": "vehicle_requirement",
+      "section": "requirements",
+      "ctrl_type": "rich_editor"
+    },
+    {
+      "name": "anim_requirement",
+      "section": "requirements",
+      "ctrl_type": "rich_editor"
+    },
+    {
+      "name": "light_requirement",
+      "section": "requirements",
+      "ctrl_type": "rich_editor"
+    },
+    {
+      "name": "vfx_requirement",
+      "section": "requirements",
+      "ctrl_type": "rich_editor"
+    },
+    {
+      "name": "sfx_requirement",
+      "section": "requirements",
+      "ctrl_type": "rich_editor"
+    },
+    {
+      "name": "placement_rules",
+      "section": "placement",
+      "ctrl_type": "rich_editor"
+    }
+  ],
+  "radio_groups": {
+    "3c-combat": [
+      {
+        "value": "无限制",
+        "default": true
+      },
+      {
+        "value": "禁技能",
+        "default": false
+      },
+      {
+        "value": "禁武器",
+        "default": false
+      }
+    ],
+    "3c-move": [
+      {
+        "value": "无限制",
+        "default": true
+      },
+      {
+        "value": "禁用移动",
+        "default": false
+      }
+    ],
+    "3c-vertical": [
+      {
+        "value": "垂直运动受限",
+        "default": false
+      },
+      {
+        "value": "垂直移动受限",
+        "default": false
+      }
+    ],
+    "3c-horizontal": [
+      {
+        "value": "水平运动受限",
+        "default": false
+      },
+      {
+        "value": "水平移动受限",
+        "default": false
+      }
+    ],
+    "3c-other": [
+      {
+        "value": "其他",
+        "default": false
+      }
+    ],
+    "3c-vehicle": [
+      {
+        "value": "无限制",
+        "default": true
+      },
+      {
+        "value": "车辆无法驶入",
+        "default": false
+      },
+      {
+        "value": "无法驶入且强制下车",
+        "default": false
+      }
+    ],
+    "3c-camera": [
+      {
+        "value": "否",
+        "default": true
+      },
+      {
+        "value": "是",
+        "default": false
+      }
+    ],
+    "mp-host": [
+      {
+        "value": "yes",
+        "default": true
+      },
+      {
+        "value": "no",
+        "default": false
+      }
+    ],
+    "mp-guest": [
+      {
+        "value": "yes",
+        "default": false
+      },
+      {
+        "value": "no",
+        "default": true
+      }
+    ]
+  },
+  "checkboxes": [
+    {
+      "id": "chk-copywriting-gameplay",
+      "label": "玩法包装需求",
+      "default": false,
+      "controls": ""
+    },
+    {
+      "id": "chk-copywriting-prop",
+      "label": "物件包装需求",
+      "default": false,
+      "controls": ""
+    },
+    {
+      "id": "chk-3c",
+      "label": "3C需求",
+      "default": false,
+      "controls": "req-3c"
+    },
+    {
+      "id": "chk-action",
+      "label": "角色动作",
+      "default": false,
+      "controls": "req-3c-action"
+    },
+    {
+      "id": "chk-physics-nondestructive",
+      "label": "非破坏类物理表现",
+      "default": false,
+      "controls": "req-physics"
+    },
+    {
+      "id": "chk-physics-destructive",
+      "label": "可破坏物",
+      "default": false,
+      "controls": "req-physics"
+    },
+    {
+      "id": "chk-system",
+      "label": "系统组合作需求",
+      "default": false,
+      "controls": "req-system"
+    },
+    {
+      "id": "chk-map",
+      "label": "地图系统",
+      "default": false,
+      "controls": "req-system-map"
+    },
+    {
+      "id": "chk-ux",
+      "label": "UIUX",
+      "default": true,
+      "controls": "req-system-ui"
+    },
+    {
+      "id": "chk-ux-interaction",
+      "label": "UX交互稿",
+      "default": true,
+      "controls": ""
+    },
+    {
+      "id": "chk-ux-prompt",
+      "label": "提示UI",
+      "default": true,
+      "controls": ""
+    },
+    {
+      "id": "chk-ux-nonprompt",
+      "label": "非提示UI与UI动效",
+      "default": false,
+      "controls": ""
+    },
+    {
+      "id": "chk-ux-map",
+      "label": "地图系统UI",
+      "default": false,
+      "controls": ""
+    },
+    {
+      "id": "chk-lighting",
+      "label": "灯光需求",
+      "default": false,
+      "controls": "req-light"
+    },
+    {
+      "id": "chk-vehicle",
+      "label": "载具需求",
+      "default": false,
+      "controls": "req-vehicle"
+    },
+    {
+      "id": "chk-ai",
+      "label": "AI需求",
+      "default": false,
+      "controls": "req-ai"
+    },
+    {
+      "id": "chk-combat",
+      "label": "战斗需求",
+      "default": false,
+      "controls": "req-combat"
+    },
+    {
+      "id": "chk-mission",
+      "label": "任务需求",
+      "default": false,
+      "controls": "req-mission"
+    },
+    {
+      "id": "chk-td",
+      "label": "TD需求",
+      "default": false,
+      "controls": ""
+    },
+    {
+      "id": "chk-gpp",
+      "label": "引擎动画",
+      "default": false,
+      "controls": "req-anim"
+    },
+    {
+      "id": "chk-concept",
+      "label": "原画",
+      "default": true,
+      "controls": ""
+    },
+    {
+      "id": "chk-model",
+      "label": "模型",
+      "default": true,
+      "controls": ""
+    },
+    {
+      "id": "chk-vfx",
+      "label": "特效",
+      "default": false,
+      "controls": "req-vfx"
+    },
+    {
+      "id": "chk-sfx",
+      "label": "音效",
+      "default": false,
+      "controls": "req-sfx"
+    },
+    {
+      "id": "chk-skeleton-anim",
+      "label": "骨骼动画",
+      "default": false,
+      "controls": ""
+    }
+  ],
+  "tables": [
+    {
+      "id": "version-table-body",
+      "section": "version",
+      "headers": [
+        "日期",
+        "内容",
+        "策划"
+      ]
+    },
+    {
+      "id": "glossary-table-body",
+      "section": "overview",
+      "headers": [
+        "名词",
+        "名词简述"
+      ]
+    },
+    {
+      "id": "related-gameplay-body",
+      "section": "related-docs",
+      "headers": [
+        "文档名称",
+        "链接/路径",
+        "说明"
+      ]
+    },
+    {
+      "id": "related-collab-body",
+      "section": "related-docs",
+      "headers": [
+        "合作组",
+        "文档/链接",
+        "说明"
+      ]
+    },
+    {
+      "id": "config-form-body",
+      "section": "config",
+      "headers": [
+        "配置项",
+        "单位",
+        "默认值",
+        "策划合法范围",
+        "配置方式",
+        "编辑器预览需求",
+        "备注"
+      ]
+    },
+    {
+      "id": "config-scene-body",
+      "section": "config",
+      "headers": [
+        "配置项",
+        "单位",
+        "默认值",
+        "策划合法范围",
+        "配置方式",
+        "编辑器预览需求",
+        "备注"
+      ]
+    }
+  ]
+}

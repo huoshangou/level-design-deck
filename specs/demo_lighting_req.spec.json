@@ -1,0 +1,51 @@
+{
+  "meta": {
+    "spec_id": "lighting_req_demo_warehouse_night",
+    "poi_id": "demo_warehouse_night",
+    "version": "0.1.0",
+    "owner": "level"
+  },
+  "map_constraint": {
+    "description": "夜间冷月色作为整体环境光基底（色温 4500K 偏冷蓝），整体亮度压低保留剪影感；远景路灯零星点亮提供层次。雨后湿润街面对环境光产生反射，强化夜晚潮湿氛围。",
+    "ir_refs": [
+      "FEEL.overall_tone",
+      "SPACE.environment_type"
+    ]
+  },
+  "level_constraint": {
+    "description": "在 POI 入口、关键岔路、可交互窗户/门处设暖色（2700K）常亮指引光，与冷色环境光形成对比，引导玩家视线推进；关键路径地面给低亮黄色边线灯辅助寻路。",
+    "ir_refs": [
+      "SPACE.regions"
+    ]
+  },
+  "mission_constraint": {
+    "description": "巡逻 NPC 视野前方的手电锥光为重点交互灯光，玩家进入锥光范围时画面降饱和提示警戒；任务关键物品（蓝图）在拾取前由顶部局部射灯打亮，拾取后熄灭。任务完成时整层警铃灯红色闪烁。",
+    "ir_refs": [
+      "FLOW.nodes",
+      "FEEL.emotional_beats"
+    ]
+  },
+  "concept_art": {
+    "ambient_only": {
+      "status": "pending",
+      "notes": "原画第①版：环境光 + 常亮指引光，待原画排期"
+    },
+    "with_mission": {
+      "status": "pending",
+      "notes": "原画第②版：①+任务流程灯光（手电锥光、射灯、警铃红光），待原画排期"
+    }
+  },
+  "position_notes": "1) 顶层窗户：月光从西侧射入，呈带状投影。2) 一层中庭：天花破洞洒下月光柱。3) 地下室：完全黑暗，仅靠玩家手电与少量应急灯。4) 出口走廊：警铃触发后顶灯转红色循环闪烁。",
+  "ambience_refs": [
+    {
+      "region_id": "demo_warehouse_lobby",
+      "description": "前厅：月光为主，墙面贴广告牌的冷蓝光泽，地面湿润反光",
+      "ref_image_url": ""
+    },
+    {
+      "region_id": "demo_warehouse_corridor",
+      "description": "走廊：低位应急灯（黄绿色）每 5 米一处，氛围压抑",
+      "ref_image_url": ""
+    }
+  ]
+}

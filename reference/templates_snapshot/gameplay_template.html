@@ -1,0 +1,2888 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>XXX玩法 - 玩法设计文档</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<style>
+/* ============================================================
+   CSS Variables — 暗色侧边栏 + 暖白内容区
+   ============================================================ */
+:root {
+  /* 侧边栏（暗色） */
+  --nav-bg: #1a1d27;
+  --nav-surface: #22263a;
+  --nav-border: #2e3352;
+  --nav-text: #8892b0;
+  --nav-text-hover: #e2e8f0;
+  --nav-accent: #64ffda;
+
+  /* 内容区（暖白） */
+  --bg: #faf9f7;
+  --surface: #ffffff;
+  --surface2: #f0eeeb;
+  --border: #e0ddd8;
+  --text: #2d2d2d;
+  --text-muted: #6b7280;
+  --text-light: #9ca3af;
+
+  /* 强调色 */
+  --accent: #0d9488;
+  --accent-light: rgba(13,148,136,0.08);
+
+  /* 状态色（亮色背景适配） */
+  --confirmed: #16a34a;
+  --pending: #d97706;
+  --risk: #dc2626;
+
+  /* 字体 */
+  --font: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+
+  /* 文案填写区 */
+  --copywriter-bg: #fef9ee;
+  --copywriter-border: #f5d88e;
+}
+
+/* ============================================================
+   Reset & Base
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font);
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--text);
+  background: var(--bg);
+  display: flex;
+  min-height: 100vh;
+}
+
+/* ============================================================
+   Sidebar Navigation（暗色）
+   ============================================================ */
+nav {
+  width: 240px;
+  min-width: 240px;
+  background: var(--nav-bg);
+  border-right: 1px solid var(--nav-border);
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  overflow-y: auto;
+  padding: 24px 0;
+  z-index: 100;
+}
+nav::-webkit-scrollbar { width: 4px; }
+nav::-webkit-scrollbar-thumb { background: var(--nav-border); border-radius: 2px; }
+
+nav .nav-logo {
+  padding: 0 20px 20px;
+  border-bottom: 1px solid var(--nav-border);
+  margin-bottom: 12px;
+}
+nav .nav-logo .project {
+  font-size: 10px;
+  color: var(--nav-text);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+nav .nav-logo .title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--nav-accent);
+  margin-top: 4px;
+  line-height: 1.4;
+}
+nav .nav-logo .version {
+  font-size: 11px;
+  color: var(--nav-text);
+  margin-top: 2px;
+}
+
+nav .nav-section {
+  padding: 16px 20px 4px;
+  font-size: 10px;
+  color: var(--nav-border);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  font-weight: 600;
+}
+nav a {
+  display: block;
+  padding: 5px 20px 5px 28px;
+  color: var(--nav-text);
+  text-decoration: none;
+  font-size: 12px;
+  transition: all 0.15s;
+  border-left: 2px solid transparent;
+}
+nav a:hover, nav a.active {
+  color: var(--nav-text-hover);
+  background: var(--nav-surface);
+  border-left-color: var(--nav-accent);
+}
+nav a .nav-num {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--nav-accent);
+  margin-right: 6px;
+  opacity: 0.7;
+}
+
+
+/* Nav sub-items (indented under parent) */
+nav a.nav-sub {
+  padding-left: 40px;
+  font-size: 11px;
+  opacity: 0.85;
+}
+nav a.nav-sub:hover { opacity: 1; }
+/* 工具栏 */
+nav .nav-tools {
+  border-top: 1px solid var(--nav-border);
+  margin-top: 16px;
+  padding-top: 16px;
+}
+nav .nav-tools button {
+  display: block;
+  width: calc(100% - 40px);
+  margin: 4px 20px;
+  padding: 6px 12px;
+  font-size: 11px;
+  background: var(--nav-surface);
+  color: var(--nav-text);
+  border: 1px solid var(--nav-border);
+  border-radius: 4px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s;
+}
+nav .nav-tools button:hover {
+  background: var(--nav-accent);
+  color: var(--nav-bg);
+  border-color: var(--nav-accent);
+}
+
+/* ============================================================
+   Main Content Area（暖白）
+   ============================================================ */
+main {
+  flex: 1;
+  padding: 40px 56px;
+  max-width: 1200px;
+  min-width: 0;
+}
+
+/* ============================================================
+   Document Header
+   ============================================================ */
+.doc-header {
+  border-bottom: 2px solid var(--border);
+  padding-bottom: 28px;
+  margin-bottom: 40px;
+}
+.doc-header .doc-type {
+  font-size: 11px;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+.doc-header h1 {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.3;
+}
+.doc-header .subtitle {
+  color: var(--text-muted);
+  margin-top: 6px;
+  font-size: 14px;
+}
+.doc-header .meta {
+  display: flex;
+  gap: 24px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+.doc-header .meta-item {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.doc-header .meta-item span {
+  color: var(--text);
+  font-weight: 500;
+}
+
+/* ============================================================
+   Sections
+   ============================================================ */
+section { margin-bottom: 48px; }
+section h2 {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text);
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+section h2 .sec-num {
+  font-size: 11px;
+  color: var(--accent);
+  font-family: var(--mono);
+  background: var(--accent-light);
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+section h2 .collapse-btn {
+  margin-left: auto;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 11px;
+  padding: 2px 8px;
+  transition: all 0.15s;
+}
+section h2 .collapse-btn:hover {
+  background: var(--surface2);
+  color: var(--text);
+}
+section h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 24px 0 12px;
+}
+section h4 {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin: 16px 0 8px;
+}
+p { color: var(--text); margin-bottom: 10px; font-size: 14px; }
+p.fill-placeholder { color: var(--text-light); }
+
+/* Section hidden state */
+.section-hidden .section-content {
+  display: none;
+}
+.section-hidden .section-hidden-hint {
+  display: block;
+}
+.section-hidden-hint {
+  display: none;
+  padding: 16px 20px;
+  background: var(--surface2);
+  border-radius: 8px;
+  color: var(--text-light);
+  font-size: 13px;
+  font-style: italic;
+}
+
+/* Collapsed state */
+.section-collapsed .section-content { display: none; }
+.section-collapsed h2 { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+
+/* ============================================================
+   Tables
+   ============================================================ */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  margin: 12px 0;
+}
+th {
+  background: var(--surface2);
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 10px 14px;
+  text-align: left;
+  border: 1px solid var(--border);
+}
+td {
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  color: var(--text);
+  vertical-align: top;
+  background: var(--surface);
+}
+tr:nth-child(even) td {
+  background: var(--bg);
+}
+td strong { color: var(--text); font-weight: 600; }
+td.label-cell {
+  background: var(--surface2);
+  font-weight: 500;
+  color: var(--text-muted);
+  width: 160px;
+  white-space: nowrap;
+}
+
+/* ============================================================
+   Cards
+   ============================================================ */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin: 12px 0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.card-confirmed { border-left: 3px solid var(--confirmed); }
+.card-pending { border-left: 3px solid var(--pending); }
+.card-risk { border-left: 3px solid var(--risk); }
+
+/* ============================================================
+   Tags & Badges
+   ============================================================ */
+.tag {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+.tag-confirmed { background: rgba(22,163,74,0.1); color: var(--confirmed); }
+.tag-pending { background: rgba(217,119,6,0.1); color: var(--pending); }
+.tag-risk { background: rgba(220,38,38,0.1); color: var(--risk); }
+
+.group-badge {
+  display: inline-block;
+  font-size: 11px;
+  padding: 2px 10px;
+  border-radius: 12px;
+  margin: 2px;
+  background: var(--surface2);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+
+.version-tag {
+  display: inline-block;
+  font-size: 10px;
+  background: var(--accent-light);
+  color: var(--accent);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-weight: 600;
+}
+
+.param-code {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--accent);
+  background: var(--accent-light);
+  padding: 1px 6px;
+  border-radius: 3px;
+}
+
+/* ============================================================
+   Requirement Lists
+   ============================================================ */
+.req-list { list-style: none; }
+.req-list li {
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+.req-list li:last-child { border-bottom: none; }
+.req-list li::before {
+  content: '·';
+  color: var(--accent);
+  font-size: 18px;
+  line-height: 1.4;
+  flex-shrink: 0;
+}
+
+/* ============================================================
+   Requirement Checklist（需求清单）
+   ============================================================ */
+.checklist-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px 24px;
+  margin: 12px 0;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+.checklist-group {
+  margin-bottom: 14px;
+}
+.checklist-group:last-child { margin-bottom: 0; }
+.checklist-group-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+  padding: 3px 10px;
+  background: var(--accent-light);
+  border-radius: 4px;
+  display: inline-block;
+}
+.checklist-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 10px;
+  border-radius: 6px;
+  transition: all 0.12s;
+  cursor: pointer;
+}
+.checklist-item:hover { background: var(--surface2); }
+.checklist-item input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.checklist-item label {
+  font-size: 13px;
+  color: var(--text);
+  cursor: pointer;
+  flex: 1;
+  user-select: none;
+}
+.checklist-item .checklist-hint {
+  font-size: 10px;
+  color: var(--text-light);
+  background: var(--surface2);
+  padding: 1px 6px;
+  border-radius: 3px;
+}
+
+/* ============================================================
+   Key-Value Info Table
+   ============================================================ */
+.info-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0;
+}
+.info-table td {
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+}
+.info-table td:first-child {
+  background: var(--surface2);
+  font-weight: 500;
+  color: var(--text-muted);
+  width: 160px;
+}
+.info-table td:nth-child(2) {
+  background: var(--surface);
+}
+
+/* ============================================================
+   Editable Fields
+   ============================================================ */
+[contenteditable="true"] {
+  outline: none;
+  transition: box-shadow 0.15s, background 0.15s;
+  border-radius: 2px;
+  min-height: 1.5em;
+}
+[contenteditable="true"]:hover {
+  box-shadow: inset 0 0 0 1px rgba(13,148,136,0.2);
+}
+[contenteditable="true"]:focus {
+  box-shadow: inset 0 0 0 2px var(--accent);
+  background: rgba(13,148,136,0.03);
+}
+.fill-placeholder {
+  color: var(--text-light);
+  font-style: italic;
+}
+
+/* User-typed text in editable fields is always black */
+[contenteditable="true"] {
+  color: var(--text);
+}
+td[contenteditable="true"] {
+  color: var(--text);
+}
+
+/* ============================================================
+   Copywriter Fields（文案填写区 — 黄色标记）
+   ============================================================ */
+.copywriter-field {
+  background: var(--copywriter-bg) !important;
+  border-left: 3px solid var(--copywriter-border) !important;
+}
+
+/* ============================================================
+   Image Placeholder & Upload
+   ============================================================ */
+.image-placeholder {
+  background: var(--surface);
+  border: 2px dashed var(--border);
+  border-radius: 8px;
+  padding: 24px;
+  margin: 16px 0;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+.image-placeholder:hover {
+  border-color: var(--accent);
+  background: var(--accent-light);
+}
+.image-placeholder.has-image {
+  border-style: solid;
+  padding: 8px;
+  cursor: default;
+}
+.image-placeholder .placeholder-label {
+  font-size: 14px;
+  color: var(--text);
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+.image-placeholder .placeholder-hint {
+  font-size: 12px;
+  color: var(--text-light);
+  margin-top: 8px;
+}
+.image-placeholder .upload-icon {
+  font-size: 32px;
+  color: var(--text-light);
+  margin-bottom: 8px;
+}
+.image-placeholder img {
+  max-width: 100%;
+  border-radius: 4px;
+  display: block;
+  margin: 0 auto;
+}
+.image-placeholder .image-actions {
+  display: none;
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  gap: 4px;
+}
+.image-placeholder.has-image:hover .image-actions { display: flex; }
+.image-actions button {
+  background: rgba(0,0,0,0.6);
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 11px;
+  cursor: pointer;
+}
+.image-actions button:hover { background: rgba(0,0,0,0.8); }
+
+/* Prompt block (for AI image prompts) */
+.prompt-block {
+  background: var(--surface2);
+  border-radius: 6px;
+  padding: 12px 16px;
+  margin-top: 10px;
+  text-align: left;
+}
+.prompt-tag {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--accent);
+  display: block;
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+.prompt-block p { font-size: 12px; color: var(--text-muted); margin: 0; }
+.prompt-block code {
+  font-size: 11px;
+  color: var(--accent);
+  font-family: var(--mono);
+  line-height: 1.6;
+  display: block;
+}
+
+/* ============================================================
+   Mermaid Diagrams
+   ============================================================ */
+.diagram-container {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 24px;
+  margin: 16px 0;
+  text-align: center;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.diagram-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 16px;
+  font-weight: 600;
+}
+.mermaid { background: transparent !important; }
+
+/* ============================================================
+   Add Row Button
+   ============================================================ */
+.add-row-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 14px;
+  font-size: 12px;
+  color: var(--accent);
+  background: var(--accent-light);
+  border: 1px dashed var(--accent);
+  border-radius: 6px;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: all 0.15s;
+}
+.add-row-btn:hover { background: rgba(13,148,136,0.15); }
+.delete-row-btn {
+  background: none;
+  border: none;
+  color: var(--text-light);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  transition: all 0.15s;
+}
+.delete-row-btn:hover { color: var(--risk); background: rgba(220,38,38,0.08); }
+
+/* ============================================================
+   Select Dropdowns
+   ============================================================ */
+select {
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 13px;
+  font-family: var(--font);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+}
+select:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+
+/* Radio & Checkbox groups */
+.option-group {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin: 4px 0;
+}
+.option-group label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text);
+  cursor: pointer;
+}
+.option-group input { accent-color: var(--accent); }
+
+/* ============================================================
+   3C Restriction Matrix
+   ============================================================ */
+.matrix-table th { font-size: 11px; text-align: center; }
+.matrix-table td { text-align: center; font-size: 12px; }
+.matrix-table td.matrix-label {
+  text-align: left;
+  font-weight: 500;
+  background: var(--surface2);
+}
+.matrix-table .matrix-group-header {
+  background: var(--surface2);
+  font-weight: 600;
+  text-align: left;
+  font-size: 12px;
+  color: var(--text);
+}
+
+
+/* ============================================================
+   Rich Editor Toolbar
+   ============================================================ */
+.rich-editor {
+  position: relative;
+  margin: 12px 0;
+}
+.rich-editor-toolbar {
+  display: none;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+  padding: 6px 10px;
+  gap: 2px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.rich-editor:focus-within .rich-editor-toolbar { display: flex; }
+.rich-editor:focus-within .rich-editor-content {
+  border-radius: 0 0 8px 8px;
+}
+.rich-editor-toolbar button {
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 13px;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-family: var(--font);
+  transition: all 0.1s;
+  line-height: 1;
+}
+.rich-editor-toolbar button:hover {
+  background: var(--surface2);
+  color: var(--text);
+  border-color: var(--border);
+}
+.rich-editor-toolbar .sep {
+  width: 1px;
+  height: 20px;
+  background: var(--border);
+  margin: 0 4px;
+}
+.rich-editor-content {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px 20px;
+  min-height: 120px;
+  outline: none;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  line-height: 1.8;
+  font-size: 14px;
+  color: var(--text);
+}
+.rich-editor-content:focus {
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+.rich-editor-content img {
+  max-width: 100%;
+  border-radius: 4px;
+  margin: 8px 0;
+  display: block;
+  cursor: pointer;
+}
+.rich-editor-content table {
+  margin: 8px 0;
+}
+.rich-editor-content h4 {
+  margin: 12px 0 6px;
+}
+.rich-editor-content ul, .rich-editor-content ol {
+  margin: 8px 0;
+  padding-left: 24px;
+}
+.rich-editor-content ul li, .rich-editor-content ol li {
+  margin: 2px 0;
+}
+
+/* ============================================================
+   Print Styles
+   ============================================================ */
+@media print {
+  nav { display: none; }
+  main { padding: 20px; max-width: 100%; }
+  .add-row-btn, .delete-row-btn, .collapse-btn, .nav-tools,
+  .image-actions, .checklist-hint { display: none !important; }
+  .section-hidden { display: none; }
+  [contenteditable] { box-shadow: none !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     Sidebar Navigation
+     ============================================================ -->
+<nav>
+  <div class="nav-logo">
+    <div class="project">ProjectX · 关卡策划</div>
+    <div class="title" id="nav-title">XXX玩法<br>玩法设计</div>
+    <div class="version" id="nav-version">v1.0 · YYYY-MM-DD</div>
+  </div>
+
+  <div class="nav-section">文档结构</div>
+  <a href="#version"><span class="nav-num">01</span>版本记录</a>
+  <a href="#info"><span class="nav-num">02</span>玩法信息</a>
+  <a href="#overview"><span class="nav-num">03</span>设计概述</a>
+  <a href="#whitebox"><span class="nav-num">04</span>白盒视频</a>
+  <a href="#related-docs"><span class="nav-num">05</span>关联文档</a>
+  <a href="#requirements"><span class="nav-num">06</span>玩法需求</a>
+  <a href="#req-flow" class="nav-sub"><span class="nav-num">6.1</span>玩法流程图</a>
+  <a href="#req-function" class="nav-sub"><span class="nav-num">6.2</span>玩法功能</a>
+  <a href="#req-physics" class="nav-sub"><span class="nav-num">6.3</span>物理需求</a>
+  <a href="#req-3c" class="nav-sub"><span class="nav-num">6.4</span>3C需求</a>
+  <a href="#req-system" class="nav-sub"><span class="nav-num">6.5</span>系统需求</a>
+  <a href="#req-mission" class="nav-sub"><span class="nav-num">6.6</span>任务需求</a>
+  <a href="#req-combat" class="nav-sub"><span class="nav-num">6.7</span>战斗需求</a>
+  <a href="#req-ai" class="nav-sub"><span class="nav-num">6.8</span>AI需求</a>
+  <a href="#req-vehicle" class="nav-sub"><span class="nav-num">6.9</span>载具需求</a>
+  <a href="#req-anim" class="nav-sub"><span class="nav-num">6.10</span>动画需求</a>
+  <a href="#req-light" class="nav-sub"><span class="nav-num">6.11</span>灯光需求</a>
+  <a href="#req-vfx" class="nav-sub"><span class="nav-num">6.12</span>特效需求</a>
+  <a href="#req-sfx" class="nav-sub"><span class="nav-num">6.13</span>音效需求</a>
+  <a href="#multiplayer"><span class="nav-num">07</span>多人游玩</a>
+  <a href="#config"><span class="nav-num">08</span>配置</a>
+  <a href="#placement"><span class="nav-num">09</span>玩法布设规范</a>
+  <a href="#reference"><span class="nav-num">10</span>补充参考图</a>
+
+
+  <div class="nav-tools">
+    <button onclick="document.getElementById('import-file-input').click()">导入已有文档</button>
+    <input type="file" id="import-file-input" accept=".html" style="display:none" onchange="importCleanHTML(this)">
+    <button onclick="exportCleanHTML()">导出纯净 HTML</button>
+    <button onclick="window.print()">打印 / PDF</button>
+  </div>
+</nav>
+
+<!-- ============================================================
+     Main Content
+     ============================================================ -->
+<main>
+
+<!-- Document Header -->
+<div class="doc-header">
+  <div class="doc-type">玩法设计文档 · Gameplay Design</div>
+  <h1 contenteditable="true" id="header-title" data-field="gameplay_name_cn">XXX玩法</h1>
+  <div class="subtitle" contenteditable="true" data-field="gameplay_name_en">Gameplay Name — 一句话描述</div>
+  <div class="meta">
+    <div class="meta-item">版本 <span contenteditable="true" id="header-version" data-field="version_num">v1.0</span></div>
+    <div class="meta-item">日期 <input type="date" id="header-date" data-field="header_date" style="border:1px solid var(--border);border-radius:4px;padding:2px 6px;font-size:12px;font-family:var(--font);background:var(--surface);color:var(--text);cursor:pointer"></div>
+    <div class="meta-item">状态 <span contenteditable="true" style="color:var(--pending)" data-field="status">设计中</span></div>
+    <div class="meta-item">策划 <span contenteditable="true" data-field="designer">—</span></div>
+  </div>
+</div>
+
+<!-- ============================================================
+     01 版本记录
+     ============================================================ -->
+<section id="version">
+  <h2>
+    <span class="sec-num">01</span>版本记录
+    <button class="collapse-btn" onclick="toggleCollapse(this)">折叠</button>
+  </h2>
+  <div class="section-content">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:120px">日期</th>
+          <th>内容</th>
+          <th style="width:100px">策划</th>
+        </tr>
+      </thead>
+      <tbody id="version-table-body">
+        <tr>
+          <td><input type="date" class="date-input" style="width:100%;border:1px solid var(--border);border-radius:4px;padding:4px 6px;font-size:13px;font-family:var(--font);background:var(--surface);color:var(--text);cursor:pointer"></td>
+          <td contenteditable="true">完成文档</td>
+          <td contenteditable="true">—</td>
+        </tr>
+      </tbody>
+    </table>
+    <button class="add-row-btn" onclick="addTableRow('version-table-body', 3)">+ 添加版本记录</button>
+  </div>
+</section>
+
+<!-- ============================================================
+     02 玩法信息
+     ============================================================ -->
+<section id="info">
+  <h2>
+    <span class="sec-num">02</span>玩法信息
+    <button class="collapse-btn" onclick="toggleCollapse(this)">折叠</button>
+  </h2>
+  <div class="section-content">
+
+    <!-- 基本信息 -->
+    <h3>基本信息</h3>
+    <table class="info-table">
+      <tr><td>版本</td><td contenteditable="true" data-field="info_version">1.0版本</td></tr>
+      <tr><td>设定</td><td contenteditable="true" data-field="info_setting">—</td></tr>
+      <tr><td>地块</td><td contenteditable="true" data-field="info_region">Los Angeles</td></tr>
+      <tr><td>玩法命名（中文）</td><td contenteditable="true" data-field="info_name_cn">—</td></tr>
+      <tr><td>玩法命名（英文）</td><td contenteditable="true" data-field="info_name_en">—</td></tr>
+    </table>
+
+    <!-- 需求清单 -->
+    <h3>需求清单</h3>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:8px">勾选对应需求，文档将自动显示相关章节。取消勾选的章节将被隐藏。</p>
+    <div class="checklist-panel" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0 24px">
+
+      <!-- Column 1 -->
+      <div>
+        <div class="checklist-group">
+          <div class="checklist-group-title">文案组</div>
+          <div class="checklist-item"><input type="checkbox" id="chk-copywriting-gameplay" data-controls=""><label for="chk-copywriting-gameplay">玩法包装需求</label></div>
+          <div class="checklist-item"><input type="checkbox" id="chk-copywriting-prop" data-controls=""><label for="chk-copywriting-prop">物件包装需求</label></div>
+        </div>
+        <div class="checklist-group">
+          <div class="checklist-group-title">角色组</div>
+          <div class="checklist-item"><input type="checkbox" id="chk-3c" data-controls="req-3c"><label for="chk-3c">3C需求</label></div>
+          <div class="checklist-item"><input type="checkbox" id="chk-action" data-controls="req-3c-action"><label for="chk-action">角色动作</label></div>
+        </div>
+        <div class="checklist-group">
+          <div class="checklist-group-title">物理组</div>
+          <div class="checklist-item"><input type="checkbox" id="chk-physics-nondestructive" data-controls="req-physics"><label for="chk-physics-nondestructive">非破坏类物理表现</label></div>
+          <div class="checklist-item"><input type="checkbox" id="chk-physics-destructive" data-controls="req-physics"><label for="chk-physics-destructive">可破坏物</label></div>
+        </div>
+        <div class="checklist-group">
+          <div class="checklist-group-title">系统组</div>
+          <div class="checklist-item"><input type="checkbox" id="chk-system" data-controls="req-system"><label for="chk-system">系统组合作需求</label></div>
+          <div class="checklist-item"><input type="checkbox" id="chk-map" data-controls="req-system-map"><label for="chk-map">地图系统</label></div>
+          <div class="checklist-item"><input type="checkbox" id="chk-ux" checked data-controls="req-system-ui"><label for="chk-ux">UIUX</label></div>
+          <div class="checklist-item" style="padding-left:20px"><input type="checkbox" id="chk-ux-interaction" checked data-controls=""><label for="chk-ux-interaction">UX交互稿</label></div>
+          <div class="checklist-item" style="padding-left:20px"><input type="checkbox" id="chk-ux-prompt" checked data-controls=""><label for="chk-ux-prompt">提示UI</label></div>
+          <div class="checklist-item" style="padding-left:20px"><input type="checkbox" id="chk-ux-nonprompt" data-controls=""><label for="chk-ux-nonprompt">非提示UI与UI动效</label></div>
+          <div class="checklist-item" style="padding-left:20px"><input type="checkbox" id="chk-ux-map" data-controls=""><label for="chk-ux-map">地图系统UI</label></div>
+        </div>
+      </div>
+
+      <!-- Column 2 -->
+      <div>
+        <div class="checklist-group">
+          <div class="checklist-group-title">地图组</div>
+          <div class="checklist-item"><input type="checkbox" id="chk-lighting" data-controls="req-light"><label for="chk-lighting">灯光需求</label></div>
+        </div>
+        <div class="checklist-group">
+          <div class="checklist-group-title">载具组</div>
+          <div class="checklist-item"><input type="checkbox" id="chk-vehicle" data-controls="req-vehicle"><label for="chk-vehicle">载具需求</label></div>
+        </div>
+        <div class="checklist-group">
+          <div class="checklist-group-title">AI组</div>
+          <div class="checklist-item"><input type="checkbox" id="chk-ai" data-controls="req-ai"><label for="chk-ai">AI需求</label></div>
+        </div>
+        <div class="checklist-group">
+          <div class="checklist-group-title">战斗组</div>
+          <div class="checklist-item"><input type="checkbox" id="chk-combat" data-controls="req-combat"><label for="chk-combat">战斗需求</label></div>
+        </div>
+        <div class="checklist-group">
+          <div class="checklist-group-title">任务组</div>
+          <div class="checklist-item"><input type="checkbox" id="chk-mission" data-controls="req-mission"><label for="chk-mission">任务需求</label></div>
+        </div>
+        <div class="checklist-group">
+          <div class="checklist-group-title">TD组</div>
+          <div class="checklist-item"><input type="checkbox" id="chk-td" data-controls=""><label for="chk-td">TD需求</label></div>
+        </div>
+        <div class="checklist-group">
+          <div class="checklist-group-title">GPP</div>
+          <div class="checklist-item"><input type="checkbox" id="chk-gpp" data-controls="req-anim"><label for="chk-gpp">引擎动画</label></div>
+        </div>
+      </div>
+
+      <!-- Column 3 -->
+      <div>
+        <div class="checklist-group">
+          <div class="checklist-group-title">美术</div>
+          <div class="checklist-item"><input type="checkbox" id="chk-concept" checked data-controls=""><label for="chk-concept">原画</label></div>
+          <div class="checklist-item"><input type="checkbox" id="chk-model" checked data-controls=""><label for="chk-model">模型</label></div>
+          <div class="checklist-item"><input type="checkbox" id="chk-vfx" data-controls="req-vfx"><label for="chk-vfx">特效</label></div>
+          <div class="checklist-item"><input type="checkbox" id="chk-sfx" data-controls="req-sfx"><label for="chk-sfx">音效</label></div>
+          <div class="checklist-item"><input type="checkbox" id="chk-skeleton-anim" data-controls=""><label for="chk-skeleton-anim">骨骼动画</label></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     03 设计概述（Excel Sheet3 第1章）
+     ============================================================ -->
+<section id="overview">
+  <h2>
+    <span class="sec-num">03</span>设计概述
+    <button class="collapse-btn" onclick="toggleCollapse(this)">折叠</button>
+  </h2>
+  <div class="section-content">
+
+    <h3>设计目标与体验</h3>
+    <div class="rich-editor">
+        <div class="rich-editor-toolbar">
+          <button onclick="richCmd('bold')" title="加粗"><b>B</b></button>
+          <button onclick="richCmd('italic')" title="斜体"><i>I</i></button>
+          <button onclick="richCmd('underline')" title="下划线"><u>U</u></button>
+          <div class="sep"></div>
+          <button onclick="richCmd('insertUnorderedList')" title="无序列表">• 列表</button>
+          <button onclick="richCmd('insertOrderedList')" title="有序列表">1. 列表</button>
+          <div class="sep"></div>
+          <button onclick="richInsertTable(this)" title="插入表格">表格</button>
+          <button onclick="richInsertImage(this)" title="插入图片">图片</button>
+          <div class="sep"></div>
+          <button onclick="richCmd('formatBlock','<h4>')" title="小标题">H4</button>
+          <button onclick="richCmd('formatBlock','<p>')" title="正文">P</button>
+          <button onclick="richCmd('removeFormat')" title="清除格式">清除</button>
+        </div>
+        <div class="rich-editor-content" contenteditable="true" data-field="design_goal">
+          <p class="fill-placeholder">描述本玩法的核心设计目标和期望带给玩家的体验感受…</p>
+        </div>
+      </div>
+
+    <h3>玩法描述</h3>
+    <div class="rich-editor">
+        <div class="rich-editor-toolbar">
+          <button onclick="richCmd('bold')" title="加粗"><b>B</b></button>
+          <button onclick="richCmd('italic')" title="斜体"><i>I</i></button>
+          <button onclick="richCmd('underline')" title="下划线"><u>U</u></button>
+          <div class="sep"></div>
+          <button onclick="richCmd('insertUnorderedList')" title="无序列表">• 列表</button>
+          <button onclick="richCmd('insertOrderedList')" title="有序列表">1. 列表</button>
+          <div class="sep"></div>
+          <button onclick="richInsertTable(this)" title="插入表格">表格</button>
+          <button onclick="richInsertImage(this)" title="插入图片">图片</button>
+          <div class="sep"></div>
+          <button onclick="richCmd('formatBlock','<h4>')" title="小标题">H4</button>
+          <button onclick="richCmd('formatBlock','<p>')" title="正文">P</button>
+          <button onclick="richCmd('removeFormat')" title="清除格式">清除</button>
+        </div>
+        <div class="rich-editor-content" contenteditable="true" data-field="gameplay_description">
+          <p class="fill-placeholder">概述本玩法的基本流程和核心机制…</p>
+        </div>
+      </div>
+
+    <h3>校验项</h3>
+    <div class="rich-editor">
+        <div class="rich-editor-toolbar">
+          <button onclick="richCmd('bold')" title="加粗"><b>B</b></button>
+          <button onclick="richCmd('italic')" title="斜体"><i>I</i></button>
+          <button onclick="richCmd('underline')" title="下划线"><u>U</u></button>
+          <div class="sep"></div>
+          <button onclick="richCmd('insertUnorderedList')" title="无序列表">• 列表</button>
+          <button onclick="richCmd('insertOrderedList')" title="有序列表">1. 列表</button>
+          <div class="sep"></div>
+          <button onclick="richInsertTable(this)" title="插入表格">表格</button>
+          <button onclick="richInsertImage(this)" title="插入图片">图片</button>
+          <div class="sep"></div>
+          <button onclick="richCmd('formatBlock','<h4>')" title="小标题">H4</button>
+          <button onclick="richCmd('formatBlock','<p>')" title="正文">P</button>
+          <button onclick="richCmd('removeFormat')" title="清除格式">清除</button>
+        </div>
+        <div class="rich-editor-content" contenteditable="true" data-field="validation_items">
+          <p class="fill-placeholder">列出设计完成后需要校验的关键点…</p>
+        </div>
+      </div>
+
+    <h3>名词解释</h3>
+    <table>
+      <thead>
+        <tr>
+          <th style="width:180px">名词</th>
+          <th>名词简述</th>
+        </tr>
+      </thead>
+      <tbody id="glossary-table-body">
+        <tr>
+          <td contenteditable="true">—</td>
+          <td contenteditable="true">—</td>
+        </tr>
+      </tbody>
+    </table>
+    <button class="add-row-btn" onclick="addTableRow('glossary-table-body', 2)">+ 添加名词</button>
+
+  </div>
+</section>
+
+<!-- ============================================================
+     04 白盒视频
+     ============================================================ -->
+<section id="whitebox">
+  <h2>
+    <span class="sec-num">04</span>白盒视频
+    <button class="collapse-btn" onclick="toggleCollapse(this)">折叠</button>
+  </h2>
+  <div class="section-content">
+    <table class="info-table">
+      <tr><td>P4路径</td><td contenteditable="true"><span data-field="whitebox_p4_path">—</span></td></tr>
+      <tr><td>文件名</td><td contenteditable="true"><span data-field="whitebox_filename">—</span></td></tr>
+    </table>
+
+    <div class="image-placeholder" onclick="handleImageUpload(this)">
+      <div class="image-actions">
+        <button onclick="event.stopPropagation(); replaceImage(this.closest('.image-placeholder'))">替换</button>
+        <button onclick="event.stopPropagation(); removeImage(this.closest('.image-placeholder'))">删除</button>
+      </div>
+      <div class="placeholder-content">
+        <div class="upload-icon">&#128247;</div>
+        <div class="placeholder-label">白盒视频截图 / 关键帧</div>
+        <div class="placeholder-hint">点击上传图片，或拖拽图片到此处（自动嵌入为base64）</div>
+      </div>
+      <!-- IMAGE_SLOT: {"id":"whitebox_screenshot","desc":"白盒视频关键帧截图"} -->
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     05 关联文档
+     ============================================================ -->
+<section id="related-docs">
+  <h2>
+    <span class="sec-num">05</span>关联文档
+    <button class="collapse-btn" onclick="toggleCollapse(this)">折叠</button>
+  </h2>
+  <div class="section-content">
+
+    <h3>玩法文档</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>文档名称</th>
+          <th>链接/路径</th>
+          <th>说明</th>
+        </tr>
+      </thead>
+      <tbody id="related-gameplay-body">
+        <tr>
+          <td contenteditable="true">—</td>
+          <td contenteditable="true">—</td>
+          <td contenteditable="true">—</td>
+        </tr>
+      </tbody>
+    </table>
+    <button class="add-row-btn" onclick="addTableRow('related-gameplay-body', 3)">+ 添加文档</button>
+
+    <h3>IP设定</h3>
+    <table class="info-table">
+      <tr><td>文案包装链接</td><td contenteditable="true"><span data-field="ip_link">—</span></td></tr>
+    </table>
+
+    <h3>合作组</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>合作组</th>
+          <th>文档/链接</th>
+          <th>说明</th>
+        </tr>
+      </thead>
+      <tbody id="related-collab-body">
+        <tr>
+          <td contenteditable="true">—</td>
+          <td contenteditable="true">—</td>
+          <td contenteditable="true">—</td>
+        </tr>
+      </tbody>
+    </table>
+    <button class="add-row-btn" onclick="addTableRow('related-collab-body', 3)">+ 添加合作组</button>
+
+  </div>
+</section>
+
+<!-- ============================================================
+     06 玩法需求（主体章节）
+     ============================================================ -->
+<section id="requirements">
+  <h2>
+    <span class="sec-num">06</span>玩法需求
+    <button class="collapse-btn" onclick="toggleCollapse(this)">折叠</button>
+  </h2>
+  <div class="section-content">
+
+    <!-- 6.1 玩法流程图 -->
+    <div id="req-flow" class="sub-section">
+      <h3>6.1 玩法流程图</h3>
+
+      <!-- 模式切换 -->
+      <div style="display:flex;gap:8px;margin-bottom:12px">
+        <button class="flow-mode-btn active" onclick="switchFlowMode('mermaid')" id="btn-flow-mermaid" style="padding:6px 16px;font-size:12px;border:1px solid var(--border);border-radius:4px;cursor:pointer;background:var(--accent);color:#fff;font-family:var(--font);transition:all 0.15s">Mermaid 图表</button>
+        <button class="flow-mode-btn" onclick="switchFlowMode('image')" id="btn-flow-image" style="padding:6px 16px;font-size:12px;border:1px solid var(--border);border-radius:4px;cursor:pointer;background:var(--surface);color:var(--text-muted);font-family:var(--font);transition:all 0.15s">上传图片</button>
+      </div>
+
+      <!-- Mode A: Mermaid -->
+      <div id="flow-mermaid-mode">
+        <div class="diagram-container">
+          <div class="diagram-label">玩法核心流程</div>
+          
+          <div class="mermaid" contenteditable="false" data-field="mermaid_flowchart">
+flowchart TD
+    A[玩法触发] --> B[核心循环]
+    B --> C{成功条件}
+    C -->|达成| D[奖励结算]
+    C -->|未达成| B
+          </div>
+        </div>
+      </div>
+
+      <!-- Mode B: Image Upload -->
+      <div id="flow-image-mode" style="display:none">
+        <div class="image-placeholder" onclick="handleImageUpload(this)">
+          <div class="image-actions">
+            <button onclick="event.stopPropagation(); replaceImage(this.closest('.image-placeholder'))">替换</button>
+            <button onclick="event.stopPropagation(); removeImage(this.closest('.image-placeholder'))">删除</button>
+          </div>
+          <div class="placeholder-content">
+            <div class="upload-icon">&#128247;</div>
+            <div class="placeholder-label">玩法流程图</div>
+            <div class="placeholder-hint">点击上传流程图图片，或拖拽图片到此处</div>
+          </div>
+          <!-- IMAGE_SLOT: {"id":"gameplay_flowchart_img","desc":"玩法流程图（图片版）"} -->
+        </div>
+      </div>
+
+      <div class="rich-editor">
+        <div class="rich-editor-toolbar">
+          <button onclick="richCmd('bold')" title="加粗"><b>B</b></button>
+          <button onclick="richCmd('italic')" title="斜体"><i>I</i></button>
+          <button onclick="richCmd('underline')" title="下划线"><u>U</u></button>
+          <div class="sep"></div>
+          <button onclick="richCmd('insertUnorderedList')" title="无序列表">• 列表</button>
+          <button onclick="richCmd('insertOrderedList')" title="有序列表">1. 列表</button>
+          <div class="sep"></div>
+          <button onclick="richInsertTable(this)" title="插入表格">表格</button>
+          <button onclick="richInsertImage(this)" title="插入图片">图片</button>
+          <div class="sep"></div>
+          <button onclick="richCmd('formatBlock','<h4>')" title="小标题">H4</button>
+          <button onclick="richCmd('formatBlock','<p>')" title="正文">P</button>
+          <button onclick="richCmd('removeFormat')" title="清除格式">清除</button>
+        </div>
+        <div class="rich-editor-content" contenteditable="true" data-field="flowchart_description">
+          <p class="fill-placeholder">流程图补充说明…</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6.2 玩法功能 -->
+    <div id="req-function" class="sub-section">
+      <h3>6.2 玩法功能</h3>
+      <div class="rich-editor">
+        <div class="rich-editor-toolbar">
+          <button onclick="richCmd('bold')" title="加粗"><b>B</b></button>
+          <button onclick="richCmd('italic')" title="斜体"><i>I</i></button>
+          <button onclick="richCmd('underline')" title="下划线"><u>U</u></button>
+          <div class="sep"></div>
+          <button onclick="richCmd('insertUnorderedList')" title="无序列表">• 列表</button>
+          <button onclick="richCmd('insertOrderedList')" title="有序列表">1. 列表</button>
+          <div class="sep"></div>
+          <button onclick="richInsertTable(this)" title="插入表格">表格</button>
+          <button onclick="richInsertImage(this)" title="插入图片">图片</button>
+          <div class="sep"></div>
+          <button onclick="richCmd('formatBlock','<h4>')" title="小标题">H4</button>
+          <button onclick="richCmd('formatBlock','<p>')" title="正文">P</button>
+          <button onclick="richCmd('removeFormat')" title="清除格式">清除</button>
+        </div>
+        <div class="rich-editor-content" contenteditable="true" data-field="gameplay_function">
+          <p class="fill-placeholder">描述玩法的功能设计需求，包括核心机制、触发条件、结束条件等…</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6.3 物理需求 -->
+    <div id="req-physics" class="sub-section" data-section="physics">
+      <h3>6.3 物理需求</h3>
+      <div class="section-hidden-hint">本玩法无物理需求，已隐藏。可在需求清单中勾选启用。</div>
+      <div class="section-content">
+        <div class="rich-editor">
+        <div class="rich-editor-toolbar">
+          <button onclick="richCmd('bold')" title="加粗"><b>B</b></button>
+          <button onclick="richCmd('italic')" title="斜体"><i>I</i></button>
+          <button onclick="richCmd('underline')" title="下划线"><u>U</u></button>
+          <div class="sep"></div>
+          <button onclick="richCmd('insertUnorderedList')" title="无序列表">• 列表</button>
+          <button onclick="richCmd('insertOrderedList')" title="有序列表">1. 列表</button>
+          <div class="sep"></div>
+          <button onclick="richInsertTable(this)" title="插入表格">表格</button>
+          <button onclick="richInsertImage(this)" title="插入图片">图片</button>
+          <div class="sep"></div>
+          <button onclick="richCmd('formatBlock','<h4>')" title="小标题">H4</button>
+          <button onclick="richCmd('formatBlock','<p>')" title="正文">P</button>
+          <button onclick="richCmd('removeFormat')" title="清除格式">清除</button>
+        </div>
+        <div class="rich-editor-content" contenteditable="true" data-field="physics_requirement">
+          <p class="fill-placeholder">描述物理表现需求，包括非破坏类物理表现和可破坏物需求…</p>
+        </div>
+      </div>
+      </div>
+    </div>
+
+    <!-- 6.4 3C需求 -->
+    <div id="req-3c" class="sub-section" data-section="3c">
+      <h3>6.4 3C需求</h3>
+      <div class="section-hidden-hint">本玩法无3C需求，已隐藏。可在需求清单中勾选启用。</div>
+      <div class="section-content">
+
+        <h4>区域能力3C限制</h4>
+        <table class="info-table" style="margin-bottom:16px">
+          <tr>
+            <td>需求类型</td>
+            <td>
+              <select id="sel-3c-type" onchange="update3CDescription()">
+                <option value="玩法模式（Gameplay）">玩法模式（Gameplay）</option>
+                <option value="区域规则（Zone）">区域规则（Zone）</option>
+                <option value="任务定制（Mission）">任务定制（Mission）</option>
+              </select>
+              <div id="3c-type-desc" style="margin-top:6px;font-size:12px;color:var(--text-muted)">由角色主动或被动进入的特定玩法或交互。以交互玩法为主要判断维度。</div>
+            </td>
+          </tr>
+          <tr>
+            <td>影响对象</td>
+            <td>
+              <select id="sel-3c-target" onchange="update3CTargetDesc()">
+                <option value="主角（Hero）">主角（Hero）</option>
+                <option value="非主角（NPC）">非主角（NPC）</option>
+              </select>
+              <div id="3c-target-desc" style="margin-top:6px;font-size:12px;color:var(--text-muted)">此限制将会影响 Hero 类型的角色身上的能力、或改变 Hero 类型的行为</div>
+            </td>
+          </tr>
+          <tr>
+            <td>触发方式</td>
+            <td>
+              <select id="sel-3c-trigger" onchange="update3CTriggerDesc()">
+                <option value="Volume">Volume</option>
+                <option value="程序接口">程序接口</option>
+              </select>
+              <div id="3c-trigger-desc" style="margin-top:6px;font-size:12px;color:var(--text-muted)">策划将其安放在对应关卡、物件中，调整至合适触发范围，当 Hero 进入Volume 时触发，退出 Volume 时解除。</div>
+            </td>
+          </tr>
+        </table>
+
+        <h4>需求背景</h4>
+        <div class="rich-editor">
+        <div class="rich-editor-toolbar">
+          <button onclick="richCmd('bold')" title="加粗"><b>B</b></button>
+          <button onclick="richCmd('italic')" title="斜体"><i>I</i></button>
+          <button onclick="richCmd('underline')" title="下划线"><u>U</u></button>
+          <div class="sep"></div>
+          <button onclick="richCmd('insertUnorderedList')" title="无序列表">• 列表</button>
+          <button onclick="richCmd('insertOrderedList')" title="有序列表">1. 列表</button>
+          <div class="sep"></div>
+          <button onclick="richInsertTable(this)" title="插入表格">表格</button>
+          <button onclick="richInsertImage(this)" title="插入图片">图片</button>
+          <div class="sep"></div>
+          <button onclick="richCmd('formatBlock','<h4>')" title="小标题">H4</button>
+          <button onclick="richCmd('formatBlock','<p>')" title="正文">P</button>
+          <button onclick="richCmd('removeFormat')" title="清除格式">清除</button>
+        </div>
+        <div class="rich-editor-content" contenteditable="true" data-field="3c_background">
+          <p class="fill-placeholder">eg.在规定范围内，让玩家使用角色射击系统击破靶子的大世界填充玩法。不希望玩家使用垂直运动能力，攀爬靶场物件，使角色进入靶子放置区内部。</p>
+        </div>
+      </div>
+
+        <h4>3C限制模板</h4>
+        <p style="font-size:13px;color:var(--text);margin-bottom:4px" contenteditable="true">《模板 - 这里填写限制区域名》</p>
+
+        <!-- [角色组] 区域能力限制 -->
+        <table class="matrix-table">
+          <thead>
+            <tr>
+              <th style="width:80px">模块</th>
+              <th style="width:90px">模板</th>
+              <th style="width:90px">子模板</th>
+              <th style="width:120px">单选选项</th>
+              <th style="width:120px">区域类型</th>
+              <th>说明</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="matrix-group-header" colspan="6">[角色组] 区域能力限制</td>
+            </tr>
+            <tr>
+              <td class="matrix-label" rowspan="9">战斗维度<br>+<br>运动能力</td>
+              <td class="matrix-label" rowspan="3">战斗维度</td>
+              <td class="matrix-label" rowspan="3">能否战斗</td>
+              <td><label><input type="radio" name="3c-combat" value="无限制" checked> 无限制</label></td>
+              <td><span class="param-code">战斗区</span></td>
+              <td style="font-size:12px;color:var(--text-muted)">无限制</td>
+            </tr>
+            <tr>
+              <td><label><input type="radio" name="3c-combat" value="禁技能"> 禁技能</label></td>
+              <td><span class="param-code">射击区</span></td>
+              <td style="font-size:12px;color:var(--text-muted)">只能进行射击、瞄准等基础武器操作</td>
+            </tr>
+            <tr>
+              <td><label><input type="radio" name="3c-combat" value="禁武器"> 禁武器</label></td>
+              <td><span class="param-code">安全区</span></td>
+              <td style="font-size:12px;color:var(--text-muted)">不可以掏出或使用任何武器。无法限制被动进战</td>
+            </tr>
+            <tr>
+              <td class="matrix-label" rowspan="6">运动能力</td>
+              <td class="matrix-label" rowspan="2">移动限制</td>
+              <td><label><input type="radio" name="3c-move" value="无限制" checked> 无限制</label></td>
+              <td><span class="param-code">大型空间</span></td>
+              <td style="font-size:12px;color:var(--text-muted)">无限制</td>
+            </tr>
+            <tr>
+              <td><label><input type="radio" name="3c-move" value="禁用移动"> 禁用移动</label></td>
+              <td><span class="param-code">固定空间</span></td>
+              <td style="font-size:12px;color:var(--text-muted)">禁用移动、跳跃、攀爬等</td>
+            </tr>
+            <tr>
+              <td class="matrix-label" rowspan="2">垂直限制</td>
+              <td><label><input type="radio" name="3c-vertical" value="垂直运动受限"> 垂直运动受限</label></td>
+              <td><span class="param-code">扁平空间</span></td>
+              <td style="font-size:12px;color:var(--text-muted)">禁用攀爬等</td>
+            </tr>
+            <tr>
+              <td><label><input type="radio" name="3c-vertical" value="垂直移动受限"> 垂直移动受限</label></td>
+              <td><span class="param-code">低矮空间</span></td>
+              <td style="font-size:12px;color:var(--text-muted)">禁用跳跃、攀爬等</td>
+            </tr>
+            <tr>
+              <td class="matrix-label" rowspan="2">水平限制</td>
+              <td><label><input type="radio" name="3c-horizontal" value="水平运动受限"> 水平运动受限</label></td>
+              <td><span class="param-code">小型空间</span></td>
+              <td style="font-size:12px;color:var(--text-muted)">禁用冲刺、闪避等</td>
+            </tr>
+            <tr>
+              <td><label><input type="radio" name="3c-horizontal" value="水平移动受限"> 水平移动受限</label></td>
+              <td><span class="param-code">狭窄空间</span></td>
+              <td style="font-size:12px;color:var(--text-muted)">禁用冲刺、闪避、跑步等</td>
+            </tr>
+            <tr>
+              <td class="matrix-label">其他能力</td>
+              <td class="matrix-label">其他能力</td>
+              <td class="matrix-label">待补充</td>
+              <td><label><input type="radio" name="3c-other" value="其他"> 其他</label></td>
+              <td></td>
+              <td style="font-size:12px;color:var(--text-muted)">特殊需求（需三方评审）</td>
+            </tr>
+
+            <tr>
+              <td class="matrix-group-header" colspan="6">[角色组] 载具使用限制</td>
+            </tr>
+            <tr>
+              <td class="matrix-label" rowspan="3">载具维度</td>
+              <td class="matrix-label" rowspan="3">载具维度</td>
+              <td class="matrix-label" rowspan="3">能否开车</td>
+              <td><label><input type="radio" name="3c-vehicle" value="无限制" checked> 无限制</label></td>
+              <td><span class="param-code">行驶区</span></td>
+              <td style="font-size:12px;color:var(--text-muted)">默认情况。可以开车驶入</td>
+            </tr>
+            <tr>
+              <td><label><input type="radio" name="3c-vehicle" value="车辆无法驶入"> 车辆无法驶入</label></td>
+              <td><span class="param-code">禁车区</span></td>
+              <td style="font-size:12px;color:var(--text-muted)">车辆靠近区域，会逐渐减速，无法驶入</td>
+            </tr>
+            <tr>
+              <td><label><input type="radio" name="3c-vehicle" value="无法驶入且强制下车"> 无法驶入且强制下车</label></td>
+              <td><span class="param-code">步行区</span></td>
+              <td style="font-size:12px;color:var(--text-muted)">车辆靠近区域，除减速外，会自动下车</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h4>镜头需求</h4>
+        <table class="matrix-table" style="margin-bottom:16px">
+          <thead>
+            <tr>
+              <th style="width:160px">模块</th>
+              <th style="width:160px">子模板</th>
+              <th>单选选项</th>
+              <th>说明</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="matrix-label" rowspan="2">[角色组] 镜头需求限制</td>
+              <td class="matrix-label" rowspan="2">是否有特殊镜头需求？</td>
+              <td><label><input type="radio" name="3c-camera" value="否" checked> 否</label></td>
+              <td style="font-size:12px;color:var(--text-muted)">若有需求，在下方描述</td>
+            </tr>
+            <tr>
+              <td><label><input type="radio" name="3c-camera" value="是"> 是</label></td>
+              <td></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h4>特殊镜头需求</h4>
+        <div class="rich-editor">
+          <div class="rich-editor-toolbar">
+            <button onclick="richCmd('bold')" title="加粗"><b>B</b></button>
+            <button onclick="richCmd('italic')" title="斜体"><i>I</i></button>
+            <button onclick="richCmd('underline')" title="下划线"><u>U</u></button>
+            <div class="sep"></div>
+            <button onclick="richCmd('insertUnorderedList')" title="无序列表">• 列表</button>
+            <button onclick="richCmd('insertOrderedList')" title="有序列表">1. 列表</button>
+            <div class="sep"></div>
+            <button onclick="richInsertTable(this)" title="插入表格">表格</button>
+            <button onclick="richInsertImage(this)" title="插入图片">图片</button>
+            <div class="sep"></div>
+            <button onclick="richCmd('formatBlock','<h4>')" title="小标题">H4</button>
+            <button onclick="richCmd('formatBlock','<p>')" title="正文">P</button>
+            <button onclick="richCmd('removeFormat')" title="清除格式">清除</button>
+          </div>
+          <div class="rich-editor-content" contenteditable="true" data-field="special_camera">
+            <p class="fill-placeholder">若有特殊镜头需求，在此描述…</p>
+          </div>
+        </div>
+
+        <div id="req-3c-action">
+          <h4>角色动作</h4>
+          <div class="section-hidden-hint">本玩法无角色动作需求，已隐藏。</div>
+          <div class="section-content">
+            <div class="rich-editor">
+              <div class="rich-editor-toolbar">
+          <button onclick="richCmd('bold')" title="加粗"><b>B</b></button>
+          <button onclick="richCmd('italic')" title="斜体"><i>I</i></button>
+          <button onclick="richCmd('underline')" title="下划线"><u>U</u></button>
+          <div class="sep"></div>
+          <button onclick="richCmd('insertUnorderedList')" title="无序列表">• 列表</button>
+          <button onclick="richCmd('insertOrderedList')" title="有序列表">1. 列表</button>
+          <div class="sep"></div>
+          <button onclick="richInsertTable(this)" title="插入表格">表格</button>
+          <button onclick="richInsertImage(this)" title="插入图片">图片</button>
+          <div class="sep"></div>
+          <button onclick="richCmd('formatBlock','<h4>')" title="小标题">H4</button>
+          <button onclick="richCmd('formatBlock','<p>')" title="正文">P</button>
+          <button onclick="richCmd('removeFormat')" title="清除格式">清除</button>
+        </div>
+              <div class="rich-editor-content" contenteditable="true" data-field="character_action">
+                <p class="fill-placeholder">描述本玩法涉及的角色动作需求…</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- 6.5 系统需求 -->
+    <div id="req-system" class="sub-section" data-section="system">
+      <h3>6.5 系统需求</h3>
+      <div class="section-hidden-hint">本玩法无系统需求，已隐藏。可在需求清单中勾选启用。</div>
+      <div class="section-content">
+
+        <h4>奖励需求</h4>
+        <table>
+          <thead>
+            <tr>
+              <th style="width:160px">需求项</th>
+              <th>需求内容</th>
+              <th>填写说明</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>是否发奖</strong></td>
+              <td contenteditable="true" data-field="reward_yn">不发奖</td>
+              <td style="font-size:12px;color:var(--text-muted)">是否发奖</td>
+            </tr>
+            <tr>
+              <td><strong>发奖节点</strong></td>
+              <td contenteditable="true" data-field="reward_timing">—</td>
+              <td style="font-size:12px;color:var(--text-muted)">如果发奖，请填写发奖节点，如玩法在某个节点时...</td>
+            </tr>
+            <tr>
+              <td><strong>接入区域探索度</strong></td>
+              <td contenteditable="true" data-field="reward_exploration">/</td>
+              <td style="font-size:12px;color:var(--text-muted)">如果玩法接入区域探索度，请填写"接入"；不接入则不用放此条</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div id="req-system-map">
+          <h4>地图系统</h4>
+          <div class="section-hidden-hint">本玩法无地图系统需求，已隐藏。</div>
+          <div class="section-content">
+            <p style="font-size:12px;color:var(--text-muted);margin-bottom:8px">* LD预填写，在合作策划需求对齐阶段，和负责 [地图系统] 的 [系统策划] 进行确认。</p>
+            <table>
+              <thead>
+                <tr>
+                  <th style="width:160px">需求项</th>
+                  <th>需求内容</th>
+                  <th>填写说明</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>大小地图显示</strong></td>
+                  <td contenteditable="true">—</td>
+                  <td style="font-size:12px;color:var(--text-muted)">请填写"大地图"，"小地图"，或"都显示"</td>
+                </tr>
+                <tr>
+                  <td><strong>迷雾解锁前/后显示</strong></td>
+                  <td contenteditable="true">迷雾解锁后显示</td>
+                  <td style="font-size:12px;color:var(--text-muted)">大/小地图icon是否特定在区域迷雾解锁前/解锁后显示<br><br>一般来说，填充玩法的地图图标应在区域迷雾解锁后显示</td>
+                </tr>
+                <tr>
+                  <td><strong>图标销毁逻辑</strong></td>
+                  <td contenteditable="true">随玩法销毁而销毁</td>
+                  <td style="font-size:12px;color:var(--text-muted)">地图图标的销毁逻辑，例如是否随玩法销毁而销毁</td>
+                </tr>
+                <tr>
+                  <td><strong>是否动态点位</strong></td>
+                  <td contenteditable="true">否</td>
+                  <td style="font-size:12px;color:var(--text-muted)">多数玩法点为静态。一些特殊的点位，比如随机玩法、NPC等，会在游戏中动态生成的单位，则为动态点位</td>
+                </tr>
+                <tr>
+                  <td><strong>显示优先级</strong></td>
+                  <td contenteditable="true">中</td>
+                  <td style="font-size:12px;color:var(--text-muted)">大地图图标：决定图标在何种缩放比例尺中出现，可选需求项包括：<br>&emsp;高：一直显示<br>&emsp;中：0~75%比例尺显示<br>&emsp;低：0~25%比例尺显示<br><br>小地图图标：无显示距离配置，若有需要请提需求</td>
+                </tr>
+                <tr>
+                  <td><strong>允许传送/追踪</strong></td>
+                  <td contenteditable="true">/</td>
+                  <td style="font-size:12px;color:var(--text-muted)">决定了大地图图标选中后，侧边弹窗的功能按钮。可选需求项包括：<br>&emsp;可追踪<br>&emsp;可传送<br>&emsp;自定义：则需要额外写明点位功能</td>
+                </tr>
+                <tr>
+                  <td><strong>大地图筛选类别</strong></td>
+                  <td contenteditable="true">/</td>
+                  <td style="font-size:12px;color:var(--text-muted)">决定了大地图图标在筛选时，出现在哪个筛选项分类下。仅在小地图显示的玩法，无需提此项需求。<br><br>具体分类可与系统组-地图系统的负责策划进行通气，由地图系统策划告知此栏配置项，由LD填写进策划案中。<br><br>可参考："1-Teleport传送点""2-Dungeon副本入口交互物"；没有则不填写。</td>
+                </tr>
+                <tr>
+                  <td><strong>图标资产名</strong></td>
+                  <td contenteditable="true">—</td>
+                  <td style="font-size:12px;color:var(--text-muted)">图标资产名称，eg：icon_main_pick_png</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="req-system-ui">
+          <h4>UIUX需求</h4>
+          <div class="section-hidden-hint">本玩法无UIUX需求，已隐藏。</div>
+          <div class="section-content">
+            <div class="rich-editor">
+              <div class="rich-editor-toolbar">
+          <button onclick="richCmd('bold')" title="加粗"><b>B</b></button>
+          <button onclick="richCmd('italic')" title="斜体"><i>I</i></button>
+          <button onclick="richCmd('underline')" title="下划线"><u>U</u></button>
+          <div class="sep"></div>
+          <button onclick="richCmd('insertUnorderedList')" title="无序列表">• 列表</button>
+          <button onclick="richCmd('insertOrderedList')" title="有序列表">1. 列表</button>
+          <div class="sep"></div>
+          <button onclick="richInsertTable(this)" title="插入表格">表格</button>
+          <button onclick="richInsertImage(this)" title="插入图片">图片</button>
+          <div class="sep"></div>
+          <button onclick="richCmd('formatBlock','<h4>')" title="小标题">H4</button>
+          <button onclick="richCmd('formatBlock','<p>')" title="正文">P</button>
+          <button onclick="richCmd('removeFormat')" title="清除格式">清除</button>
+        </div>
+              <div class="rich-editor-content" contenteditable="true" data-field="uiux_requirement">
+                <p class="fill-placeholder">描述 UI/UX 交互需求…</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- 6.6 任务需求 -->
+    <div id="req-mission" class="sub-section" data-section="mission">
+      <h3>6.6 任务需求</h3>
+      <div class="section-hidden-hint">本玩法无任务需求，已隐藏。可在需求清单中勾选启用。</div>
+      <div class="section-content">
+        <div class="rich-editor">
+        <div class="rich-editor-toolbar">
+          <button onclick="richCmd('bold')" title="加粗"><b>B</b></button>
+          <button onclick="richCmd('italic')" title="斜体"><i>I</i></button>
+          <button onclick="richCmd('underline')" title="下划线"><u>U</u></button>
+          <div class="sep"></div>
+          <button onclick="richCmd('insertUnorderedList')" title="无序列表">• 列表</button>
+          <button onclick="richCmd('insertOrderedList')" title="有序列表">1. 列表</button>
+          <div class="sep"></div>
+          <button onclick="richInsertTable(this)" title="插入表格">表格</button>
+          <button onclick="richInsertImage(this)" title="插入图片">图片</button>
+          <div class="sep"></div>
+          <button onclick="richCmd('formatBlock','<h4>')" title="小标题">H4</button>
+          <button onclick="richCmd('formatBlock','<p>')" title="正文">P</button>
+          <button onclick="richCmd('removeFormat')" title="清除格式">清除</button>
+        </div>
+        <div class="rich-editor-content" contenteditable="true" data-field="mission_requirement">
+          <p class="fill-placeholder">描述与任务系统的配合需求…</p>
+        </div>
+      </div>
+      </div>
+    </div>
+
+    <!-- 6.7 战斗需求 -->
+    <div id="req-combat" class="sub-section" data-section="combat">
+      <h3>6.7 战斗需求</h3>
+      <div class="section-hidden-hint">本玩法无战斗需求，已隐藏。可在需求清单中勾选启用。</div>
+      <div class="section-content">
+        <div class="rich-editor">
+        <div class="rich-editor-toolbar">
+          <button onclick="richCmd('bold')" title="加粗"><b>B</b></button>
+          <button onclick="richCmd('italic')" title="斜体"><i>I</i></button>
+          <button onclick="richCmd('underline')" title="下划线"><u>U</u></button>
+          <div class="sep"></div>
+          <button onclick="richCmd('insertUnorderedList')" title="无序列表">• 列表</button>
+          <button onclick="richCmd('insertOrderedList')" title="有序列表">1. 列表</button>
+          <div class="sep"></div>
+          <button onclick="richInsertTable(this)" title="插入表格">表格</button>
+          <button onclick="richInsertImage(this)" title="插入图片">图片</button>
+          <div class="sep"></div>
+          <button onclick="richCmd('formatBlock','<h4>')" title="小标题">H4</button>
+          <button onclick="richCmd('formatBlock','<p>')" title="正文">P</button>
+          <button onclick="richCmd('removeFormat')" title="清除格式">清除</button>
+        </div>
+        <div class="rich-editor-content" contenteditable="true" data-field="combat_requirement">
+          <p class="fill-placeholder">描述战斗系统相关需求…</p>
+        </div>
+      </div>
+      </div>
+    </div>
+
+    <!-- 6.8 AI需求 -->
+    <div id="req-ai" class="sub-section" data-section="ai">
+      <h3>6.8 AI需求</h3>
+      <div class="section-hidden-hint">本玩法无AI需求，已隐藏。可在需求清单中勾选启用。</div>
+      <div class="section-content">
+        <h4>NPC事件响应</h4>
+        <div class="rich-editor">
+        <div class="rich-editor-toolbar">
+          <button onclick="richCmd('bold')" title="加粗"><b>B</b></button>
+          <button onclick="richCmd('italic')" title="斜体"><i>I</i></button>
+          <button onclick="richCmd('underline')" title="下划线"><u>U</u></button>
+          <div class="sep"></div>
+          <button onclick="richCmd('insertUnorderedList')" title="无序列表">• 列表</button>
+          <button onclick="richCmd('insertOrderedList')" title="有序列表">1. 列表</button>
+          <div class="sep"></div>
+          <button onclick="richInsertTable(this)" title="插入表格">表格</button>
+          <button onclick="richInsertImage(this)" title="插入图片">图片</button>
+          <div class="sep"></div>
+          <button onclick="richCmd('formatBlock','<h4>')" title="小标题">H4</button>
+          <button onclick="richCmd('formatBlock','<p>')" title="正文">P</button>
+          <button onclick="richCmd('removeFormat')" title="清除格式">清除</button>
+        </div>
+        <div class="rich-editor-content" contenteditable="true" data-field="ai_requirement">
+          <p class="fill-placeholder">描述 NPC 事件响应需求，包括 AI 行为、巡逻、反应等…</p>
+        </div>
+      </div>
+      </div>
+    </div>
+
+    <!-- 6.9 载具需求 -->
+    <div id="req-vehicle" class="sub-section" data-section="vehicle">
+      <h3>6.9 载具需求</h3>
+      <div class="section-hidden-hint">本玩法无载具需求，已隐藏。可在需求清单中勾选启用。</div>
+      <div class="section-content">
+        <div class="rich-editor">
+        <div class="rich-editor-toolbar">
+          <button onclick="richCmd('bold')" title="加粗"><b>B</b></button>
+          <button onclick="richCmd('italic')" title="斜体"><i>I</i></button>
+          <button onclick="richCmd('underline')" title="下划线"><u>U</u></button>
+          <div class="sep"></div>
+          <button onclick="richCmd('insertUnorderedList')" title="无序列表">• 列表</button>
+          <button onclick="richCmd('insertOrderedList')" title="有序列表">1. 列表</button>
+          <div class="sep"></div>
+          <button onclick="richInsertTable(this)" title="插入表格">表格</button>
+          <button onclick="richInsertImage(this)" title="插入图片">图片</button>
+          <div class="sep"></div>
+          <button onclick="richCmd('formatBlock','<h4>')" title="小标题">H4</button>
+          <button onclick="richCmd('formatBlock','<p>')" title="正文">P</button>
+          <button onclick="richCmd('removeFormat')" title="清除格式">清除</button>
+        </div>
+        <div class="rich-editor-content" contenteditable="true" data-field="vehicle_requirement">
+          <p class="fill-placeholder">描述载具相关需求…</p>
+        </div>
+      </div>
+      </div>
+    </div>
+
+    <!-- 6.10 动画需求 -->
+    <div id="req-anim" class="sub-section" data-section="anim">
+      <h3>6.10 动画需求</h3>
+      <div class="section-hidden-hint">本玩法无动画需求，已隐藏。可在需求清单中勾选启用。</div>
+      <div class="section-content">
+        <div class="rich-editor">
+        <div class="rich-editor-toolbar">
+          <button onclick="richCmd('bold')" title="加粗"><b>B</b></button>
+          <button onclick="richCmd('italic')" title="斜体"><i>I</i></button>
+          <button onclick="richCmd('underline')" title="下划线"><u>U</u></button>
+          <div class="sep"></div>
+          <button onclick="richCmd('insertUnorderedList')" title="无序列表">• 列表</button>
+          <button onclick="richCmd('insertOrderedList')" title="有序列表">1. 列表</button>
+          <div class="sep"></div>
+          <button onclick="richInsertTable(this)" title="插入表格">表格</button>
+          <button onclick="richInsertImage(this)" title="插入图片">图片</button>
+          <div class="sep"></div>
+          <button onclick="richCmd('formatBlock','<h4>')" title="小标题">H4</button>
+          <button onclick="richCmd('formatBlock','<p>')" title="正文">P</button>
+          <button onclick="richCmd('removeFormat')" title="清除格式">清除</button>
+        </div>
+        <div class="rich-editor-content" contenteditable="true" data-field="anim_requirement">
+          <p class="fill-placeholder">描述引擎动画需求…</p>
+        </div>
+      </div>
+      </div>
+    </div>
+
+    <!-- 6.11 灯光需求 -->
+    <div id="req-light" class="sub-section" data-section="light">
+      <h3>6.11 灯光需求</h3>
+      <div class="section-hidden-hint">本玩法无灯光需求，已隐藏。可在需求清单中勾选启用。</div>
+      <div class="section-content">
+        <div class="rich-editor">
+        <div class="rich-editor-toolbar">
+          <button onclick="richCmd('bold')" title="加粗"><b>B</b></button>
+          <button onclick="richCmd('italic')" title="斜体"><i>I</i></button>
+          <button onclick="richCmd('underline')" title="下划线"><u>U</u></button>
+          <div class="sep"></div>
+          <button onclick="richCmd('insertUnorderedList')" title="无序列表">• 列表</button>
+          <button onclick="richCmd('insertOrderedList')" title="有序列表">1. 列表</button>
+          <div class="sep"></div>
+          <button onclick="richInsertTable(this)" title="插入表格">表格</button>
+          <button onclick="richInsertImage(this)" title="插入图片">图片</button>
+          <div class="sep"></div>
+          <button onclick="richCmd('formatBlock','<h4>')" title="小标题">H4</button>
+          <button onclick="richCmd('formatBlock','<p>')" title="正文">P</button>
+          <button onclick="richCmd('removeFormat')" title="清除格式">清除</button>
+        </div>
+        <div class="rich-editor-content" contenteditable="true" data-field="light_requirement">
+          <p class="fill-placeholder">描述灯光需求…</p>
+        </div>
+      </div>
+      </div>
+    </div>
+
+    <!-- 6.12 特效需求 -->
+    <div id="req-vfx" class="sub-section" data-section="vfx">
+      <h3>6.12 特效需求</h3>
+      <div class="section-hidden-hint">本玩法无特效需求，已隐藏。可在需求清单中勾选启用。</div>
+      <div class="section-content">
+        <div class="rich-editor">
+        <div class="rich-editor-toolbar">
+          <button onclick="richCmd('bold')" title="加粗"><b>B</b></button>
+          <button onclick="richCmd('italic')" title="斜体"><i>I</i></button>
+          <button onclick="richCmd('underline')" title="下划线"><u>U</u></button>
+          <div class="sep"></div>
+          <button onclick="richCmd('insertUnorderedList')" title="无序列表">• 列表</button>
+          <button onclick="richCmd('insertOrderedList')" title="有序列表">1. 列表</button>
+          <div class="sep"></div>
+          <button onclick="richInsertTable(this)" title="插入表格">表格</button>
+          <button onclick="richInsertImage(this)" title="插入图片">图片</button>
+          <div class="sep"></div>
+          <button onclick="richCmd('formatBlock','<h4>')" title="小标题">H4</button>
+          <button onclick="richCmd('formatBlock','<p>')" title="正文">P</button>
+          <button onclick="richCmd('removeFormat')" title="清除格式">清除</button>
+        </div>
+        <div class="rich-editor-content" contenteditable="true" data-field="vfx_requirement">
+          <p class="fill-placeholder">描述特效需求…</p>
+        </div>
+      </div>
+      </div>
+    </div>
+
+    <!-- 6.13 音效需求 -->
+    <div id="req-sfx" class="sub-section" data-section="sfx">
+      <h3>6.13 音效需求</h3>
+      <div class="section-hidden-hint">本玩法无音效需求，已隐藏。可在需求清单中勾选启用。</div>
+      <div class="section-content">
+        <div class="rich-editor">
+        <div class="rich-editor-toolbar">
+          <button onclick="richCmd('bold')" title="加粗"><b>B</b></button>
+          <button onclick="richCmd('italic')" title="斜体"><i>I</i></button>
+          <button onclick="richCmd('underline')" title="下划线"><u>U</u></button>
+          <div class="sep"></div>
+          <button onclick="richCmd('insertUnorderedList')" title="无序列表">• 列表</button>
+          <button onclick="richCmd('insertOrderedList')" title="有序列表">1. 列表</button>
+          <div class="sep"></div>
+          <button onclick="richInsertTable(this)" title="插入表格">表格</button>
+          <button onclick="richInsertImage(this)" title="插入图片">图片</button>
+          <div class="sep"></div>
+          <button onclick="richCmd('formatBlock','<h4>')" title="小标题">H4</button>
+          <button onclick="richCmd('formatBlock','<p>')" title="正文">P</button>
+          <button onclick="richCmd('removeFormat')" title="清除格式">清除</button>
+        </div>
+        <div class="rich-editor-content" contenteditable="true" data-field="sfx_requirement">
+          <p class="fill-placeholder">描述音效需求…</p>
+        </div>
+      </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ============================================================
+     07 多人游玩
+     ============================================================ -->
+<section id="multiplayer">
+  <h2>
+    <span class="sec-num">07</span>多人游玩
+    <button class="collapse-btn" onclick="toggleCollapse(this)">折叠</button>
+  </h2>
+  <div class="section-content">
+    <table>
+      <thead>
+        <tr>
+          <th>角色</th>
+          <th>是否允许交互</th>
+          <th>说明</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>主机玩家</strong></td>
+          <td>
+            <div class="option-group">
+              <label><input type="radio" name="mp-host" value="yes" checked> 是</label>
+              <label><input type="radio" name="mp-host" value="no"> 否</label>
+            </div>
+          </td>
+          <td contenteditable="true">—</td>
+        </tr>
+        <tr>
+          <td><strong>非主机玩家</strong></td>
+          <td>
+            <div class="option-group">
+              <label><input type="radio" name="mp-guest" value="yes"> 是</label>
+              <label><input type="radio" name="mp-guest" value="no" checked> 否</label>
+            </div>
+          </td>
+          <td contenteditable="true">—</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================
+     08 配置
+     ============================================================ -->
+<section id="config">
+  <h2>
+    <span class="sec-num">08</span>配置
+    <button class="collapse-btn" onclick="toggleCollapse(this)">折叠</button>
+  </h2>
+  <div class="section-content">
+
+    <h3>表单参数</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>配置项</th>
+          <th>单位</th>
+          <th>默认值</th>
+          <th>策划合法范围</th>
+          <th>配置方式</th>
+          <th>编辑器预览需求</th>
+          <th>备注</th>
+        </tr>
+      </thead>
+      <tbody id="config-form-body">
+        <tr>
+          <td contenteditable="true"><span class="param-code">—</span></td>
+          <td contenteditable="true">—</td>
+          <td contenteditable="true">—</td>
+          <td contenteditable="true">—</td>
+          <td contenteditable="true">—</td>
+          <td contenteditable="true">—</td>
+          <td contenteditable="true">—</td>
+        </tr>
+      </tbody>
+    </table>
+    <button class="add-row-btn" onclick="addTableRow('config-form-body', 7)">+ 添加配置项</button>
+
+    <h3>场景实例参数</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>配置项</th>
+          <th>单位</th>
+          <th>默认值</th>
+          <th>策划合法范围</th>
+          <th>配置方式</th>
+          <th>编辑器预览需求</th>
+          <th>备注</th>
+        </tr>
+      </thead>
+      <tbody id="config-scene-body">
+        <tr>
+          <td contenteditable="true"><span class="param-code">—</span></td>
+          <td contenteditable="true">—</td>
+          <td contenteditable="true">—</td>
+          <td contenteditable="true">—</td>
+          <td contenteditable="true">—</td>
+          <td contenteditable="true">—</td>
+          <td contenteditable="true">—</td>
+        </tr>
+      </tbody>
+    </table>
+    <button class="add-row-btn" onclick="addTableRow('config-scene-body', 7)">+ 添加配置项</button>
+
+  </div>
+</section>
+
+<!-- ============================================================
+     09 玩法布设规范
+     ============================================================ -->
+<section id="placement">
+  <h2>
+    <span class="sec-num">09</span>玩法布设规范
+    <button class="collapse-btn" onclick="toggleCollapse(this)">折叠</button>
+  </h2>
+  <div class="section-content">
+
+    <h3>白盒图与布设环境</h3>
+    <div class="image-placeholder" onclick="handleImageUpload(this)">
+      <div class="image-actions">
+        <button onclick="event.stopPropagation(); replaceImage(this.closest('.image-placeholder'))">替换</button>
+        <button onclick="event.stopPropagation(); removeImage(this.closest('.image-placeholder'))">删除</button>
+      </div>
+      <div class="placeholder-content">
+        <div class="upload-icon">&#128247;</div>
+        <div class="placeholder-label">白盒布设示意图</div>
+        <div class="placeholder-hint">点击上传图片，或拖拽图片到此处</div>
+      </div>
+      <!-- IMAGE_SLOT: {"id":"placement_whitebox","desc":"布设环境白盒图"} -->
+    </div>
+
+    <h3>布设条件与限制</h3>
+    <div class="rich-editor">
+        <div class="rich-editor-toolbar">
+          <button onclick="richCmd('bold')" title="加粗"><b>B</b></button>
+          <button onclick="richCmd('italic')" title="斜体"><i>I</i></button>
+          <button onclick="richCmd('underline')" title="下划线"><u>U</u></button>
+          <div class="sep"></div>
+          <button onclick="richCmd('insertUnorderedList')" title="无序列表">• 列表</button>
+          <button onclick="richCmd('insertOrderedList')" title="有序列表">1. 列表</button>
+          <div class="sep"></div>
+          <button onclick="richInsertTable(this)" title="插入表格">表格</button>
+          <button onclick="richInsertImage(this)" title="插入图片">图片</button>
+          <div class="sep"></div>
+          <button onclick="richCmd('formatBlock','<h4>')" title="小标题">H4</button>
+          <button onclick="richCmd('formatBlock','<p>')" title="正文">P</button>
+          <button onclick="richCmd('removeFormat')" title="清除格式">清除</button>
+        </div>
+        <div class="rich-editor-content" contenteditable="true" data-field="placement_rules">
+          <p class="fill-placeholder">描述玩法布设的条件、限制和规范要求…</p>
+        </div>
+      </div>
+
+  </div>
+</section>
+
+<!-- ============================================================
+     10 补充参考图
+     ============================================================ -->
+<section id="reference">
+  <h2>
+    <span class="sec-num">10</span>补充参考图
+    <button class="collapse-btn" onclick="toggleCollapse(this)">折叠</button>
+  </h2>
+  <div class="section-content">
+
+    <div class="image-placeholder" onclick="handleImageUpload(this)">
+      <div class="image-actions">
+        <button onclick="event.stopPropagation(); replaceImage(this.closest('.image-placeholder'))">替换</button>
+        <button onclick="event.stopPropagation(); removeImage(this.closest('.image-placeholder'))">删除</button>
+      </div>
+      <div class="placeholder-content">
+        <div class="upload-icon">&#128247;</div>
+        <div class="placeholder-label">参考图片</div>
+        <div class="placeholder-hint">点击上传图片，或拖拽图片到此处</div>
+      </div>
+    </div>
+    <button class="add-row-btn" onclick="addImagePlaceholder(this.parentElement)">+ 添加参考图</button>
+
+  </div>
+</section>
+
+</main>
+
+<!-- ============================================================
+     JavaScript
+     ============================================================ -->
+<script>
+// -----------------------------------------------------------
+// Mermaid Init
+// -----------------------------------------------------------
+mermaid.initialize({
+  startOnLoad: true,
+  theme: 'default',
+  themeVariables: {
+    primaryColor: '#e8f5f3',
+    primaryBorderColor: '#0d9488',
+    primaryTextColor: '#2d2d2d',
+    lineColor: '#0d9488',
+    secondaryColor: '#f0eeeb',
+    tertiaryColor: '#faf9f7'
+  }
+});
+
+// -----------------------------------------------------------
+// Sidebar Active State (Scroll Spy)
+// -----------------------------------------------------------
+const sections = document.querySelectorAll('section[id], .sub-section[id]');
+const navLinks = document.querySelectorAll('nav a');
+
+function updateActiveNav() {
+  let current = '';
+  sections.forEach(sec => {
+    const rect = sec.getBoundingClientRect();
+    if (rect.top <= 120) current = sec.id;
+  });
+  navLinks.forEach(link => {
+    link.classList.toggle('active', link.getAttribute('href') === '#' + current);
+  });
+}
+window.addEventListener('scroll', updateActiveNav, { passive: true });
+updateActiveNav();
+
+// -----------------------------------------------------------
+// Collapse / Expand Sections
+// -----------------------------------------------------------
+function toggleCollapse(btn) {
+  const section = btn.closest('section') || btn.closest('.sub-section');
+  section.classList.toggle('section-collapsed');
+  btn.textContent = section.classList.contains('section-collapsed') ? '展开' : '折叠';
+}
+
+// -----------------------------------------------------------
+// Requirement Checklist → Section Visibility
+// -----------------------------------------------------------
+document.querySelectorAll('.checklist-item input[type="checkbox"]').forEach(chk => {
+  chk.addEventListener('change', function() {
+    const targetId = this.dataset.controls;
+    if (!targetId) return;
+    const target = document.getElementById(targetId);
+    if (!target) return;
+    target.classList.toggle('section-hidden', !this.checked);
+    // Update data-required on fillable elements
+    target.querySelectorAll('[contenteditable]').forEach(el => {
+      el.dataset.required = this.checked ? 'true' : 'false';
+    });
+  });
+  // Initialize: unchecked → hidden
+  if (!chk.checked && chk.dataset.controls) {
+    const target = document.getElementById(chk.dataset.controls);
+    if (target) target.classList.add('section-hidden');
+  }
+});
+
+// -----------------------------------------------------------
+// Add Table Rows
+// -----------------------------------------------------------
+function addTableRow(tbodyId, colCount) {
+  const tbody = document.getElementById(tbodyId);
+  const tr = document.createElement('tr');
+  const isVersionTable = (tbodyId === 'version-table-body');
+  for (let i = 0; i < colCount; i++) {
+    const td = document.createElement('td');
+    if (isVersionTable && i === 0) {
+      // Date picker for version history first column
+      const input = document.createElement('input');
+      input.type = 'date';
+      input.className = 'date-input';
+      input.style.cssText = 'width:100%;border:1px solid var(--border);border-radius:4px;padding:4px 6px;font-size:13px;font-family:var(--font);background:var(--surface);color:var(--text);cursor:pointer';
+      td.appendChild(input);
+    } else {
+      td.contentEditable = 'true';
+      td.textContent = '—';
+    }
+    tr.appendChild(td);
+  }
+  // Add delete button in last cell
+  const lastTd = tr.lastElementChild;
+  const delBtn = document.createElement('button');
+  delBtn.className = 'delete-row-btn';
+  delBtn.textContent = '×';
+  delBtn.title = '删除此行';
+  delBtn.onclick = function() { tr.remove(); };
+  lastTd.appendChild(delBtn);
+  tbody.appendChild(tr);
+}
+
+// -----------------------------------------------------------
+// Image Upload (Local File → Base64 Embed)
+// -----------------------------------------------------------
+function handleImageUpload(container) {
+  if (container.classList.contains('has-image')) return;
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/png,image/jpeg,image/gif,image/webp';
+  input.onchange = function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    processImageFile(file, container);
+  };
+  input.click();
+}
+
+function processImageFile(file, container) {
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const img = new Image();
+    img.onload = function() {
+      // Compress if needed (max width 960px)
+      let dataUrl = e.target.result;
+      if (img.width > 960) {
+        const canvas = document.createElement('canvas');
+        const ratio = 960 / img.width;
+        canvas.width = 960;
+        canvas.height = img.height * ratio;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        dataUrl = canvas.toDataURL(file.type === 'image/png' ? 'image/png' : 'image/jpeg', 0.85);
+      }
+      // Insert image
+      const placeholderContent = container.querySelector('.placeholder-content');
+      if (placeholderContent) placeholderContent.style.display = 'none';
+      // Hide placeholder hint for table cells
+      const hint = container.querySelector('.placeholder-hint');
+      if (hint && !placeholderContent) hint.style.display = 'none';
+
+      const existingImg = container.querySelector('img');
+      if (existingImg) existingImg.remove();
+
+      const imgEl = document.createElement('img');
+      imgEl.src = dataUrl;
+      imgEl.alt = file.name;
+      imgEl.style.maxWidth = '100%';
+      container.insertBefore(imgEl, container.firstChild);
+      container.classList.add('has-image');
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function replaceImage(container) {
+  container.classList.remove('has-image');
+  const img = container.querySelector('img');
+  if (img) img.remove();
+  const content = container.querySelector('.placeholder-content');
+  if (content) content.style.display = '';
+  handleImageUpload(container);
+}
+
+function removeImage(container) {
+  container.classList.remove('has-image');
+  const img = container.querySelector('img');
+  if (img) img.remove();
+  const content = container.querySelector('.placeholder-content');
+  if (content) content.style.display = '';
+  const hint = container.querySelector('.placeholder-hint');
+  if (hint) hint.style.display = '';
+}
+
+// Drag & Drop support
+document.querySelectorAll('.image-placeholder').forEach(ph => {
+  ph.addEventListener('dragover', function(e) { e.preventDefault(); this.style.borderColor = 'var(--accent)'; });
+  ph.addEventListener('dragleave', function() { this.style.borderColor = ''; });
+  ph.addEventListener('drop', function(e) {
+    e.preventDefault();
+    this.style.borderColor = '';
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) {
+      processImageFile(file, this);
+    }
+  });
+});
+
+// -----------------------------------------------------------
+// Add Image Placeholder
+// -----------------------------------------------------------
+function addImagePlaceholder(parent) {
+  const ph = document.createElement('div');
+  ph.className = 'image-placeholder';
+  ph.onclick = function() { handleImageUpload(this); };
+  ph.innerHTML = `
+    <div class="image-actions">
+      <button onclick="event.stopPropagation(); replaceImage(this.closest('.image-placeholder'))">替换</button>
+      <button onclick="event.stopPropagation(); removeImage(this.closest('.image-placeholder'))">删除</button>
+    </div>
+    <div class="placeholder-content">
+      <div class="upload-icon">&#128247;</div>
+      <div class="placeholder-label">参考图片</div>
+      <div class="placeholder-hint">点击上传图片，或拖拽图片到此处</div>
+    </div>
+  `;
+  // Enable drag & drop
+  ph.addEventListener('dragover', function(e) { e.preventDefault(); this.style.borderColor = 'var(--accent)'; });
+  ph.addEventListener('dragleave', function() { this.style.borderColor = ''; });
+  ph.addEventListener('drop', function(e) {
+    e.preventDefault();
+    this.style.borderColor = '';
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) processImageFile(file, this);
+  });
+  // Insert before the add button
+  const addBtn = parent.querySelector('.add-row-btn');
+  parent.insertBefore(ph, addBtn);
+}
+
+// -----------------------------------------------------------
+// Export Clean HTML
+// -----------------------------------------------------------
+function exportCleanHTML() {
+  // ---- A. Collect all form state into a JSON snapshot ----
+  const snapshot = {};
+
+  // A1. data-field elements
+  document.querySelectorAll('[data-field]').forEach(el => {
+    const f = el.getAttribute('data-field');
+    if (el.tagName === 'INPUT' && el.type === 'date') {
+      snapshot['field:' + f] = el.value;
+    } else {
+      snapshot['field:' + f] = el.innerHTML;
+    }
+  });
+
+  // A2. All selects (by id)
+  document.querySelectorAll('select[id]').forEach(sel => {
+    snapshot['select:' + sel.id] = sel.value;
+  });
+  // Selects without id: by name or index within parent section
+  let anonSelIdx = 0;
+  document.querySelectorAll('select:not([id])').forEach(sel => {
+    const name = sel.getAttribute('name') || ('anon_' + anonSelIdx++);
+    snapshot['select_anon:' + name] = sel.value;
+  });
+
+  // A3. All radios
+  document.querySelectorAll('input[type="radio"]').forEach(radio => {
+    if (radio.checked) {
+      snapshot['radio:' + radio.name] = radio.value;
+    }
+  });
+
+  // A4. All checkboxes (by id)
+  document.querySelectorAll('input[type="checkbox"][id]').forEach(chk => {
+    snapshot['checkbox:' + chk.id] = chk.checked;
+  });
+
+  // A5. All date inputs
+  document.querySelectorAll('input[type="date"]').forEach((input, i) => {
+    const id = input.id || ('date_' + i);
+    snapshot['date:' + id] = input.value;
+  });
+
+  // A6. Table data (tbody by id)
+  ['version-table-body','config-form-body','config-scene-body','glossary-table-body','related-gameplay-body','related-collab-body'].forEach(tbodyId => {
+    const tbody = document.getElementById(tbodyId);
+    if (!tbody) return;
+    const rows = [];
+    tbody.querySelectorAll('tr').forEach(tr => {
+      const cells = [];
+      tr.querySelectorAll('td').forEach(td => {
+        const dateInput = td.querySelector('input[type="date"]');
+        cells.push(dateInput ? dateInput.value : td.innerHTML);
+      });
+      rows.push(cells);
+    });
+    snapshot['table:' + tbodyId] = rows;
+  });
+
+  // A7. Flow mode
+  const flowImage = document.getElementById('flow-image-mode');
+  snapshot['flow_mode'] = (flowImage && flowImage.style.display !== 'none') ? 'image' : 'mermaid';
+
+  // A8. Images (by IMAGE_SLOT id or index)
+  let imgIdx = 0;
+  document.querySelectorAll('.image-placeholder').forEach(ph => {
+    if (!ph.classList.contains('has-image')) { imgIdx++; return; }
+    const img = ph.querySelector('img');
+    if (img) {
+      const slotMatch = ph.innerHTML.match(/IMAGE_SLOT[^{]*(\{[^}]+\})/);
+      const key = slotMatch ? JSON.parse(slotMatch[1]).id : ('img_' + imgIdx);
+      snapshot['image:' + key] = img.src;
+    }
+    imgIdx++;
+  });
+
+  // ---- B. Build the visual-only clone ----
+  const clone = document.documentElement.cloneNode(true);
+
+  // B1. Freeze selects
+  const liveSelects = document.querySelectorAll('select');
+  const cloneSelects = clone.querySelectorAll('select');
+  cloneSelects.forEach((sel, i) => {
+    const liveSel = liveSelects[i];
+    const span = document.createElement('span');
+    span.textContent = liveSel ? liveSel.options[liveSel.selectedIndex]?.text || '' : '';
+    sel.parentNode.replaceChild(span, sel);
+  });
+
+  // B2. Freeze dates
+  const liveDates = document.querySelectorAll('input[type="date"]');
+  const cloneDates = clone.querySelectorAll('input[type="date"]');
+  cloneDates.forEach((input, i) => {
+    const span = document.createElement('span');
+    span.textContent = liveDates[i]?.value || '—';
+    input.parentNode.replaceChild(span, input);
+  });
+
+  // B3. Freeze radios
+  clone.querySelectorAll('input[type="radio"]').forEach(radio => {
+    const name = radio.name;
+    const isChecked = snapshot['radio:' + name] === radio.value;
+    const label = radio.closest('label');
+    if (label) {
+      const text = label.textContent.trim();
+      if (isChecked) {
+        label.innerHTML = '<strong>\u2714 ' + text + '</strong>';
+      } else {
+        label.textContent = text;
+        label.style.color = 'var(--text-light)';
+      }
+    }
+  });
+
+  // B4. Freeze checkboxes
+  clone.querySelectorAll('input[type="checkbox"]').forEach(chk => {
+    const isChecked = snapshot['checkbox:' + chk.id] || false;
+    const item = chk.closest('.checklist-item');
+    if (item) {
+      const labelEl = item.querySelector('label');
+      const text = labelEl ? labelEl.textContent.trim() : '';
+      item.innerHTML = isChecked
+        ? '<strong>\u2714 ' + text + '</strong>'
+        : '<span style="color:var(--text-light)">' + text + '</span>';
+    }
+  });
+
+  // B5. Remove edit UI
+  clone.querySelectorAll('.add-row-btn, .delete-row-btn, .collapse-btn, .nav-tools, .checklist-hint').forEach(el => el.remove());
+  clone.querySelectorAll('.section-hidden').forEach(el => el.remove());
+  clone.querySelectorAll('.section-hidden-hint').forEach(el => el.remove());
+  clone.querySelectorAll('[contenteditable]').forEach(el => el.removeAttribute('contenteditable'));
+  clone.querySelectorAll('.fill-placeholder').forEach(el => { if (el.textContent.includes('\u2026')) el.remove(); });
+
+  // B6. Flow mode
+  if (snapshot['flow_mode'] === 'image') {
+    clone.querySelector('#flow-mermaid-mode')?.remove();
+    const fi = clone.querySelector('#flow-image-mode');
+    if (fi) fi.style.display = '';
+  } else {
+    clone.querySelector('#flow-image-mode')?.remove();
+  }
+  clone.querySelectorAll('.flow-mode-btn').forEach(el => { const p = el.parentElement; if (p && p.children.length <= 2) p.remove(); });
+
+  // B7. Remove image upload UI
+  clone.querySelectorAll('.image-actions').forEach(el => el.remove());
+  clone.querySelectorAll('.image-placeholder').forEach(ph => {
+    ph.style.cursor = 'default';
+    ph.removeAttribute('onclick');
+    if (!ph.classList.contains('has-image')) {
+      ph.querySelector('.placeholder-hint')?.remove();
+      ph.querySelector('.upload-icon')?.remove();
+    }
+  });
+
+  // B8. Remove scripts + remaining inputs
+  clone.querySelectorAll('script').forEach(el => el.remove());
+  clone.querySelectorAll('input').forEach(el => el.remove());
+
+  // B9. Sync title
+  const title = document.querySelector('h1')?.textContent?.trim() || 'gameplay';
+  const cloneTitle = clone.querySelector('title');
+  if (cloneTitle) cloneTitle.textContent = title + ' - 玩法设计文档';
+
+  // ---- C. Embed JSON snapshot as URL-encoded data attribute on <html> ----
+  const jsonStr = JSON.stringify(snapshot);
+  clone.setAttribute('data-snapshot', encodeURIComponent(jsonStr));
+
+  // ---- D. Download ----
+  const htmlStr = '<!DOCTYPE html>\n' + clone.outerHTML;
+  const blob = new Blob([htmlStr], { type: 'text/html;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = title + '_gameplay_export.html';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// -----------------------------------------------------------
+// 3C Description Auto-fill (VLOOKUP-like behavior)
+// -----------------------------------------------------------
+const _3cTypeDescMap = {
+  '玩法模式（Gameplay）': '由角色主动或被动进入的特定玩法或交互。以交互玩法为主要判断维度。',
+  '区域规则（Zone）':     '由角色所处的物理区域施加的行为准则，通常这种类型有一定的空间范围。以物理空间为主要判断维度。',
+  '任务定制（Mission）':  '由任务、剧情、系统等上层指令下达的"命令"或"规则"。通常这种类型具有特定的任务脚本情景。以脚本任务为主要判断维度。'
+};
+
+function update3CDescription() {
+  const type = document.getElementById('sel-3c-type')?.value;
+  const descEl = document.getElementById('3c-type-desc');
+  if (descEl && _3cTypeDescMap[type]) descEl.textContent = _3cTypeDescMap[type];
+}
+
+const _3cTargetDescMap = {
+  '主角（Hero）': '此限制将会影响 Hero 类型的角色身上的能力、或改变 Hero 类型的行为',
+  '非主角（NPC）': '（暂不支持）此限制将会影响 NPC 类型的角色身上的能力、或改变 NPC 类型的行为'
+};
+
+function update3CTargetDesc() {
+  const val = document.getElementById('sel-3c-target')?.value;
+  const descEl = document.getElementById('3c-target-desc');
+  if (descEl && _3cTargetDescMap[val]) descEl.textContent = _3cTargetDescMap[val];
+}
+
+const _3cTriggerDescMap = {
+  'Volume': '策划将其安放在对应关卡、物件中，调整至合适触发范围，当 Hero 进入Volume 时触发，退出 Volume 时解除。',
+  '程序接口': '开发直接调用角色组对应接口，参数为角色组提供的 Key，在特定时机触发和解除。'
+};
+
+function update3CTriggerDesc() {
+  const val = document.getElementById('sel-3c-trigger')?.value;
+  const descEl = document.getElementById('3c-trigger-desc');
+  if (descEl && _3cTriggerDescMap[val]) descEl.textContent = _3cTriggerDescMap[val];
+}
+
+// -----------------------------------------------------------
+// Flow Chart Mode Switch (Mermaid vs Image)
+// -----------------------------------------------------------
+function switchFlowMode(mode) {
+  const mermaidMode = document.getElementById('flow-mermaid-mode');
+  const imageMode = document.getElementById('flow-image-mode');
+  const btnMermaid = document.getElementById('btn-flow-mermaid');
+  const btnImage = document.getElementById('btn-flow-image');
+  if (mode === 'mermaid') {
+    mermaidMode.style.display = '';
+    imageMode.style.display = 'none';
+    btnMermaid.style.background = 'var(--accent)';
+    btnMermaid.style.color = '#fff';
+    btnImage.style.background = 'var(--surface)';
+    btnImage.style.color = 'var(--text-muted)';
+  } else {
+    mermaidMode.style.display = 'none';
+    imageMode.style.display = '';
+    btnImage.style.background = 'var(--accent)';
+    btnImage.style.color = '#fff';
+    btnMermaid.style.background = 'var(--surface)';
+    btnMermaid.style.color = 'var(--text-muted)';
+  }
+}
+
+// Register drag-drop for flow image placeholder
+document.querySelectorAll('#flow-image-mode .image-placeholder').forEach(ph => {
+  ph.addEventListener('dragover', function(e) { e.preventDefault(); this.style.borderColor = 'var(--accent)'; });
+  ph.addEventListener('dragleave', function() { this.style.borderColor = ''; });
+  ph.addEventListener('drop', function(e) {
+    e.preventDefault();
+    this.style.borderColor = '';
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) processImageFile(file, this);
+  });
+});
+
+
+
+// -----------------------------------------------------------
+// Placeholder: clear on focus, restore on blur if empty
+// -----------------------------------------------------------
+document.querySelectorAll('[contenteditable="true"]').forEach(el => {
+  el.addEventListener('focus', function() {
+    const ph = this.querySelector('.fill-placeholder');
+    if (ph) ph.remove();
+    // Also clear if the element itself has placeholder class
+    if (this.classList.contains('fill-placeholder')) {
+      this.textContent = '';
+      this.classList.remove('fill-placeholder');
+    }
+  });
+});
+
+// Same for rich-editor-content
+document.querySelectorAll('.rich-editor-content').forEach(el => {
+  el.addEventListener('focus', function() {
+    const ph = this.querySelector('.fill-placeholder');
+    if (ph) ph.remove();
+  });
+});
+
+// -----------------------------------------------------------
+// Rich Editor Commands
+// -----------------------------------------------------------
+function richCmd(cmd, value) {
+  document.execCommand(cmd, false, value || null);
+}
+
+function richInsertImage(btn) {
+  const editor = btn.closest('.rich-editor').querySelector('.rich-editor-content');
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/png,image/jpeg,image/gif,image/webp';
+  input.onchange = function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+      const img = new Image();
+      img.onload = function() {
+        let dataUrl = ev.target.result;
+        // Compress if too wide
+        if (img.width > 960) {
+          const canvas = document.createElement('canvas');
+          const ratio = 960 / img.width;
+          canvas.width = 960;
+          canvas.height = img.height * ratio;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          dataUrl = canvas.toDataURL(file.type === 'image/png' ? 'image/png' : 'image/jpeg', 0.85);
+        }
+        editor.focus();
+        document.execCommand('insertImage', false, dataUrl);
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  };
+  input.click();
+}
+
+function richInsertTable(btn) {
+  const editor = btn.closest('.rich-editor').querySelector('.rich-editor-content');
+  editor.focus();
+  const tableHTML = '<table><thead><tr><th>列1</th><th>列2</th><th>列3</th></tr></thead><tbody><tr><td contenteditable="true">—</td><td contenteditable="true">—</td><td contenteditable="true">—</td></tr></tbody></table><p><br></p>';
+  document.execCommand('insertHTML', false, tableHTML);
+}
+
+// -----------------------------------------------------------
+// Sync: Header → Nav Sidebar
+// -----------------------------------------------------------
+// Title sync
+const headerTitle = document.getElementById('header-title');
+const navTitle = document.getElementById('nav-title');
+if (headerTitle && navTitle) {
+  headerTitle.addEventListener('input', function() {
+    const name = this.textContent.trim();
+    navTitle.innerHTML = name + '<br>玩法设计';
+    document.title = name + ' - 玩法设计文档';
+  });
+}
+
+// Version + Date sync
+const headerVersion = document.getElementById('header-version');
+const headerDate = document.getElementById('header-date');
+const navVersion = document.getElementById('nav-version');
+
+function syncNavVersion() {
+  const v = headerVersion ? headerVersion.textContent.trim() : 'v1.0';
+  const d = headerDate ? headerDate.value : '';
+  navVersion.textContent = v + ' · ' + (d || 'YYYY-MM-DD');
+}
+
+if (headerVersion) headerVersion.addEventListener('input', syncNavVersion);
+if (headerDate) headerDate.addEventListener('change', syncNavVersion);
+
+// -----------------------------------------------------------
+// Import Clean HTML → Refill Template
+// -----------------------------------------------------------
+function importCleanHTML(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(e.target.result, 'text/html');
+
+    // Try to find JSON snapshot
+    // Try reading snapshot from data-snapshot attribute on <html>
+    let snapshot = null;
+    const htmlEl = doc.querySelector('html');
+    const snapshotAttr = htmlEl?.getAttribute('data-snapshot');
+    if (snapshotAttr) {
+      try {
+        snapshot = JSON.parse(decodeURIComponent(snapshotAttr));
+      } catch(err) {
+        snapshot = null;
+      }
+    }
+    // Also try old format (hidden div)
+    if (!snapshot) {
+      const snapshotEl = doc.getElementById('form-snapshot');
+      if (snapshotEl) {
+        try {
+          snapshot = JSON.parse(snapshotEl.textContent.trim());
+        } catch(err) { snapshot = null; }
+      }
+    }
+
+    // Fallback: if no JSON snapshot, parse from HTML structure
+    if (!snapshot) {
+      snapshot = {};
+      // Extract data-field text from HTML
+      doc.querySelectorAll('[data-field]').forEach(srcEl => {
+        const f = srcEl.getAttribute('data-field');
+        snapshot['field:' + f] = srcEl.innerHTML;
+      });
+      // Extract select values
+      doc.querySelectorAll('[data-select-id]').forEach(el => {
+        snapshot['select:' + el.getAttribute('data-select-id')] = el.getAttribute('data-select-value') || el.textContent.trim();
+      });
+      // Extract radio values
+      doc.querySelectorAll('[data-radio-name]').forEach(el => {
+        snapshot['radio:' + el.getAttribute('data-radio-name')] = el.getAttribute('data-radio-value') || '';
+      });
+      // Extract table data by tbody id
+      ['version-table-body','config-form-body','config-scene-body','glossary-table-body','related-gameplay-body','related-collab-body'].forEach(tbodyId => {
+        const tbody = doc.getElementById(tbodyId);
+        if (!tbody) return;
+        const rows = [];
+        tbody.querySelectorAll('tr').forEach(tr => {
+          const cells = [];
+          tr.querySelectorAll('td').forEach(td => cells.push(td.innerHTML));
+          rows.push(cells);
+        });
+        if (rows.length) snapshot['table:' + tbodyId] = rows;
+      });
+      // Flow mode
+      if (doc.querySelector('[data-flow-mode="image"]')) {
+        snapshot['flow_mode'] = 'image';
+      }
+    }
+
+    // 1. Restore data-field elements
+    for (const [key, value] of Object.entries(snapshot)) {
+      if (!key.startsWith('field:')) continue;
+      const fieldName = key.slice(6);
+      const el = document.querySelector('[data-field="' + fieldName + '"]');
+      if (!el) continue;
+      if (el.tagName === 'INPUT' && el.type === 'date') {
+        el.value = value;
+      } else {
+        el.innerHTML = value;
+      }
+    }
+
+    // 2. Restore selects
+    for (const [key, value] of Object.entries(snapshot)) {
+      if (key.startsWith('select:')) {
+        const selId = key.slice(7);
+        const sel = document.getElementById(selId);
+        if (sel) {
+          sel.value = value;
+          sel.dispatchEvent(new Event('change'));
+        }
+      }
+    }
+
+    // 3. Restore radios
+    for (const [key, value] of Object.entries(snapshot)) {
+      if (!key.startsWith('radio:')) continue;
+      const name = key.slice(6);
+      const radio = document.querySelector('input[type="radio"][name="' + name + '"][value="' + CSS.escape(value) + '"]');
+      if (radio) radio.checked = true;
+    }
+
+    // 4. Restore checkboxes
+    // First uncheck all, then check the saved ones
+    document.querySelectorAll('.checklist-item input[type="checkbox"]').forEach(chk => {
+      chk.checked = false;
+    });
+    for (const [key, value] of Object.entries(snapshot)) {
+      if (!key.startsWith('checkbox:')) continue;
+      const id = key.slice(9);
+      const chk = document.getElementById(id);
+      if (chk) {
+        chk.checked = !!value;
+        chk.dispatchEvent(new Event('change'));
+      }
+    }
+
+    // 5. Restore dates
+    for (const [key, value] of Object.entries(snapshot)) {
+      if (!key.startsWith('date:')) continue;
+      const id = key.slice(5);
+      const input = document.getElementById(id);
+      if (input) input.value = value;
+    }
+
+    // 6. Restore tables
+    for (const [key, value] of Object.entries(snapshot)) {
+      if (!key.startsWith('table:')) continue;
+      const tbodyId = key.slice(6);
+      const tbody = document.getElementById(tbodyId);
+      if (!tbody || !Array.isArray(value)) continue;
+
+      tbody.innerHTML = '';
+      const isVersionTable = (tbodyId === 'version-table-body');
+
+      value.forEach(cells => {
+        const tr = document.createElement('tr');
+        cells.forEach((cellContent, i) => {
+          const td = document.createElement('td');
+          if (isVersionTable && i === 0) {
+            const dateInput = document.createElement('input');
+            dateInput.type = 'date';
+            dateInput.className = 'date-input';
+            dateInput.value = cellContent;
+            dateInput.style.cssText = 'width:100%;border:1px solid var(--border);border-radius:4px;padding:4px 6px;font-size:13px;font-family:var(--font);background:var(--surface);color:var(--text);cursor:pointer';
+            td.appendChild(dateInput);
+          } else {
+            td.contentEditable = 'true';
+            td.innerHTML = cellContent;
+          }
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+    }
+
+    // 7. Restore flow mode
+    if (snapshot['flow_mode'] === 'image') {
+      switchFlowMode('image');
+    } else {
+      switchFlowMode('mermaid');
+    }
+
+    // 8. Restore images
+    for (const [key, value] of Object.entries(snapshot)) {
+      if (!key.startsWith('image:')) continue;
+      const imgId = key.slice(6);
+      document.querySelectorAll('.image-placeholder').forEach(ph => {
+        if (ph.classList.contains('has-image')) return;
+        if (ph.innerHTML.includes(imgId) || imgId.startsWith('img_')) {
+          const img = document.createElement('img');
+          img.src = value;
+          img.style.maxWidth = '100%';
+          const content = ph.querySelector('.placeholder-content');
+          if (content) content.style.display = 'none';
+          const hint = ph.querySelector('.placeholder-hint');
+          if (hint) hint.style.display = 'none';
+          ph.insertBefore(img, ph.firstChild);
+          ph.classList.add('has-image');
+        }
+      });
+    }
+
+    // 9. Sync nav sidebar
+    const titleEl = document.getElementById('header-title');
+    const navTitleEl = document.getElementById('nav-title');
+    if (titleEl && navTitleEl) {
+      navTitleEl.innerHTML = titleEl.textContent.trim() + '<br>玩法设计';
+      document.title = titleEl.textContent.trim() + ' - 玩法设计文档';
+    }
+    syncNavVersion();
+
+    alert('导入成功！');
+    input.value = '';
+  };
+  reader.readAsText(file, 'utf-8');
+}
+
+</script>
+
+</body>
+</html>

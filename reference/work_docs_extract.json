@@ -1,0 +1,592 @@
+{
+  "extracted_at": "2026-05-06T12:00:00+08:00",
+  "sources": [
+    "POI文档基本内容(3.19更新）.pdf",
+    "【POI】POI名称-从属区域-260109（提出时间).pptx",
+    "玩法设计文档模板.xlsx",
+    "玩法设计文档说明.txt"
+  ],
+  "extraction_notes": {
+    "pdf": "poppler/pdftotext 未安装；改用 macOS mdimport -t -d3 提取 kMDItemTextContent（Spotlight 索引文本），成功提取 1813 字符纯文本。字体 glyph 编码导致无法用 zlib 直读，mdimport 路径可靠。",
+    "pptx": "python3 ~/scripts/pptx2text.py 成功，12 slides，2229 字符。",
+    "xlsx": "python3 ~/scripts/xlsx2text.py 成功，3 sheets，2645 字符。",
+    "txt": "Read tool 直接读取，成功。"
+  },
+  "poi_fields": [
+    {
+      "name": "POI范围",
+      "section": "POI概况 / 一、平面图",
+      "type": "string",
+      "required": true,
+      "description": "明确标注的 POI 边界范围",
+      "lighting_related": false
+    },
+    {
+      "name": "建筑功能分区",
+      "section": "POI概况 / 一、平面图",
+      "type": "string",
+      "required": true,
+      "description": "标注建筑功能分区（非填充区域）",
+      "lighting_related": false
+    },
+    {
+      "name": "线规划",
+      "section": "POI概况 / 一、平面图",
+      "type": "string",
+      "required": true,
+      "description": "主动线 & 支线规划，在平面图中标注",
+      "lighting_related": false
+    },
+    {
+      "name": "指北针",
+      "section": "POI概况 / 一、平面图",
+      "type": "boolean",
+      "required": true,
+      "description": "平面图包含指北针（3.0更新要求）",
+      "lighting_related": false
+    },
+    {
+      "name": "俯视图",
+      "section": "POI概况 / 二、俯视图",
+      "type": "string",
+      "required": true,
+      "description": "体现 POI 与周边环境关系的俯视图",
+      "lighting_related": false
+    },
+    {
+      "name": "氛围关键词",
+      "section": "POI概况 / 三、整体美术氛围",
+      "type": "array",
+      "required": true,
+      "description": "简短词汇描述整体氛围，例如：神秘、紧张、宁静",
+      "lighting_related": false
+    },
+    {
+      "name": "整体氛围参考图",
+      "section": "POI概况 / 三、整体美术氛围",
+      "type": "array",
+      "required": true,
+      "description": "符合 POI 整体场景氛围特点的参考图，多氛围区需多张并标注对应位置和范围",
+      "lighting_related": false
+    },
+    {
+      "name": "氛围描述",
+      "section": "POI概况 / 三、整体美术氛围",
+      "type": "string",
+      "required": true,
+      "description": "描述整体氛围和脏污程度，参照氛围参考图",
+      "lighting_related": false
+    },
+    {
+      "name": "关卡定位",
+      "section": "POI概况 / 四、POI简述",
+      "type": "string",
+      "required": true,
+      "description": "POI 的关卡定位",
+      "lighting_related": false
+    },
+    {
+      "name": "POI主题调性",
+      "section": "POI概况 / 四、POI简述",
+      "type": "string",
+      "required": true,
+      "description": "POI 整体主题调性",
+      "lighting_related": false
+    },
+    {
+      "name": "主要玩法描述",
+      "section": "POI概况 / 四、POI简述",
+      "type": "string",
+      "required": true,
+      "description": "POI 内主要玩法的简述",
+      "lighting_related": false
+    },
+    {
+      "name": "生态背景设定",
+      "section": "POI概况 / 五、生态背景设定",
+      "type": "string",
+      "required": false,
+      "description": "待文案组补充的生态背景设定内容",
+      "lighting_related": false
+    },
+    {
+      "name": "夜景光效原画效果图_环境光版",
+      "section": "POI概况 / 六、POI文档夜景光效说明",
+      "type": "string",
+      "required": true,
+      "description": "原画需给两版效果图之一：①环境光+常亮指引光",
+      "lighting_related": true
+    },
+    {
+      "name": "夜景光效原画效果图_任务灯光版",
+      "section": "POI概况 / 六、POI文档夜景光效说明",
+      "type": "string",
+      "required": true,
+      "description": "原画需给两版效果图之二：②环境光+常亮指引光+和任务流程有关的灯光",
+      "lighting_related": true
+    },
+    {
+      "name": "地图收束_环境光",
+      "section": "POI概况 / 六、POI文档夜景光效说明",
+      "type": "string",
+      "required": true,
+      "description": "地图收束阶段：环境光需求说明；OWNER=关卡",
+      "lighting_related": true
+    },
+    {
+      "name": "关卡收束_常亮指引光",
+      "section": "POI概况 / 六、POI文档夜景光效说明",
+      "type": "string",
+      "required": true,
+      "description": "关卡收束阶段：常亮指引光需求说明；OWNER=关卡",
+      "lighting_related": true
+    },
+    {
+      "name": "任务收束_任务流程灯光",
+      "section": "POI概况 / 六、POI文档夜景光效说明",
+      "type": "string",
+      "required": true,
+      "description": "任务收束阶段：和任务流程有关的灯光说明；OWNER=关卡",
+      "lighting_related": true
+    },
+    {
+      "name": "玩法物件白盒截图",
+      "section": "具体设计 / POI玩法设计 / 一、玩法物件",
+      "type": "string",
+      "required": true,
+      "description": "玩法物件在白盒中的截图",
+      "lighting_related": false
+    },
+    {
+      "name": "玩法物件标记说明",
+      "section": "具体设计 / POI玩法设计 / 一、玩法物件",
+      "type": "string",
+      "required": true,
+      "description": "用特殊颜色标记玩法物件，与普通物件区分",
+      "lighting_related": false
+    },
+    {
+      "name": "玩法物件列表",
+      "section": "具体设计 / POI玩法设计 / 一、玩法物件",
+      "type": "array",
+      "required": true,
+      "description": "包含宝箱/神瞳位置及玩法物件位置、尺寸、参考（若有）；注意宝箱附近不放置遮挡物且留通道",
+      "lighting_related": false
+    },
+    {
+      "name": "情境文档AI需求",
+      "section": "具体设计 / POI玩法设计 / 二、情境",
+      "type": "string",
+      "required": false,
+      "description": "用统一版式描述所需的 AI 站位大致位置或范围",
+      "lighting_related": false
+    },
+    {
+      "name": "区域详细描述",
+      "section": "具体设计 / POI内具体设计参考 / 一、关键区域设计",
+      "type": "array",
+      "required": true,
+      "description": "按动线方向描述每个关键区域的设计需求：区域功能属性、设计重点、玩法描述",
+      "lighting_related": false
+    },
+    {
+      "name": "区域参考图",
+      "section": "具体设计 / POI内具体设计参考 / 一、关键区域设计",
+      "type": "array",
+      "required": true,
+      "description": "包含具体位置/氛围参考、视觉引导方式、视觉重点表现、材质搭配参考、灯光氛围参考等",
+      "lighting_related": true
+    },
+    {
+      "name": "灯光氛围参考",
+      "section": "具体设计 / POI内具体设计参考 / 一、关键区域设计 / 参考图子项",
+      "type": "string",
+      "required": false,
+      "description": "参考图中专项指向灯光氛围的说明，文档明确列举为参考图内容之一",
+      "lighting_related": true
+    },
+    {
+      "name": "设计节点",
+      "section": "具体设计 / POI内具体设计参考 / 一、关键区域设计",
+      "type": "string",
+      "required": true,
+      "description": "空间结构设计、视线引导、视线通达性设计要点；可添加氛围描述词或参考图辅助说明",
+      "lighting_related": false
+    },
+    {
+      "name": "区域大致平面",
+      "section": "具体设计 / POI内具体设计参考 / 一、关键区域设计",
+      "type": "string",
+      "required": true,
+      "description": "标注关键细节（战斗区域范围）、空间功能、出入口位置及动线（不要求精确）",
+      "lighting_related": false
+    },
+    {
+      "name": "填充建筑范围和功能分区",
+      "section": "具体设计 / POI内具体设计参考 / 二、填充建筑设计参考",
+      "type": "string",
+      "required": false,
+      "description": "POI 包含填充建筑时必填：范围边界、节点需求、特殊结构需求、立面需求（3.0更新）",
+      "lighting_related": false
+    },
+    {
+      "name": "填充建筑立面参考",
+      "section": "具体设计 / POI内具体设计参考 / 二、填充建筑设计参考",
+      "type": "object",
+      "required": false,
+      "description": "整体立面氛围参考及描述；按立面类型（建筑功能/业态/人文）分类；体块比例及分割",
+      "lighting_related": false
+    },
+    {
+      "name": "填充建筑具体需求",
+      "section": "具体设计 / POI内具体设计参考 / 二、填充建筑设计参考",
+      "type": "string",
+      "required": false,
+      "description": "对填充建筑有特殊需求的标注（立面/入口/指引等），附参考图",
+      "lighting_related": false
+    },
+    {
+      "name": "地图组填充选择",
+      "section": "具体设计 / POI内具体设计参考 / 二、填充建筑设计参考",
+      "type": "string",
+      "required": false,
+      "description": "由地图组补充的填充建筑选择内容",
+      "lighting_related": false
+    },
+    {
+      "name": "生态背景设定_具体设计侧",
+      "section": "具体设计 / POI内具体设计参考 / 三、生态背景设定",
+      "type": "string",
+      "required": false,
+      "description": "文案组补充的生态背景设定（具体设计部分）",
+      "lighting_related": false
+    },
+    {
+      "name": "图例说明",
+      "section": "文档协作 / 图例说明",
+      "type": "string",
+      "required": true,
+      "description": "颜色图例标注、各组模板位置、左上角标题颜色=需求归属、标题=位置+需求内容",
+      "lighting_related": false
+    },
+    {
+      "name": "夜景光效位置说明",
+      "section": "POI案例PPTX / 夜景光效说明页",
+      "type": "string",
+      "required": true,
+      "description": "PPTX模板中：有不同组都需要写的部分，标题名称需写清楚位置+需求内容（来自PPTX slide 7）",
+      "lighting_related": true
+    },
+    {
+      "name": "环境音需求_室内外",
+      "section": "POI案例PPTX / 环境音需求",
+      "type": "array",
+      "required": false,
+      "description": "环境音需求表：区域位置、时间段、声音描述、天气影响、音源、可听范围、播放频率、提需方、备注（来自PPTX slide 8）",
+      "lighting_related": false
+    }
+  ],
+  "poi_lighting_fields": [
+    {
+      "name": "夜景光效原画效果图_环境光版",
+      "section": "POI概况 / 六、POI文档夜景光效说明",
+      "type": "string",
+      "required": true,
+      "description": "原画产出效果图①：环境光+常亮指引光。M1 spec 应记录此版图的存在/链接。",
+      "source_quote": "原画需要给两版效果图 ①环境光+常亮指引光"
+    },
+    {
+      "name": "夜景光效原画效果图_任务灯光版",
+      "section": "POI概况 / 六、POI文档夜景光效说明",
+      "type": "string",
+      "required": true,
+      "description": "原画产出效果图②：环境光+常亮指引光+和任务流程有关的灯光。",
+      "source_quote": "②环境光+常亮指引光+和任务流程有关的灯光"
+    },
+    {
+      "name": "地图收束_环境光",
+      "section": "POI概况 / 六、POI文档夜景光效说明",
+      "type": "string",
+      "required": true,
+      "description": "地图收束阶段的环境光需求描述。OWNER=关卡。这是三段收束里最基础的一层。",
+      "source_quote": "1、地图收束：环境光"
+    },
+    {
+      "name": "关卡收束_常亮指引光",
+      "section": "POI概况 / 六、POI文档夜景光效说明",
+      "type": "string",
+      "required": true,
+      "description": "关卡收束阶段的常亮指引光需求描述。OWNER=关卡。",
+      "source_quote": "2、关卡收束：常亮指引光"
+    },
+    {
+      "name": "任务收束_任务流程灯光",
+      "section": "POI概况 / 六、POI文档夜景光效说明",
+      "type": "string",
+      "required": true,
+      "description": "任务收束阶段与任务流程有关的灯光需求描述。OWNER=关卡。",
+      "source_quote": "3、任务收束：和任务流程有关的灯光"
+    },
+    {
+      "name": "灯光氛围参考",
+      "section": "具体设计 / POI内具体设计参考 / 一、关键区域设计 / 参考图",
+      "type": "string",
+      "required": false,
+      "description": "关键区域参考图中专项指向灯光氛围的说明，按区域分别填写。",
+      "source_quote": "灯光氛围参考等等"
+    },
+    {
+      "name": "夜景光效位置说明",
+      "section": "POI案例PPTX / 夜景光效说明页",
+      "type": "string",
+      "required": true,
+      "description": "PPTX模板页：各区域/位置的灯光需求，标题格式=位置+需求内容，不同组各自填写对应部分。",
+      "source_quote": "有不同组都需要写相应需求的部分，标题名称需要写清楚位置+需求内容"
+    }
+  ],
+  "gameplay_fields": [
+    {
+      "name": "游戏名_中文",
+      "section": "玩法信息",
+      "type": "string",
+      "required": true,
+      "description": "命名（汉语）"
+    },
+    {
+      "name": "游戏名_英文",
+      "section": "玩法信息",
+      "type": "string",
+      "required": true,
+      "description": "命名（英语）"
+    },
+    {
+      "name": "版本",
+      "section": "玩法信息",
+      "type": "string",
+      "required": true,
+      "description": "版本号"
+    },
+    {
+      "name": "设定",
+      "section": "玩法信息",
+      "type": "string",
+      "required": false,
+      "description": "设定描述"
+    },
+    {
+      "name": "地块",
+      "section": "玩法信息",
+      "type": "string",
+      "required": true,
+      "description": "所属地块，如 LA"
+    },
+    {
+      "name": "需求清单",
+      "section": "玩法信息",
+      "type": "object",
+      "required": true,
+      "description": "各组需求承接方+需求列表+是否存在该需求，含文案组、角色组、物理组、GPP、美术、系统组、地图组、载具组、AI组、战斗组、任务组"
+    },
+    {
+      "name": "玩法描述",
+      "section": "1.设计概述",
+      "type": "string",
+      "required": true,
+      "description": "1.1 玩法描述"
+    },
+    {
+      "name": "设计目标",
+      "section": "1.设计概述",
+      "type": "string",
+      "required": true,
+      "description": "1.2 设计目标"
+    },
+    {
+      "name": "玩家体验",
+      "section": "1.设计概述",
+      "type": "string",
+      "required": true,
+      "description": "1.3 玩家体验"
+    },
+    {
+      "name": "校验点",
+      "section": "1.设计概述",
+      "type": "string",
+      "required": true,
+      "description": "1.4 校验点"
+    },
+    {
+      "name": "IP设定",
+      "section": "1.设计概述",
+      "type": "string",
+      "required": false,
+      "description": "1.5 IP设定，缺失则需提文案需求"
+    },
+    {
+      "name": "玩法白盒视频路径",
+      "section": "2.玩法白盒视频",
+      "type": "string",
+      "required": true,
+      "description": "内网p4路径和文件名"
+    },
+    {
+      "name": "关联文档",
+      "section": "3.关联文档",
+      "type": "array",
+      "required": false,
+      "description": "物件文档、战斗文档等关联文档"
+    },
+    {
+      "name": "玩法流程图",
+      "section": "4.玩法描述",
+      "type": "string",
+      "required": true,
+      "description": "4.1 导图形式的玩法流程图"
+    },
+    {
+      "name": "玩法交互",
+      "section": "4.玩法描述",
+      "type": "string",
+      "required": false,
+      "description": "4.2 交互方式、交互功能，可包含UI需求"
+    },
+    {
+      "name": "UI需求",
+      "section": "4.玩法描述",
+      "type": "string",
+      "required": false,
+      "description": "4.3 UI功能或交互行为需求，具体设计交给UIUX"
+    },
+    {
+      "name": "玩法功能",
+      "section": "4.玩法描述",
+      "type": "string",
+      "required": true,
+      "description": "4.4 需要程序支持的功能"
+    },
+    {
+      "name": "玩法表现_反馈",
+      "section": "4.玩法描述",
+      "type": "string",
+      "required": true,
+      "description": "4.5 玩法表现/反馈，需含参考图片/视频"
+    },
+    {
+      "name": "玩法判定",
+      "section": "4.玩法描述",
+      "type": "object",
+      "required": true,
+      "description": "4.6 触发区域、执行范围、完成条件、中止条件"
+    },
+    {
+      "name": "玩法3C需求",
+      "section": "4.玩法描述",
+      "type": "object",
+      "required": true,
+      "description": "4.7 3C表格：移动能力(Camera/Locomotion)、战斗、手持物兼容、角色切换"
+    },
+    {
+      "name": "玩法可配置项",
+      "section": "5.玩法配置",
+      "type": "object",
+      "required": true,
+      "description": "模板参数（针对类修改）和动态实例参数（针对实例修改）"
+    },
+    {
+      "name": "期望配置方式",
+      "section": "5.玩法配置",
+      "type": "string",
+      "required": false,
+      "description": "5.2 LD期望的必备配置方式"
+    },
+    {
+      "name": "玩法变种",
+      "section": "6.玩法变种",
+      "type": "string",
+      "required": false,
+      "description": "玩法后续可能存在的变种类型"
+    },
+    {
+      "name": "玩法积木概述",
+      "section": "7.玩法积木概述",
+      "type": "string",
+      "required": false,
+      "description": "玩法的基础模组，可组合构成多样玩法"
+    },
+    {
+      "name": "玩法边界",
+      "section": "8.玩法边界",
+      "type": "string",
+      "required": true,
+      "description": "玩法本身的边界条件"
+    },
+    {
+      "name": "多人游玩",
+      "section": "9.多人游玩",
+      "type": "object",
+      "required": false,
+      "description": "联机处理（XLSX中另有断线重连、存档）"
+    },
+    {
+      "name": "玩法布设范围",
+      "section": "10.玩法布设范围",
+      "type": "string",
+      "required": true,
+      "description": "布置数量、方式、环境、密度、规则；含白盒图与布设环境图"
+    }
+  ],
+  "comparison": {
+    "poi_only_fields": [
+      "POI范围",
+      "建筑功能分区",
+      "指北针",
+      "俯视图",
+      "氛围关键词",
+      "整体氛围参考图",
+      "氛围描述",
+      "关卡定位",
+      "POI主题调性",
+      "夜景光效原画效果图_环境光版",
+      "夜景光效原画效果图_任务灯光版",
+      "地图收束_环境光",
+      "关卡收束_常亮指引光",
+      "任务收束_任务流程灯光",
+      "灯光氛围参考",
+      "夜景光效位置说明",
+      "环境音需求_室内外",
+      "区域详细描述",
+      "区域参考图",
+      "设计节点",
+      "区域大致平面",
+      "填充建筑范围和功能分区",
+      "填充建筑立面参考",
+      "填充建筑具体需求",
+      "地图组填充选择",
+      "图例说明"
+    ],
+    "gameplay_only_fields": [
+      "玩法流程图",
+      "玩法交互",
+      "玩法功能",
+      "玩法表现_反馈",
+      "玩法判定",
+      "玩法3C需求",
+      "玩法可配置项",
+      "玩法变种",
+      "玩法积木概述",
+      "玩法边界",
+      "多人游玩",
+      "玩法布设范围",
+      "期望配置方式"
+    ],
+    "shared_fields": [
+      "主要玩法描述（POI简述中）/ 玩法描述（玩法文档）",
+      "关联文档",
+      "版本",
+      "生态背景设定"
+    ],
+    "lighting_in_gameplay_check": "验证结果：玩法设计文档（xlsx + txt）中，灯光作为【需求清单】中\"地图组\"下的一行（label='灯光'，is_applicable默认为空），仅作为一个二元勾选项（是否有灯光需求）存在，无任何灯光字段展开定义。template_fields.json 中 light_requirement 字段 ctrl_type=rich_editor，是自由文本框，无结构化子字段。预期=false：玩法文档不包含 lighting 结构化字段，交叉验证通过。"
+  },
+  "poi_examples_count": 12,
+  "notes": "1. 【关键发现】POI文档第六节'POI文档夜景光效说明（3.0更新）'是 lighting spec 的最直接来源：三层收束结构（地图收束=环境光 / 关卡收束=常亮指引光 / 任务收束=任务流程灯光），OWNER 全部=关卡，且原画需产出两版效果图。这个三层结构应直接映射为 M1 lighting_req schema 的顶级字段结构。2. 【玩法文档交叉验证】玩法文档需求清单中'地图组→灯光'仅是勾选项（有/无），无结构化灯光字段，证实 Steve 2026-05-06 的说法：lighting 只在 POI 文档需要。3. 【POI文档组织风格】按文档生产流程 + 需求受众分层：概况部分面向美术/策划的氛围共识，具体设计部分按区域动线展开，协作部分（各组模板）按组别拆分。不是严格按职能或生命周期，是混合结构。4. 【意外发现1】PPTX slide 3 中'关卡定位'块含氛围字段（氛围一行），且'流程时间限定：仅限晚上开启流程'这类时间约束字段也出现在 POI 案例中，未在 PDF 模板中明确列出，可能是可选扩展字段。5. 【意外发现2】PPTX slide 8 环境音需求表有完整结构化字段定义（区域位置/时间段/声音描述/天气影响/音源/可听范围/播放频率/提需方），可作为 audio_req schema 设计的参考，但不在本次 M1 scope 内。6. 【PDF 提取限制】mdimport 提取文本有部分字符断行错位（如'明确''境'等字拆开），内容语义完整。总字符 1813，覆盖完整的两个章节结构（POI概况 + 具体设计）。"
+}

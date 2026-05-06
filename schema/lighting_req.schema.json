@@ -1,0 +1,157 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "level-design-deck/schema/lighting_req.schema.json",
+  "title": "lighting_req spec",
+  "description": "POI 灯光需求 spec schema。字段来源 work_docs_extract.json poi_lighting_fields。M1 v0.1.0。",
+  "version": "0.1.0",
+  "applies_to": ["POI"],
+  "type": "object",
+  "required": ["meta", "map_constraint", "level_constraint", "mission_constraint", "concept_art"],
+  "additionalProperties": false,
+  "properties": {
+    "meta": {
+      "type": "object",
+      "required": ["spec_id", "poi_id", "version"],
+      "additionalProperties": false,
+      "properties": {
+        "spec_id": {
+          "type": "string",
+          "pattern": "^lighting_req_[a-z0-9_]+$",
+          "description": "spec 唯一 ID，命名规则 lighting_req_<poi_short_name>"
+        },
+        "poi_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "对应的 POI ID（公司内部命名待对接）"
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$",
+          "description": "spec 语义化版本号"
+        },
+        "owner": {
+          "type": "string",
+          "default": "level",
+          "description": "需求归属方，POI 灯光默认 OWNER=关卡（来自 PDF 第六节）"
+        }
+      }
+    },
+    "map_constraint": {
+      "type": "object",
+      "required": ["description"],
+      "additionalProperties": false,
+      "description": "地图收束_环境光（POI 文档第六节第 1 项）",
+      "properties": {
+        "description": {
+          "type": "string",
+          "minLength": 10,
+          "description": "地图收束阶段的环境光需求描述"
+        },
+        "ir_refs": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "可选引用 IR 字段路径，如 FEEL.overall_tone / SPACE.environment_type"
+        }
+      }
+    },
+    "level_constraint": {
+      "type": "object",
+      "required": ["description"],
+      "additionalProperties": false,
+      "description": "关卡收束_常亮指引光（POI 文档第六节第 2 项）",
+      "properties": {
+        "description": {
+          "type": "string",
+          "minLength": 10,
+          "description": "关卡收束阶段的常亮指引光需求描述"
+        },
+        "ir_refs": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "mission_constraint": {
+      "type": "object",
+      "required": ["description"],
+      "additionalProperties": false,
+      "description": "任务收束_任务流程灯光（POI 文档第六节第 3 项）",
+      "properties": {
+        "description": {
+          "type": "string",
+          "minLength": 10,
+          "description": "任务收束阶段与任务流程有关的灯光需求描述"
+        },
+        "ir_refs": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "concept_art": {
+      "type": "object",
+      "required": ["ambient_only", "with_mission"],
+      "additionalProperties": false,
+      "description": "原画两版效果图（POI 文档 3.0 更新要求）",
+      "properties": {
+        "ambient_only": {
+          "type": "object",
+          "required": ["status"],
+          "additionalProperties": false,
+          "description": "效果图①：环境光+常亮指引光",
+          "properties": {
+            "url": { "type": "string", "description": "图片 URL 或内网路径" },
+            "status": {
+              "type": "string",
+              "enum": ["pending", "in_progress", "done"]
+            },
+            "notes": { "type": "string" }
+          }
+        },
+        "with_mission": {
+          "type": "object",
+          "required": ["status"],
+          "additionalProperties": false,
+          "description": "效果图②：环境光+常亮指引光+任务流程灯光",
+          "properties": {
+            "url": { "type": "string" },
+            "status": {
+              "type": "string",
+              "enum": ["pending", "in_progress", "done"]
+            },
+            "notes": { "type": "string" }
+          }
+        }
+      }
+    },
+    "position_notes": {
+      "type": "string",
+      "description": "夜景光效位置说明（PPTX 模板，可选）"
+    },
+    "ambience_refs": {
+      "type": "array",
+      "description": "灯光氛围参考（按区域多个，关键区域设计的子项）",
+      "items": {
+        "type": "object",
+        "required": ["region_id", "description"],
+        "additionalProperties": false,
+        "properties": {
+          "region_id": {
+            "type": "string",
+            "minLength": 1,
+            "description": "对应 IR SPACE.regions[].id"
+          },
+          "description": {
+            "type": "string",
+            "minLength": 5,
+            "description": "该区域的灯光氛围描述"
+          },
+          "ref_image_url": {
+            "type": "string",
+            "description": "氛围参考图链接（可选）"
+          }
+        }
+      }
+    }
+  }
+}

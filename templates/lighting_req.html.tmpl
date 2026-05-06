@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>{{meta.poi_id}} · 灯光需求</title>
+<style>
+:root { --fg:#1a1a1a; --muted:#666; --bg:#fff; --line:#e5e5e5; --accent:#0066cc; --code-bg:#f5f5f5; }
+* { box-sizing:border-box; margin:0; padding:0; }
+body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; color:var(--fg); background:var(--bg); line-height:1.7; padding:40px 24px; max-width:760px; margin:0 auto; font-size:14px; }
+.meta { color:var(--muted); font-size:12px; padding-bottom:16px; border-bottom:1px solid var(--line); margin-bottom:24px; font-family:"JetBrains Mono","Consolas",monospace; }
+.meta b { color:var(--fg); font-weight:600; }
+h1 { font-size:18px; font-weight:600; margin-bottom:24px; }
+h2 { font-size:14px; font-weight:600; color:var(--accent); margin:24px 0 8px; padding-top:16px; border-top:1px solid var(--line); }
+h2 .label { color:var(--muted); font-weight:400; font-size:11px; margin-left:8px; font-family:"JetBrains Mono","Consolas",monospace; }
+p { margin-bottom:8px; }
+.refs { font-family:"JetBrains Mono","Consolas",monospace; font-size:11px; margin-top:4px; }
+.refs span { background:var(--code-bg); color:var(--muted); padding:1px 6px; border-radius:3px; margin-right:4px; display:inline-block; }
+.status { display:inline-block; font-size:11px; padding:2px 8px; border-radius:3px; margin-right:8px; font-weight:500; }
+.status-pending { background:#fff7e6; color:#d97706; }
+.status-in_progress { background:#e0f2fe; color:#0369a1; }
+.status-done { background:#dcfce7; color:#16a34a; }
+.art-row { padding:8px 0; border-bottom:1px solid var(--line); }
+.art-row:last-child { border-bottom:none; }
+.art-row .label { font-weight:500; display:inline-block; min-width:120px; }
+.art-row .body { color:var(--muted); display:inline; }
+.region-list { padding-left:0; list-style:none; }
+.region-list li { padding:8px 0; border-bottom:1px solid var(--line); }
+.region-list li b { color:var(--fg); margin-right:8px; font-family:"JetBrains Mono","Consolas",monospace; font-size:12px; }
+a { color:var(--accent); text-decoration:none; margin-left:8px; font-size:12px; }
+a:hover { text-decoration:underline; }
+</style>
+</head>
+<body>
+
+<div class="meta">
+  <b>{{meta.spec_id}}</b> · POI: {{meta.poi_id}} · v{{meta.version}} · OWNER: {{meta.owner}}
+</div>
+
+<h1>POI 灯光需求</h1>
+
+<h2>地图收束_环境光<span class="label">map_constraint</span></h2>
+<p>{{map_constraint.description}}</p>
+<div class="refs">{{#each map_constraint.ir_refs}}<span>{{this}}</span>{{/each}}</div>
+
+<h2>关卡收束_常亮指引光<span class="label">level_constraint</span></h2>
+<p>{{level_constraint.description}}</p>
+<div class="refs">{{#each level_constraint.ir_refs}}<span>{{this}}</span>{{/each}}</div>
+
+<h2>任务收束_任务流程灯光<span class="label">mission_constraint</span></h2>
+<p>{{mission_constraint.description}}</p>
+<div class="refs">{{#each mission_constraint.ir_refs}}<span>{{this}}</span>{{/each}}</div>
+
+<h2>原画效果图<span class="label">concept_art</span></h2>
+<div class="art-row">
+  <div><span class="label">①环境光版</span><span class="status status-{{concept_art.ambient_only.status}}">{{concept_art.ambient_only.status}}</span></div>
+  <div class="body">{{concept_art.ambient_only.url}} {{concept_art.ambient_only.notes}}</div>
+</div>
+<div class="art-row">
+  <div><span class="label">②任务灯光版</span><span class="status status-{{concept_art.with_mission.status}}">{{concept_art.with_mission.status}}</span></div>
+  <div class="body">{{concept_art.with_mission.url}} {{concept_art.with_mission.notes}}</div>
+</div>
+
+<h2>夜景光效位置说明<span class="label">position_notes</span></h2>
+<p>{{position_notes}}</p>
+
+<h2>灯光氛围参考<span class="label">ambience_refs</span></h2>
+<ul class="region-list">
+{{#each ambience_refs}}
+  <li><b>{{region_id}}</b>{{description}}<a href="{{ref_image_url}}">参考图</a></li>
+{{/each}}
+</ul>
+
+</body>
+</html>
