@@ -207,6 +207,7 @@ level-design-deck/
 | 2026-05-06 | M2 关键架构决策 · 不抽 prompt helper | 占位符/caveat 字面量在两个工具内重复 + 注释`[来源: tools/mechanical_check.py 同步维护]`。理由：避免依赖耦合，工具仍 < 200 行。`[来源: 第一原理推导]` |
 | 2026-05-06 | M2 关键架构决策 · dot path 不支持 array 索引 | 遇 array 报错 + 提示"M2 不支持"。理由：M2 lighting_req 字段最深 3 层都是 object，array 拓展（如 `ambience_refs[0].region_id`）推到 M3。`[来源: 第一原理推导]` |
 | 2026-05-06 | git init + 首次 commit `03580f0` | 22 文件 6486 行；分支 `main`；`.gitignore` 排除 outputs/*.html / .warnings.json / .diff.json / __pycache__ / .DS_Store。template snapshot **进 git**（INHERITANCE.md "物理隔断"那一半的物理依据）。M2 决策"cp/diff 验隔离"现在可改用 `git diff` |
+| 2026-05-06 | M3.1 真实 POI 案例（gangster_mansion）端到端通过 | spec `lighting_req_gangster_mansion.spec.json` 落盘 → mechanical_check 0 ERROR / template_diff 0 MISSING / render HTML / regen 抽查 `level_constraint.description` diff 仅动 1 行 + 仍 0 ERROR。intent 940 token / generate_prompt 2.5k token，远低于 5k 上限。**暴露问题 1 项**：editor.html 的 SPEC_PATH 写死，本次加 1 行参数化（`?spec=` URL query）解决。详见 HANDOVER.md M3.1 经验节。`[来源: 第一原理推导 + extracted_design.md 案例素材]` |
 
 ---
 

@@ -74,7 +74,7 @@ legend .schema-desc{color:var(--muted);font-weight:400;font-size:11px;margin-lef
 <div class="toast" id="toast"></div>
 
 <script>
-const SPEC_PATH = '/specs/demo_lighting_req.spec.json';
+const SPEC_PATH = `/specs/${new URLSearchParams(location.search).get('spec') || 'demo_lighting_req'}.spec.json`;
 const SCHEMA_PATH = '/schema/lighting_req.schema.json';
 const WARNINGS_PATH = '/outputs/.warnings.json';
 const DIFF_PATH = '/outputs/.diff.json';
