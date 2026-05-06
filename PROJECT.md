@@ -206,6 +206,7 @@ level-design-deck/
 | 2026-05-06 | M2 关键架构决策 · Module 注册 dict | `MODULES` 字典留 M3 拓展点（加 module = 加一行 dict）。M2 仅注册 lighting_req。`[来源: 第一原理推导]` |
 | 2026-05-06 | M2 关键架构决策 · 不抽 prompt helper | 占位符/caveat 字面量在两个工具内重复 + 注释`[来源: tools/mechanical_check.py 同步维护]`。理由：避免依赖耦合，工具仍 < 200 行。`[来源: 第一原理推导]` |
 | 2026-05-06 | M2 关键架构决策 · dot path 不支持 array 索引 | 遇 array 报错 + 提示"M2 不支持"。理由：M2 lighting_req 字段最深 3 层都是 object，array 拓展（如 `ambience_refs[0].region_id`）推到 M3。`[来源: 第一原理推导]` |
+| 2026-05-06 | git init + 首次 commit `03580f0` | 22 文件 6486 行；分支 `main`；`.gitignore` 排除 outputs/*.html / .warnings.json / .diff.json / __pycache__ / .DS_Store。template snapshot **进 git**（INHERITANCE.md "物理隔断"那一半的物理依据）。M2 决策"cp/diff 验隔离"现在可改用 `git diff` |
 
 ---
 

@@ -63,13 +63,14 @@ python3 tools/render.py specs/<id>.spec.json templates/lighting_req.html.tmpl ou
 
 | 候选 | 选它的理由 | 风险 |
 |---|---|---|
+| **真实 POI 案例端到端**（从 `~/Desktop/我的项目关卡 Bible/` 拉一个真 POI 跑 generate→edit→render 全流程） | M2 验证用的是虚构案例，只证"工具能跑通"；真实案例才证"工具产出能用" | spec 含敏感信息要决定落哪 / 工作 Bible 上下文增量大 |
 | **铺第二个 module**（如 vfx_req / audio_req / spatial_layout） | 暴露 schema-driven 范式在不同字段形态下的问题（数组、嵌套对象）；M2 dot path 在 array 索引就要拓展 | 重复"schema 设计 + demo + render template + diff 映射" 4 件事，工作量 1-2 天 |
 | **批量优化美学+交互** | 兑现 M1 后"延后到批量做"的承诺；schema-driven UI 改一次所有 module 受益 | 美学优化的"完成定义"模糊，容易超出 PoC 范围 |
-| **给项目加 git** | 当前 spec 改动只能靠人眼 cp+diff，git 后能用 `git diff`；M2 验证流程可去掉 cp 步骤 | 一次性的基础设施动作，5 分钟搞定 |
+| ~~**给项目加 git**~~ | ~~已完成 2026-05-06，commit `03580f0`~~ | — |
 | **小范围团队试用** | 验证非 Steve 的策划能不能用 schema-driven 工作流 | 还没准备好（无文档、无操作引导）；M3 早 |
 | **优化 prompt 模板**（按 token 量化、加 system role） | M2 的 prompt 是 V1，可能过长；regen 1.7k 已 OK 但 generate 4k 可优化 | 优化方向待 M2 实跑出问题反馈再说，现在动是过早优化 |
 
-我（AI）的判断：**git init 先做（5 分钟低成本）→ 然后选铺第二个 module**（暴露 schema 范式问题最有价值）。但 Steve 自己定。
+我（AI）的判断：**先跑真实 POI 案例**（验证工具产出能用 > 虚构案例只证能跑通）→ 再决定是铺第二个 module 还是批量优化。但 Steve 自己定。
 
 ---
 
@@ -101,7 +102,7 @@ python3 tools/render.py specs/<id>.spec.json templates/lighting_req.html.tmpl ou
 | template 借鉴 = 字段清单 diff，不读结构 | template 4000 行有强结构/命名/视觉污染，机械提取后归档 |
 | 机械检测 > AI confidence | LLM 自评校准极差；Python 报错才是硬约束 |
 | **M2 工具不调 LLM** | 保仓库零外部依赖、防火墙友好；AI 调用集中在对话窗口 |
-| **M2 工具单字段原位覆写 + cp/diff 验隔离** | 项目暂未 git init；隔离性人眼看够，PoC 阶段不自动量化 |
+| **M2 工具单字段原位覆写 + git diff 验隔离** | 2026-05-06 git init 后改用 git diff；隔离性人眼看够，PoC 阶段不自动量化 |
 | **美学/交互优化延后** | schema-driven 红利：改一次所有 module 受益。批量做避免重复优化 |
 
 完整决策史在 [PROJECT.md](PROJECT.md) 末尾"决策记录"表。
