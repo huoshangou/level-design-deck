@@ -68,6 +68,25 @@ def main():
         sys.exit(f"ERROR: template_fields not found: {args.template_fields}")
 
     spec = json.loads(args.spec.read_text(encoding="utf-8"))
+
+    # M3.2: 图状 module 走跳过分支（template_fields.json 是字段填空型 derived from gameplay_template.html，
+    # 对图状 spec 无映射意义，强行套是反污染失误）。[来源: 第一原理推导]
+    spec_id = spec.get("meta", {}).get("spec_id", "")
+    if spec_id.startswith("bubble_diagram_"):
+        payload = {
+            "diffed_at": datetime.now(timezone.utc).isoformat(),
+            "spec_path": str(args.spec),
+            "scope": "bubble_diagram (graph-type, no field-clipboard diff applies)",
+            "stats": {"mapped": 0, "missing": 0, "extra": 0},
+            "mapped": [], "missing": [], "extra": [],
+            "rationale": "bubble_diagram is graph-typed; template_fields.json/work_docs_extract.json are field-clipboard derived. No mapping applicable. [来源: 第一原理推导]",
+        }
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+        args.output.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+        print("mapped=0 missing=0 extra=0 (skipped: graph-type module)")
+        print(f"OK: diff written to {args.output}")
+        sys.exit(0)
+
     work_docs = json.loads(args.work_docs.read_text(encoding="utf-8"))
     template_fields = json.loads(args.template_fields.read_text(encoding="utf-8"))
 

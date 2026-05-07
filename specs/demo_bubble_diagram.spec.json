@@ -1,0 +1,94 @@
+{
+  "meta": {
+    "spec_id": "bubble_diagram_demo_abandoned_lab",
+    "level_id": "demo_abandoned_lab_infiltration",
+    "version": "0.1.0",
+    "owner": "level"
+  },
+  "context": {
+    "intent": "虚构演示流程：废弃实验室渗透 → 击败守卫 → 双路选择（解谜隐蔽路径 vs 强攻主通道）→ 撤离",
+    "level_type": "gameplay"
+  },
+  "nodes": [
+    {
+      "id": "entry",
+      "type": "entry",
+      "label": "入口：实验室外门",
+      "notes": "玩家从屋顶坠绳进入；触发任务 NPC 通讯"
+    },
+    {
+      "id": "guard_room",
+      "type": "combat",
+      "label": "守卫房间",
+      "notes": "3-4 名巡逻守卫，提供 2 个掩体路径，可潜行也可强攻"
+    },
+    {
+      "id": "central_corridor",
+      "type": "scene",
+      "label": "中心走廊",
+      "notes": "战斗后过场氛围；走廊尽头分岔"
+    },
+    {
+      "id": "path_choice",
+      "type": "choice",
+      "label": "选择：隐蔽 / 强攻",
+      "notes": "玩家面板二选一；选择不影响奖励但影响通关时长与目击度"
+    },
+    {
+      "id": "stealth_puzzle",
+      "type": "puzzle",
+      "label": "隐蔽路径：电箱解谜",
+      "notes": "短解谜（30 秒），失败可重试，成功打开隐藏门"
+    },
+    {
+      "id": "exit",
+      "type": "exit",
+      "label": "撤离点：地下停车场",
+      "notes": "通用收束节点，不论走哪条路最终都到这"
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry",
+      "to": "guard_room",
+      "type": "sequential",
+      "label": "进入大楼"
+    },
+    {
+      "from": "guard_room",
+      "to": "central_corridor",
+      "type": "sequential",
+      "label": "清场或潜行通过"
+    },
+    {
+      "from": "central_corridor",
+      "to": "path_choice",
+      "type": "sequential",
+      "label": "走到走廊尽头分岔"
+    },
+    {
+      "from": "path_choice",
+      "to": "stealth_puzzle",
+      "type": "branch",
+      "label": "选择隐蔽路径"
+    },
+    {
+      "from": "path_choice",
+      "to": "exit",
+      "type": "branch",
+      "label": "选择强攻路径"
+    },
+    {
+      "from": "stealth_puzzle",
+      "to": "central_corridor",
+      "type": "loop",
+      "label": "解谜失败 / 再探索"
+    },
+    {
+      "from": "stealth_puzzle",
+      "to": "exit",
+      "type": "sequential",
+      "label": "解开门锁"
+    }
+  ]
+}

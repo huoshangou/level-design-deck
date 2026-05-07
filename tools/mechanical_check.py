@@ -127,6 +127,81 @@ class Validator:
         return f"{path}.{key}"
 
 
+# === module 语义层 dispatcher (M3.2) ===
+# schema 表达不了"图级语义"（id 唯一、edge 端点存在、入口出口）。
+# 通用 schema validator 跑完后，按 module 派发到对应语义检查函数。
+
+SEMANTIC_CHECKS = {}
+
+
+def register_semantic_check(module):
+    def deco(f):
+        SEMANTIC_CHECKS[module] = f
+        return f
+    return deco
+
+
+def infer_module(spec, schema):
+    """从 spec.meta.spec_id 前缀或 schema.$id 推断 module 名。"""
+    spec_id = spec.get("meta", {}).get("spec_id", "")
+    for module in sorted(SEMANTIC_CHECKS.keys(), key=len, reverse=True):
+        if spec_id == f"demo_{module}" or spec_id.startswith(f"demo_{module}_") or spec_id.startswith(f"{module}_"):
+            return module
+    schema_id = schema.get("$id", "")
+    for module in sorted(SEMANTIC_CHECKS.keys(), key=len, reverse=True):
+        if f"/{module}.schema.json" in schema_id:
+            return module
+    return None
+
+
+@register_semantic_check("bubble_diagram")
+def check_bubble_diagram(spec, v):
+    nodes = spec.get("nodes", []) if isinstance(spec.get("nodes"), list) else []
+    edges = spec.get("edges", []) if isinstance(spec.get("edges"), list) else []
+
+    # 1. node id 全 spec 唯一
+    seen = set()
+    for i, n in enumerate(nodes):
+        if not isinstance(n, dict):
+            continue
+        nid = n.get("id")
+        if nid is None:
+            continue  # schema layer 已报 required
+        if nid in seen:
+            v.add_error(f"nodes[{i}].id", "unique_id", f"duplicate id {nid!r}")
+        seen.add(nid)
+
+    # 2. edge.from / edge.to 必须命中已声明 node id
+    for i, e in enumerate(edges):
+        if not isinstance(e, dict):
+            continue
+        for end in ("from", "to"):
+            ref = e.get(end)
+            if ref is not None and ref not in seen:
+                v.add_error(f"edges[{i}].{end}", "ref_integrity",
+                            f"{ref!r} not in nodes (available: {sorted(seen)})")
+
+    # 3. 入口必须存在；出口缺失 = REVIEW（不阻塞，部分流程可能无明确 exit）
+    types = [n.get("type") for n in nodes if isinstance(n, dict)]
+    if "entry" not in types:
+        v.add_error("nodes", "graph_entry", "no node with type=entry (graph needs at least 1 entry)")
+    if "exit" not in types:
+        v.add_review("nodes", "graph_exit", "no node with type=exit (warning, not blocking)")
+
+    # 4. 孤立节点（无任何 in/out edge）→ REVIEW
+    refed = set()
+    for e in edges:
+        if not isinstance(e, dict):
+            continue
+        if e.get("from") in seen:
+            refed.add(e["from"])
+        if e.get("to") in seen:
+            refed.add(e["to"])
+    for nid in seen:
+        if nid not in refed:
+            v.add_review(f"nodes[{nid}]", "isolated", f"node {nid!r} has no in/out edge")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("spec", type=Path, help="spec JSON 路径")
@@ -146,6 +221,12 @@ def main():
 
     v = Validator(schema)
     v.check(spec)
+
+    # M3.2: 跑 module 语义层检查（图级断言等 schema 表达不了的）
+    module = infer_module(spec, schema)
+    fn = SEMANTIC_CHECKS.get(module) if module else None
+    if fn:
+        fn(spec, v)
 
     payload = {
         "checked_at": datetime.now(timezone.utc).isoformat(),

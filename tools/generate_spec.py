@@ -28,6 +28,13 @@ MODULES = {
         "workdoc_key": "poi_lighting_fields",
         "spec_id_pattern": "lighting_req_<poi_short_name>",
     },
+    # M3.2: 图状 module，无 work_docs 字段映射（schema 即真源）
+    "bubble_diagram": {
+        "schema_path": "schema/bubble_diagram.schema.json",
+        "demo_path": "specs/demo_bubble_diagram.spec.json",
+        "workdoc_key": None,
+        "spec_id_pattern": "bubble_diagram_<level_short_name>",
+    },
 }
 
 WORK_DOCS_PATH = "reference/work_docs_extract.json"
@@ -43,6 +50,9 @@ def load_module(name):
     cfg = MODULES[name]
     schema = json.loads((PROJECT_ROOT / cfg["schema_path"]).read_text(encoding="utf-8"))
     demo = json.loads((PROJECT_ROOT / cfg["demo_path"]).read_text(encoding="utf-8"))
+    # workdoc_key=None 表示图状/无字段映射型 module，schema 即真源
+    if cfg["workdoc_key"] is None:
+        return cfg, schema, demo, []
     work_docs = json.loads((PROJECT_ROOT / WORK_DOCS_PATH).read_text(encoding="utf-8"))
     fields = work_docs.get(cfg["workdoc_key"], [])
     if not fields:
@@ -84,6 +94,12 @@ def section_schema(schema):
 
 
 def section_workdoc_fields(fields):
+    if not fields:
+        return textwrap.dedent("""\
+            # Work_docs 字段定义
+
+            该 module 是图状/无字段填空型，**schema 即真源**，无 work_docs 字段映射。
+            生成 spec 时严格按 schema.properties 的字段名 + 类型 + enum + 描述办事。""")
     lines = ["# Work_docs 字段定义（业务术语真源）", ""]
     for f in fields:
         req = "required" if f.get("required") else "optional"

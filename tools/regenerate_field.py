@@ -14,6 +14,7 @@ AI 在对话窗口里看 prompt 后给新值，由用户/AI 用 Edit 工具原�
 
 import argparse
 import json
+import re
 import sys
 import textwrap
 from pathlib import Path
@@ -41,31 +42,71 @@ def infer_schema_path(spec_path):
     sys.exit(f"ERROR: cannot infer schema for spec '{spec_path.name}'. Tried modules: {list(candidates)}. 用 --schema 显式指定")
 
 
+SEG_RE = re.compile(r"^([^\[]+)(?:\[([^\]]+)\])?$")
+
+
+def parse_path(path):
+    """'nodes[entry].label' → [('key','nodes'), ('idx','entry'), ('key','label')]
+       'nodes[0].label'      → [('key','nodes'), ('idx','0'),     ('key','label')]
+       'meta.spec_id'        → [('key','meta'),  ('key','spec_id')]"""
+    out = []
+    for raw in path.split("."):
+        m = SEG_RE.match(raw)
+        if not m:
+            sys.exit(f"ERROR: malformed path segment {raw!r} in {path!r}")
+        out.append(("key", m.group(1)))
+        if m.group(2) is not None:
+            out.append(("idx", m.group(2)))
+    return out
+
+
 def walk_value(spec, path):
-    """按 dot path 在 spec 里取值。返回 (value, exists)。"""
+    """按 dot path 在 spec 里取值。支持 array 索引：
+       - by-index: nodes[0]
+       - by-id:    nodes[entry]（按 item.id 字段匹配）
+    返回 (value, exists)。"""
     cur = spec
-    for part in path.split("."):
-        if isinstance(cur, dict) and part in cur:
-            cur = cur[part]
-        else:
-            return None, False
+    for kind, val in parse_path(path):
+        if kind == "key":
+            if isinstance(cur, dict) and val in cur:
+                cur = cur[val]
+            else:
+                return None, False
+        else:  # idx
+            if not isinstance(cur, list):
+                return None, False
+            try:
+                cur = cur[int(val)]  # by-index
+            except ValueError:
+                hit = next((x for x in cur if isinstance(x, dict) and x.get("id") == val), None)
+                if hit is None:
+                    return None, False
+                cur = hit
+            except IndexError:
+                return None, False
     return cur, True
 
 
 def walk_schema(schema, path):
-    """按 dot path 在 schema 里取 sub-schema。
+    """按 dot path 在 schema 里取 sub-schema。array 索引段会下到 items.schema。
     返回 (sub_schema, error_msg)；error_msg 不为 None 表示路径无效，附该层有效 keys。"""
     cur = schema
     walked = []
-    for part in path.split("."):
-        if cur.get("type") != "object":
-            return None, f"path 走到 '{'.'.join(walked)}' 时该层非 object（type={cur.get('type')}），M2 不支持 array 索引（用 --whole-array 不在 M2 范围）"
-        props = cur.get("properties", {})
-        if part not in props:
-            valid = list(props.keys())
-            return None, f"path '{path}' 在 '{'.'.join(walked) or '<root>'}' 层找不到 key '{part}'。该层有效 keys: {valid}"
-        cur = props[part]
-        walked.append(part)
+    for kind, val in parse_path(path):
+        if kind == "key":
+            if cur.get("type") != "object":
+                return None, f"path 走到 {val!r} 时该层非 object（type={cur.get('type')}），无法继续按 key 下钻"
+            props = cur.get("properties", {})
+            if val not in props:
+                valid = list(props.keys())
+                return None, f"path '{path}' 在 '{'.'.join(walked) or '<root>'}' 层找不到 key '{val}'。该层有效 keys: {valid}"
+            cur = props[val]
+            walked.append(val)
+        else:  # idx
+            if cur.get("type") != "array":
+                return None, f"path 走到 array 索引 [{val}] 时该层不是 array（type={cur.get('type')}）"
+            cur = cur.get("items", {})
+            walked.append(f"[{val}]")
     return cur, None
 
 

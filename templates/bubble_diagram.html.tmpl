@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>{{meta.level_id}} · 关卡流程图</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script>mermaid.initialize({startOnLoad:true, theme:'default', flowchart:{useMaxWidth:true, htmlLabels:true}});</script>
+<style>
+:root { --fg:#1a1a1a; --muted:#666; --bg:#fff; --line:#e5e5e5; --accent:#0066cc; --code-bg:#f5f5f5; }
+* { box-sizing:border-box; margin:0; padding:0; }
+body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; color:var(--fg); background:var(--bg); line-height:1.7; padding:40px 24px; max-width:920px; margin:0 auto; font-size:14px; }
+.meta { color:var(--muted); font-size:12px; padding-bottom:16px; border-bottom:1px solid var(--line); margin-bottom:24px; font-family:"JetBrains Mono","Consolas",monospace; }
+.meta b { color:var(--fg); font-weight:600; }
+h1 { font-size:18px; font-weight:600; margin-bottom:24px; }
+h2 { font-size:14px; font-weight:600; color:var(--accent); margin:24px 0 8px; padding-top:16px; border-top:1px solid var(--line); }
+h2 .label { color:var(--muted); font-weight:400; font-size:11px; margin-left:8px; font-family:"JetBrains Mono","Consolas",monospace; }
+p { margin-bottom:8px; }
+pre.mermaid { background:#fafafa; border:1px solid var(--line); border-radius:6px; padding:24px; margin:8px 0 24px; min-height:200px; text-align:center; }
+.node-list, .edge-list { padding-left:0; list-style:none; }
+.node-list li, .edge-list li { padding:8px 12px; border-bottom:1px solid var(--line); display:flex; gap:10px; align-items:baseline; flex-wrap:wrap; }
+.node-list li:last-child, .edge-list li:last-child { border-bottom:none; }
+.id { font-family:"JetBrains Mono","Consolas",monospace; font-size:12px; color:var(--accent); min-width:140px; font-weight:500; }
+.type { display:inline-block; font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; padding:1px 8px; border-radius:3px; background:var(--code-bg); color:var(--muted); font-family:"JetBrains Mono","Consolas",monospace; min-width:74px; text-align:center; }
+.label-text { color:var(--fg); }
+.notes { color:var(--muted); font-size:12px; flex-basis:100%; padding-left:150px; margin-top:2px; }
+.edge-arrow { font-family:"JetBrains Mono","Consolas",monospace; color:var(--muted); }
+.context-intent { background:#fafafa; border-left:3px solid var(--accent); padding:10px 14px; border-radius:0 4px 4px 0; }
+.level-type-tag { display:inline-block; font-size:10px; padding:1px 8px; border-radius:3px; background:#e0f2fe; color:#0369a1; font-family:"JetBrains Mono",monospace; margin-left:8px; }
+</style>
+</head>
+<body>
+
+<div class="meta">
+  <b>{{meta.spec_id}}</b> · LEVEL: {{meta.level_id}} · v{{meta.version}} · OWNER: {{meta.owner}}
+</div>
+
+<h1>关卡流程图</h1>
+
+<h2>意图<span class="label">context</span></h2>
+<p class="context-intent">{{context.intent}}<span class="level-type-tag">{{context.level_type}}</span></p>
+
+<h2>流程图<span class="label">mermaid (auto-rendered)</span></h2>
+<pre class="mermaid">{{__derived__.mermaid_source}}</pre>
+
+<h2>节点明细<span class="label">nodes</span></h2>
+<ul class="node-list">
+{{#each nodes}}
+  <li>
+    <span class="id">{{id}}</span>
+    <span class="type">{{type}}</span>
+    <span class="label-text">{{label}}</span>
+    <div class="notes">{{notes}}</div>
+  </li>
+{{/each}}
+</ul>
+
+<h2>边明细<span class="label">edges</span></h2>
+<ul class="edge-list">
+{{#each edges}}
+  <li>
+    <span class="id">{{from}}</span>
+    <span class="edge-arrow">→</span>
+    <span class="id">{{to}}</span>
+    <span class="type">{{type}}</span>
+    <span class="label-text">{{label}}</span>
+  </li>
+{{/each}}
+</ul>
+
+</body>
+</html>

@@ -85,15 +85,22 @@ level-design-deck/
 │   └── template_diff.py             # spec vs template_fields.json（M1）
 ├── reference/
 │   └── template_fields.json         # template 提取出的字段清单（不再读原文件）
+├── cases/                              # 真实案例素材副本（M3.2 起）
+│   └── case_05_gangster_mansion__extracted_design.md
 └── outputs/
     └── (生成的 HTML 文档放这里)
 ```
 
 **约束**：
 - 每个 Python 工具 < 300 行
-- editor.html 单文件 < 300 行
+- editor.html 单文件 < 900 行（M3.2 从 < 300 bump 到 < 400；M3.3 再 bump 到 < 900 加 bubble_diagram 图状专用视图。下次再超强制拆 `editor/views/<module>.js`）
 - 没有 build step（npm/webpack 不要）
 - 离线可用（CDN 依赖只允许 jsonschema、Mermaid 一类必须的）
+
+**`cases/` 目录约定（M3.2 起）**：
+- 真实案例的"输入素材原料"复制到这里（不是 pipeline 产物，不污染）
+- 命名 `<case_id>__<orig_filename>.md`（双下划线分隔 case_id 和原文件名）
+- 引入新真实案例时，Claude 应主动复制对应素材到此目录，避免下次找不到
 
 ---
 
@@ -208,6 +215,19 @@ level-design-deck/
 | 2026-05-06 | M2 关键架构决策 · dot path 不支持 array 索引 | 遇 array 报错 + 提示"M2 不支持"。理由：M2 lighting_req 字段最深 3 层都是 object，array 拓展（如 `ambience_refs[0].region_id`）推到 M3。`[来源: 第一原理推导]` |
 | 2026-05-06 | git init + 首次 commit `03580f0` | 22 文件 6486 行；分支 `main`；`.gitignore` 排除 outputs/*.html / .warnings.json / .diff.json / __pycache__ / .DS_Store。template snapshot **进 git**（INHERITANCE.md "物理隔断"那一半的物理依据）。M2 决策"cp/diff 验隔离"现在可改用 `git diff` |
 | 2026-05-06 | M3.1 真实 POI 案例（gangster_mansion）端到端通过 | spec `lighting_req_gangster_mansion.spec.json` 落盘 → mechanical_check 0 ERROR / template_diff 0 MISSING / render HTML / regen 抽查 `level_constraint.description` diff 仅动 1 行 + 仍 0 ERROR。intent 940 token / generate_prompt 2.5k token，远低于 5k 上限。**暴露问题 1 项**：editor.html 的 SPEC_PATH 写死，本次加 1 行参数化（`?spec=` URL query）解决。详见 HANDOVER.md M3.1 经验节。`[来源: 第一原理推导 + extracted_design.md 案例素材]` |
+| 2026-05-06 | M3.2 启动：选 bubble_diagram 作第二个 module | 3 个理由：(1) 图状数据是当前架构最大未覆盖维度（节点+边 vs 字段平铺）；(2) 触发 M2 留 TODO 的 dot path array 索引扩展；(3) vfx_req 等克隆型不暴露新问题留到后面。`[来源: Steve 直接指示（2026-05-06）]` |
+| 2026-05-06 | M3.2 schema 决策 · 节点级粒度 | spec.nodes[] / spec.edges[] 是真源，每节点/边可独立 dot path 寻址。AI 一次产整图 JSON，重生成按 id 改单节点。mechanical_check 有图级断言抓手。代价：dot path 必须支持 array 索引（M2 → M3 的拓展兑现）。`[来源: Steve 直接指示（2026-05-06）]` |
+| 2026-05-06 | M3.2 渲染决策 · Mermaid（零依赖 + CDN 一行） | 文本 grep/git diff 友好；ELK pipeline 已踩坑结论复用。代价：Mermaid 自动布局不可精控，PoC 接受。`[来源: Steve 直接指示（2026-05-06）]` |
+| 2026-05-06 | M3.2 node/edge type 闭合枚举 | node: entry/scene/combat/puzzle/dialogue/choice/cutscene/exit；edge: sequential/branch/optional/loop/failure。理由：CLAUDE.md 第 2 条核心理念"schema 改了字段才存在"；自由字符串等于放弃机械约束。新需求扩枚举走 schema bump。`[来源: 第一原理推导]` |
+| 2026-05-06 | M3.2 dot path 扩展 · 同时支持 by-id 和 by-index | `nodes[entry].label` by-id（按 array items.id 唯一字段匹配） / `nodes[0].label` by-index（兜底）。by-id 优先因更稳（数组重排不失效）。M2 留 TODO 兑现。`[来源: 第一原理推导]` |
+| 2026-05-06 | M3.2 template_diff 对图状 module 走 noop | bubble_diagram 走跳过分支，输出 mapped/missing/extra=0/0/0 + rationale。理由：template_fields.json 是字段填空型 derived from gameplay_template.html，对图状 spec 强行套是反污染失误。`[来源: 第一原理推导]` |
+| 2026-05-06 | editor.html 行数约束 bump < 300 → < 400 | M3.2 加 spec 选择器 UI 后 295 → 318 行；原约束本意防大杂烩，spec 选择器是合理增量（多 spec 场景已确立）。后续仍需克制，每次 bump 在本表追加。`[来源: Steve 直接指示（2026-05-06）]` |
+| 2026-05-06 | M3.2 ✅ 完成 | 4 文件新建（schema/spec/template + outputs 派生）+ 7 文件修改（render/check/diff/generate/regen/serve/editor）+ 3 文档同步。验证：demo_bubble_diagram 0 ERROR / 0 REVIEW / template_diff skipped / Mermaid HTML 渲染成功；4 项故意破坏全部命中预期 ERROR/REVIEW；regenerate by-id 切出正确 sub-schema。`[来源: 第一原理推导]` |
+| 2026-05-06 | M3.2 真实案例补做（同日） | Steve 反馈"为什么用虚构？"——意识到被 lighting_req 「demo+真实分两步」模板带偏。**修正**：M3.x 引入新 module 时直接以真实案例为验收基准。落 `bubble_diagram_gangster_mansion`（11 节点 / 10 边，主动线 5 Beat）0 ERROR / 0 REVIEW / template_diff skipped / Mermaid 出图。新建 `cases/` 目录复制 `case_05_gangster_mansion__extracted_design.md` 防 future Claude 又找不到。`[来源: Steve 直接指示（2026-05-06）]` |
+| 2026-05-07 | M3.3 启动 · bubble_diagram editor 走专用视图 | Steve 实测 M3.2 后反馈：通用 schema-driven form 对图状数据**功能性不可用**（不是美学）—— nodes/edges 上下两块 dashed 框无 type 区分；图与表单无视觉关联；"加分支"要分别在 nodes/edges 区 push 三步，违反图操作直觉。**决策**：renderForm() 按 spec_id 前缀分发，bubble_diagram 走专用视图（嵌 Mermaid 实时预览 + 双向高亮 + type 上色卡片 + 图操作 popover），lighting_req 通用路径完全不变。`[来源: 第一原理推导 + Steve 直接指示（2026-05-07）]` |
+| 2026-05-07 | M3.3 渲染同步决策 · client-side specToMermaid 重写 | editor 内 JS port 一份 specToMermaid（< 30 行），与 [tools/render.py:88-112](tools/render.py) 的 `spec_to_mermaid` 逻辑一致。理由：实时反馈优先于 DRY；走 server round trip 200-500ms 卡顿严重。代价：python/js 双实现同步成本（新增 node/edge type 时两处都改）。约定代码注释互引。`[来源: 第一原理推导]` |
+| 2026-05-07 | editor.html 行数约束再 bump < 400 → < 900 | M3.3 加图状专用视图后 318 → 820 行（CSS 70 行 / specToMermaid+双向高亮 50 行 / renderBubbleDiagramView+卡片 130 行 / 6 个图操作 handler+popover 230 行 + HTML 结构 30 行）。比预算 < 700 多出，主因 popover handlers 字面量 HTML 较啰嗦。**强制约定**：下次 M3.4+ 再超 900 必须拆 `editor/views/<module>.js`，不再 bump。`[来源: Steve 直接指示（2026-05-07）]` |
+| 2026-05-07 | M3.3 ✅ 完成 | 1 文件修改（editor.html 318 → 820）+ 3 文档同步。新增能力：(1) 顶部 Mermaid 实时预览（debounce 200ms）；(2) Mermaid 节点 click 滚到 form 卡片 + 卡片 hover 反向高亮 mermaid；(3) 节点卡片按 type 上色（8 种）+ 紧凑 id/label/notes 编辑；(4) 出/入边按节点归属就地显示 chip；(5) 4 种图操作 popover（在此后插入 / 分叉 / 编辑边 / 删除节点 / 添加孤立）；(6) Esc 关闭。lighting_req 通用 form 路径未动（回归通过）。`[来源: 第一原理推导]` |
 
 ---
 

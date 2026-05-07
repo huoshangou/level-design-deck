@@ -61,7 +61,67 @@ def render_each(template, data):
     return EACH_RE.sub(replace, template)
 
 
+# === module-aware pre-render enrich (M3.2) ===
+# 通用模板引擎不动；按 spec_id 前缀派发到 enricher，注入派生字段（如 mermaid_source）。
+# 派生字段约定写到 spec["__derived__"] 命名空间，模板可用 {{__derived__.xxx}} 取值。
+
+NODE_SHAPE = {
+    "entry":    ("([", "])"),
+    "exit":     ("([", "])"),
+    "combat":   ("[", "]"),
+    "scene":    ("[", "]"),
+    "puzzle":   ("{", "}"),
+    "choice":   ("{", "}"),
+    "dialogue": ("[/", "/]"),
+    "cutscene": ("[\\", "\\]"),
+}
+
+EDGE_ARROW = {
+    "sequential": "-->",
+    "branch":     "-->",
+    "optional":   "-.->",
+    "loop":       "==>",
+    "failure":    "-.->",
+}
+
+
+def spec_to_mermaid(spec):
+    """spec.nodes/edges → Mermaid flowchart 文本。"""
+    lines = ["graph TD"]
+    for n in spec.get("nodes", []):
+        if not isinstance(n, dict):
+            continue
+        l, r = NODE_SHAPE.get(n.get("type"), ("[", "]"))
+        label = (n.get("label") or n.get("id", "")).replace('"', '\\"')
+        lines.append(f'  {n.get("id", "")}{l}"{label}"{r}')
+    for e in spec.get("edges", []):
+        if not isinstance(e, dict):
+            continue
+        et = e.get("type", "sequential")
+        arrow = EDGE_ARROW.get(et, "-->")
+        lbl = (e.get("label") or "").replace('"', '\\"')
+        if et == "failure" and lbl:
+            edge_part = f'{arrow}|"{lbl} (失败)"|'
+        elif et == "failure":
+            edge_part = f'{arrow}|"失败"|'
+        elif lbl:
+            edge_part = f'{arrow}|"{lbl}"|'
+        else:
+            edge_part = arrow
+        lines.append(f'  {e.get("from", "")} {edge_part} {e.get("to", "")}')
+    return "\n".join(lines)
+
+
+def enrich_for_render(spec):
+    """按 spec_id 前缀派发到对应 enricher，注入派生字段。其他 module 默认 noop。"""
+    spec_id = spec.get("meta", {}).get("spec_id", "")
+    if spec_id.startswith("bubble_diagram_"):
+        spec.setdefault("__derived__", {})["mermaid_source"] = spec_to_mermaid(spec)
+    return spec
+
+
 def render(template, spec):
+    spec = enrich_for_render(spec)
     # 先展开 each（支持 each 内部嵌套变量），再展开顶层变量
     text = render_each(template, spec)
     text = render_vars(text, spec)

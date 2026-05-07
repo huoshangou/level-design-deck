@@ -16,8 +16,33 @@ import json
 import subprocess
 import sys
 from pathlib import Path
+from urllib.parse import urlparse, parse_qs
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
+
+
+def list_specs():
+    """列出 specs/*.spec.json 的 stem（去掉 .spec 后缀）。"""
+    specs_dir = PROJECT_ROOT / "specs"
+    return sorted(p.stem.replace(".spec", "") for p in specs_dir.glob("*.spec.json"))
+
+
+def infer_paths(spec_id):
+    """spec_id → (spec_path, schema_path, template_path)。
+    扫 schema/，按最长 module 名前缀匹配（与 regenerate_field.infer_schema_path 同思路）。"""
+    schema_dir = PROJECT_ROOT / "schema"
+    candidates = sorted(
+        (p.name[:-len(".schema.json")] for p in schema_dir.glob("*.schema.json")),
+        key=len, reverse=True,
+    )
+    for module in candidates:
+        if module in spec_id:
+            return (
+                PROJECT_ROOT / "specs" / f"{spec_id}.spec.json",
+                schema_dir / f"{module}.schema.json",
+                PROJECT_ROOT / "templates" / f"{module}.html.tmpl",
+            )
+    return None
 
 
 class Handler(http.server.SimpleHTTPRequestHandler):
@@ -52,36 +77,79 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(json.dumps({"ok": True, "path": rel}).encode("utf-8"))
 
+    def do_GET(self):
+        # GET /api/specs           → 返回 specs/*.spec.json 列表
+        # GET /api/paths?spec=<id> → 返回该 spec 的 spec/schema/template 路径
+        parsed = urlparse(self.path)
+        if parsed.path == "/api/specs":
+            self._json_ok({"specs": list_specs()})
+            return
+        if parsed.path == "/api/paths":
+            spec_id = parse_qs(parsed.query).get("spec", [""])[0]
+            paths = infer_paths(spec_id)
+            if paths:
+                spec, schema, tmpl = paths
+                self._json_ok({
+                    "spec": "/" + str(spec.relative_to(PROJECT_ROOT)),
+                    "schema": "/" + str(schema.relative_to(PROJECT_ROOT)),
+                    "template": "/" + str(tmpl.relative_to(PROJECT_ROOT)),
+                })
+            else:
+                self.send_error(400, f"cannot infer paths for {spec_id!r}")
+            return
+        super().do_GET()
+
     def do_POST(self):
-        # POST /api/check  → 跑 mechanical_check + template_diff
-        # POST /api/render → 跑 render.py
-        if self.path == "/api/check":
-            self._run_check()
-        elif self.path == "/api/render":
-            self._run_render()
+        # POST /api/check?spec=<id>  → 跑 mechanical_check + template_diff
+        # POST /api/render?spec=<id> → 跑 render.py
+        parsed = urlparse(self.path)
+        if parsed.path == "/api/check":
+            self._run_check(self._spec_id_from_query(parsed))
+        elif parsed.path == "/api/render":
+            self._run_render(self._spec_id_from_query(parsed))
         else:
             self.send_error(404)
 
-    def _run_check(self):
-        spec = PROJECT_ROOT / "specs" / "demo_lighting_req.spec.json"
-        schema = PROJECT_ROOT / "schema" / "lighting_req.schema.json"
+    def _spec_id_from_query(self, parsed):
+        qs = parse_qs(parsed.query)
+        spec_id = qs.get("spec", ["demo_lighting_req"])[0]
+        return spec_id
+
+    def _resolve_paths_or_500(self, spec_id):
+        paths = infer_paths(spec_id)
+        if not paths:
+            self.send_error(400, f"cannot infer module for spec_id {spec_id!r}")
+            return None
+        spec, schema, tmpl = paths
+        if not spec.exists():
+            self.send_error(404, f"spec not found: {spec.relative_to(PROJECT_ROOT)}")
+            return None
+        return paths
+
+    def _run_check(self, spec_id):
+        paths = self._resolve_paths_or_500(spec_id)
+        if not paths:
+            return
+        spec, schema, _ = paths
         try:
             subprocess.run([sys.executable, "tools/mechanical_check.py", str(spec), str(schema), "--quiet"],
                            cwd=PROJECT_ROOT, check=False, capture_output=True)
             subprocess.run([sys.executable, "tools/template_diff.py", str(spec), "--quiet"],
                            cwd=PROJECT_ROOT, check=False, capture_output=True)
-            self._json_ok({"ok": True})
+            self._json_ok({"ok": True, "spec_id": spec_id})
         except Exception as e:
             self.send_error(500, str(e))
 
-    def _run_render(self):
-        spec = PROJECT_ROOT / "specs" / "demo_lighting_req.spec.json"
-        tmpl = PROJECT_ROOT / "templates" / "lighting_req.html.tmpl"
-        out = PROJECT_ROOT / "outputs" / "demo.html"
+    def _run_render(self, spec_id):
+        paths = self._resolve_paths_or_500(spec_id)
+        if not paths:
+            return
+        spec, _, tmpl = paths
+        out = PROJECT_ROOT / "outputs" / f"{spec_id}.html"
         try:
             subprocess.run([sys.executable, "tools/render.py", str(spec), str(tmpl), str(out)],
                            cwd=PROJECT_ROOT, check=True, capture_output=True)
-            self._json_ok({"ok": True, "output": "outputs/demo.html"})
+            self._json_ok({"ok": True, "spec_id": spec_id, "output": f"outputs/{spec_id}.html"})
         except subprocess.CalledProcessError as e:
             self.send_error(500, e.stderr.decode("utf-8", errors="replace") if e.stderr else "render failed")
 

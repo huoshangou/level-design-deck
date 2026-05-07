@@ -49,7 +49,7 @@
 ## 3. 代码约束
 
 - **Python 工具**单文件 < 300 行，**优先标准库**（避免公司防火墙下 pip install 麻烦，详见 user `MEMORY.md` 的"公司防火墙"条）
-- **`editor.html`** < 300 行，单文件 self-contained
+- **`editor.html`** < 900 行，单文件 self-contained（M3.2 从 < 300 bump 到 < 400，M3.3 从 < 400 bump 到 < 900 因加 bubble_diagram 图状专用视图，理由见 PROJECT.md 决策记录 2026-05-06 / 2026-05-07）。**下次（M3.4+）再超 900 强制拆 `editor/views/<module>.js`**
 - **无 build step**（不要 npm / webpack / vite）
 - **离线可用**，CDN 依赖只允许必须的（如 jsonschema、Mermaid）
 - **fail loud**：解析/校验失败必须明确报错，不静默 skip
@@ -158,4 +158,4 @@ L3 防线由**两个机制**组成：自问（4.A）+ 决策来源标签（4.B�
 
 ## 版本
 
-CLAUDE.md v0.3（2026-04-30 创建；2026-05-06 加 4.B 决策来源标签输出契约；2026-05-06 同日：补 work_docs_extract.json 和 Steve 直接指示 2 种来源枚举）
+CLAUDE.md v0.5（2026-04-30 创建；2026-05-06 加 4.B 决策来源标签输出契约；2026-05-06 同日：补 work_docs_extract.json 和 Steve 直接指示 2 种来源枚举；2026-05-06 M3.2：editor.html 行数约束从 < 300 bump 到 < 400；2026-05-07 M3.3：editor.html 从 < 400 bump 到 < 900，加 bubble_diagram 图状专用视图）
