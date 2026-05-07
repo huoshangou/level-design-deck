@@ -1,7 +1,7 @@
 # HANDOVER · level-design-deck
 
 > **创建**：2026-04-30
-> **最近更新**：2026-05-07（M3.3 完成）
+> **最近更新**：2026-05-07（M3.4 完成）
 > **目标读者**：未来的 Steve + 新 session 的 Claude
 
 ---
@@ -9,8 +9,8 @@
 ## TL;DR（30 秒看完）
 
 - **项目**：`level-design-deck`，spec 真源 + schema-driven 编辑 + 机械校验工作台
-- **状态**：**M0 / M1 / M2 全部 ✅**；**M3.1 真实 POI 案例（gangster_mansion）端到端 ✅**；**M3.2 第二个 module（bubble_diagram，图状数据 + Mermaid 渲染）端到端 ✅**；**M3.3 bubble_diagram editor 图状专用视图 ✅**（嵌 Mermaid 实时预览 + 双向高亮 + 4 种图操作 popover）
-- **下一步**：M3.x 剩余候选（HUB 结构第二真实案例 / 第三个 module / 批量优化美学）
+- **状态**：**M0 / M1 / M2 全部 ✅**；**M3.1 真实 POI 案例（gangster_mansion）端到端 ✅**；**M3.2 第二个 module（bubble_diagram，图状数据 + Mermaid 渲染）端到端 ✅**；**M3.3 bubble_diagram editor 图状专用视图 ✅**（嵌 Mermaid 实时预览 + 双向高亮 + 4 种图操作 popover）；**M3.4 HUB 结构第二真实关卡案例（gangster_mansion_boss，13 节点 / 14 边）✅**
+- **下一步**：M3.x 剩余候选（bubble_diagram schema 补字段 / 第三个 module / 批量优化美学）
 
 ---
 
@@ -46,6 +46,7 @@ python3 tools/render.py specs/<id>.spec.json templates/lighting_req.html.tmpl ou
 - `specs/lighting_req_gangster_mansion.spec.json` — M3.1 真实案例（LittleTokyo 黑帮大宅 / 主线烘焙模式）
 - `specs/demo_bubble_diagram.spec.json` — M3.2 手填 demo（虚构废弃实验室渗透流程，6 节点 / 7 边 / 覆盖 entry/scene/combat/choice/puzzle/exit + sequential/branch/loop edge）— 留作 generate_spec.py few-shot
 - `specs/bubble_diagram_gangster_mansion.spec.json` — M3.2 真实案例（黑帮大宅 Part 1 区域主动线 5 Beat 流程，11 节点 / 10 边）— 素材来源 `cases/case_05_gangster_mansion__extracted_design.md` Page 22-28
+- `specs/bubble_diagram_gangster_mansion_boss.spec.json` — M3.4 真实案例（黑帮大宅 Part 2 = 稻泽薰 40 体 boss，HUB 结构 + 3 阶段，13 节点 / 14 边，含 2 条 loop 回流）— 素材来源 `cases/case_05_gangster_mansion__extracted_design.md` Page 29-32
 
 ---
 
@@ -59,6 +60,7 @@ python3 tools/render.py specs/<id>.spec.json templates/lighting_req.html.tmpl ou
 | **M3.1** | ✅ 完成 | 真实 POI 案例 `lighting_req_gangster_mansion`（黑帮大宅）端到端跑通 | mechanical_check 0 ERROR / template_diff 0 MISSING / regen 抽查 diff 仅 1 行 / editor 加 1 行参数化支持多 spec |
 | **M3.2** | ✅ 完成 | 第二个 module = `bubble_diagram`（节点级 schema + Mermaid 渲染）+ 真实案例端到端 | demo 0/0 ✓；**真实 case `bubble_diagram_gangster_mansion`（11 节点 / 10 边，主动线 5 Beat）0/0 ✓**；template_diff skipped；4 项故意破坏命中预期；regenerate by-id 切对 sub-schema；editor 加 spec 选择器（318 行 < 400 bumped）|
 | **M3.3** | ✅ 完成 | bubble_diagram editor 图状专用视图：嵌 Mermaid 实时预览 + 节点 type 上色卡片 + 双向高亮 + 4 种图操作 popover（在此后插入 / 分叉 / 编辑边 / 删除节点 / 添加孤立） | editor.html 318 → 820 行（< 900 bumped，下次再超强制拆 .js）；module 分发让 lighting_req 通用 form 路径完全不变（回归 ✓）|
+| **M3.4** | ✅ 完成 | 第二个真实关卡 bubble_diagram 案例（HUB 结构）= `bubble_diagram_gangster_mansion_boss`（13 节点 / 14 边，Phase I/II/III）| mechanical_check 0/0 ✓；template_diff skipped ✓；render Mermaid 出图 ✓；HUB 中央节点（4 出 3 入）+ loop 回流边表达成立。schema 暴露 4 项缺字段（前置依赖合取条件 / 物件依赖 / Phase 归属 / 估时 / TBD 标记）记入候选表。详见 M3.4 经验节 |
 | **M3.x** | 🔮 候选 | 见末尾候选表 | — |
 
 ---
@@ -72,8 +74,9 @@ python3 tools/render.py specs/<id>.spec.json templates/lighting_req.html.tmpl ou
 | ~~**真实 POI 案例端到端**~~ | ~~M2 验证用的是虚构案例，只证"工具能跑通"；真实案例才证"工具产出能用"~~ | ~~已完成 2026-05-06 (M3.1)，案例改用 `~/LevelAgent/test_cases/case_05_gangster_mansion/extracted_design.md`（Steve 确认是输入素材原料而非 pipeline 产物）；详见 M3.1 经验节~~ |
 | ~~**铺第二个 module**（如 vfx_req / audio_req / spatial_layout）~~ | ~~暴露 schema-driven 范式在不同字段形态下的问题（数组、嵌套对象）；M2 dot path 在 array 索引就要拓展~~ | ~~已完成 2026-05-06 (M3.2)，选了 bubble_diagram（图状数据，比克隆型暴露问题更多）；详见 M3.2 经验节~~ |
 | ~~**真实关卡 bubble_diagram 案例**~~ | ~~验证 schema-driven 对图在真实关卡复杂度下成立；Mermaid 自动布局是否够用要真实节点数才知道~~ | ~~已完成 2026-05-06（M3.2 同日补做），跑了 case_05 黑帮大宅 Part 1 主动线 11 节点 / 10 边~~ |
-| **第二个真实关卡 bubble_diagram 案例（HUB 结构）** | case_05 Part 2 = 稻泽薰 40 体 boss = HUB 分支循环结构，比线性 5 Beat 更复杂；验证 schema 对 HUB 图（多 Key 收集 + 中央分流点 + 知识锁）是否够用 | 需要把 Page 29-32 内容映射到节点/边；可能暴露 schema 缺字段（如「玩法物件依赖」「Key 锁关系」） |
+| ~~**第二个真实关卡 bubble_diagram 案例（HUB 结构）**~~ | ~~case_05 Part 2 = 稻泽薰 40 体 boss = HUB 分支循环结构~~ | ~~已完成 2026-05-07 (M3.4)，详见 M3.4 经验节~~ |
 | **第三个 module**（如 vfx_req / spatial_layout / audio_req） | 看是否暴露第三种维度（如 spatial_layout 的几何/坐标） | 重复 M3.2 同款流程，但 vfx_req 等近似克隆，价值递减 |
+| **bubble_diagram schema 补字段（前置依赖 / Phase / 估时 / TBD）** | M3.4 暴露 4 项缺字段，逐项决定加哪个：(a) edges[] 的 `requires:[node_id]` 表达合取前置 (b) nodes[] 的 `phase:string` 标 Phase 归属 (c) nodes[] 的 `est_minutes:[min,max]` (d) nodes[] 的 `tbd:bool` + `tbd_reason` | 加一个字段就要改 schema + mechanical_check + render(mermaid 子图分组) + editor 卡片 4 处；范围比想象大，按真实需求驱动单独加 |
 | ~~**bubble_diagram editor 图状专用视图**~~ | ~~M3.2 暴露通用 schema-driven form 对图状数据功能性不可用~~ | ~~已完成 2026-05-07 (M3.3)，详见 M3.3 经验节~~ |
 | **批量优化美学+交互** | 兑现 M1 后"延后到批量做"的承诺；schema-driven UI 改一次所有 module 受益（注意：bubble_diagram 已走专用视图，批量美学只惠及 lighting_req 类通用 form） | 美学优化的"完成定义"模糊，容易超出 PoC 范围 |
 | ~~**给项目加 git**~~ | ~~已完成 2026-05-06，commit `03580f0`~~ | — |
@@ -85,6 +88,8 @@ python3 tools/render.py specs/<id>.spec.json templates/lighting_req.html.tmpl ou
 > **2026-05-06 update**：候选 #1 已完成（M3.1）；候选 #2 已完成（M3.2，选 bubble_diagram）；新增候选"真实关卡 bubble_diagram 案例"和"第三个 module"，批量美学/团队试用/prompt 优化仍开放。
 >
 > **2026-05-07 update**：bubble_diagram editor 图状专用视图已完成（M3.3）。剩余优先级建议：HUB 案例 > 第三个 module > 批量美学。
+>
+> **2026-05-07 update 2**：HUB 案例已完成（M3.4，bubble_diagram_gangster_mansion_boss）。剩余优先级建议：bubble_diagram schema 补字段（驱动力强：M3.4 暴露 4 项实际缺字段，1 项已用 notes 文字 fallback）> 第三个 module > 批量美学。
 
 ---
 
@@ -299,6 +304,94 @@ python3 tools/serve_editor.py --port 8765
 8. 点节点卡片底部"出边" chip → 弹 popover 改 from/to/type/label / 删除边
 9. 点 `🗑 删除节点` → confirm → 节点 + 相关边都删
 10. 切到 `?spec=lighting_req_gangster_mansion` → 通用 form 完全不变（**回归 ✓**）
+
+---
+
+## M3.4 经验（第二个真实关卡 bubble_diagram 案例 = HUB 结构 = boss）
+
+### 触发原因
+
+M3.2 真实案例 `bubble_diagram_gangster_mansion`（Part 1）是线性 5 Beat，schema 表达力没被压到。HUB 结构（多 Key 收集 + 中央分流点 + 知识锁 + 回流循环）是 schema 第二种压力测试，验证 8 种 node type / 5 种 edge type 闭合枚举在非线性流程下是否成立。
+
+### 落盘
+
+**素材来源**：`cases/case_05_gangster_mansion__extracted_design.md` Page 29-32
+
+**spec**：`specs/bubble_diagram_gangster_mansion_boss.spec.json` 13 节点 / 14 边
+
+**拓扑**：
+- Phase I (Linear)：side_entrance(entry) → discover_secret(scene)
+- Phase II (Hub)：butsudo_first_visit(scene) → **butsudo_hub(choice，4 出 3 入)**
+  - 分支 B：→ side_courtyard_path → ayami_room_key02 ==loop=> butsudo_hub
+  - 分支 A：→ training_hall_path → closet_dorm_key03 ==loop=> butsudo_hub
+- Phase III：butsudo_hub → knowledge_lock(puzzle) → secret_passage → boss_meet(cutscene) → boss_battle(combat) → ending_resolution(exit)
+
+**验证全过**：mechanical_check 0/0 ✓ / template_diff skipped ✓ / render Mermaid 出图 ✓ / 11306 chars HTML
+
+**节点 type 真实使用**：entry / scene / choice / puzzle / cutscene / combat / exit 共 7 种；dialogue 未用。Part 1+Part 2 合计 7/8 type 使用过，schema 第一原理推导的闭合枚举在两个真实案例下成立。
+
+**edge type 真实使用**：sequential / branch / loop 共 3 种；optional / failure 未用。**loop 在 HUB 回流场景首次被真实使用**（Part 1 全 sequential/branch），M3.2 当时担心的"loop 用不上"被推翻。
+
+### 🟢 工具够用的（M3.2 范式在 HUB 下成立）
+
+- **8 种 node type / 5 种 edge type 闭合枚举对 HUB 结构表达足够**：choice 节点天然承担 hub 角色，loop 边天然承担回流角色，无需扩枚举
+- **mechanical_check 语义层对 HUB 一次过**：图级断言（id 唯一 / edge 端点存在 / 入口出口 / 孤立节点）对 HUB 结构无误报无漏报；M3.2 写的 4 项断言对非线性图同样工作
+- **client-side specToMermaid 对 HUB 节点形状无分歧**：choice→菱形 `{...}` 和 loop→`==>` 加粗箭头，python/js 双实现都对
+- **Mermaid TD 默认布局对 13 节点 HUB 结构「够用」**：Steve 2026-05-07 浏览器实测原话「布局还不错，可以接受」→ 即 4 出 3 入中央节点 + 2 条 loop 回流不致纠缠，PoC 期不需要 layout hint；M3.x 候选表对应项可降优先级
+
+### 🟡 PoC 接受但未来要看的粗糙边
+
+- **HUB 结构 Mermaid 自动布局是否清爽**：13 节点（Part 1 是 11）+ 中央节点 4 出 3 入 + 2 条 loop 回流 + 1 条直通 Phase III，TD 布局会不会把 hub 周围挤乱待 Steve 浏览器看；不行就候选「加 layout hint」（如 nodes[].rank 或 nodes[].subgraph_phase）
+- **edge label 啰嗦**：本次为兜住"前置合取条件无字段"在 `butsudo_hub → knowledge_lock` 边的 label 里塞了"（合取条件无字段，见 notes）"，10 字以上 label 在 Mermaid 上会撑长边长。schema 加 `requires` 字段后该 label 应缩为 "Key02 + Key03 齐"
+- **Phase 归属混在 notes 文字前缀**：node.notes 字段以 "Phase II 起。..." 开头，无结构化 phase 字段，无法做"按 Phase 折叠/分组渲染"。Mermaid subgraph 语法支持分组，但当前 spec 表达不出来
+- **Loop 边视觉对回流语义不够强**：Mermaid `==>` 加粗箭头表达"强连接"，但用户心智里 loop 是"返回"。理想做法是 mermaid 的曲线返回箭头，但 Mermaid v10 没原生支持
+
+### 🔴 schema 缺字段（M3.4 暴露 4 项，候选记入路线图候选表）
+
+按"刚需程度"排序：
+
+1. **edges[] 的 `requires:[node_id]` 表达合取前置条件** ⭐ 最刚需
+   - 场景：knowledge_lock 入边需要 "Key02 ∧ Key03 已收集" 这种合取
+   - 当前 fallback：edge.label 文字描述"Key02 + Key03 齐"
+   - 加完后 mechanical_check 可校验"requires 引用的 node id 必须存在且必须是 knowledge_lock 的祖先节点"
+   - 风险：合取/析取混合（"Key02 ∧ (Key03 ∨ Key03_alt)"）会让字段结构复杂化，PoC 阶段先只支持合取
+2. **nodes[] 的 `phase:string` 标 Phase 归属**
+   - 场景：本 spec 13 节点天然分 3 阶段（Phase I/II/III），文档/编辑器若按 phase 分组会大幅提升可读性
+   - 当前 fallback：node.notes 文字前缀
+   - 加完后 render.py 可生成 Mermaid `subgraph Phase_II` 分组
+3. **nodes[] 的 `est_minutes:[min,max]` 估时**
+   - 场景：Page 30 给"5-8 mins"估时，Part 1 也有节点估时
+   - 当前 fallback：写在 notes 里
+   - 优先级低：估时不影响图结构，文档侧加一个 badge 即可
+4. **nodes[] 的 `tbd:bool` + `tbd_reason:string`**
+   - 场景：Page 31-32 标"此处分镜和参考待世界观补充"
+   - 当前 fallback：notes 末尾写 [限制: ...]
+   - 优先级低：可视化提示价值有限，更适合 mechanical_check 加 REVIEW
+
+**决策**：M3.x 候选表已加"bubble_diagram schema 补字段"项，按真实需求驱动单独加，不批量推。第 1 项 `requires` 最高优先级。
+
+### 反污染合规自检 ✅
+
+- 全程未读 pipeline 的 `/bubble-diagram` 命令实现 / ELK 渲染实现 / contracts/skills/**
+- 全程未读 case_05 下的 ir_filled.json / layout_*.json / build_enriched.js / region_shape_map.json（pipeline 产物）
+- 唯一引用：`cases/case_05_gangster_mansion__extracted_design.md` Page 29-32（Steve 确认是输入素材）
+- node 拓扑设计 / 阶段切分 / Key 收集回流逻辑均从 case_05 原文 + 第一原理推导，未参考任何 pipeline 字段
+
+### Steve 人眼验收点
+
+启动：
+```bash
+cd ~/Desktop/level-design-deck
+python3 tools/serve_editor.py --port 8765
+```
+
+验收清单：
+1. 渲染 HTML：`open outputs/bubble_diagram_gangster_mansion_boss.html` → Mermaid TD 图正常出图，13 节点 14 边
+2. **关键观察点**：HUB 节点 `butsudo_hub`（菱形 choice）周围布局是否够看（4 出 3 入是否纠缠）
+3. **关键观察点**：2 条 loop 回流边（`==>` 加粗箭头从 ayami/closet 回 hub）是否视觉清晰，能否被识别为"返回"
+4. editor `?spec=bubble_diagram_gangster_mansion_boss` → 顶部 Mermaid 实时预览 / 双向高亮 / 13 张节点卡片 / type 上色（entry 绿 / choice 橙 / puzzle 橙 / cutscene 粉 / combat 红 / exit 灰 / scene 蓝）
+5. 切回 `?spec=bubble_diagram_gangster_mansion`（Part 1，11 节点）→ M3.3 已验回归 ✓ 这次复测一遍
+6. 切到 `?spec=lighting_req_gangster_mansion` → 通用 form 路径完全不变（**回归 ✓**）
 
 ---
 

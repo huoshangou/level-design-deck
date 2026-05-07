@@ -228,6 +228,11 @@ level-design-deck/
 | 2026-05-07 | M3.3 渲染同步决策 · client-side specToMermaid 重写 | editor 内 JS port 一份 specToMermaid（< 30 行），与 [tools/render.py:88-112](tools/render.py) 的 `spec_to_mermaid` 逻辑一致。理由：实时反馈优先于 DRY；走 server round trip 200-500ms 卡顿严重。代价：python/js 双实现同步成本（新增 node/edge type 时两处都改）。约定代码注释互引。`[来源: 第一原理推导]` |
 | 2026-05-07 | editor.html 行数约束再 bump < 400 → < 900 | M3.3 加图状专用视图后 318 → 820 行（CSS 70 行 / specToMermaid+双向高亮 50 行 / renderBubbleDiagramView+卡片 130 行 / 6 个图操作 handler+popover 230 行 + HTML 结构 30 行）。比预算 < 700 多出，主因 popover handlers 字面量 HTML 较啰嗦。**强制约定**：下次 M3.4+ 再超 900 必须拆 `editor/views/<module>.js`，不再 bump。`[来源: Steve 直接指示（2026-05-07）]` |
 | 2026-05-07 | M3.3 ✅ 完成 | 1 文件修改（editor.html 318 → 820）+ 3 文档同步。新增能力：(1) 顶部 Mermaid 实时预览（debounce 200ms）；(2) Mermaid 节点 click 滚到 form 卡片 + 卡片 hover 反向高亮 mermaid；(3) 节点卡片按 type 上色（8 种）+ 紧凑 id/label/notes 编辑；(4) 出/入边按节点归属就地显示 chip；(5) 4 种图操作 popover（在此后插入 / 分叉 / 编辑边 / 删除节点 / 添加孤立）；(6) Esc 关闭。lighting_req 通用 form 路径未动（回归通过）。`[来源: 第一原理推导]` |
+| 2026-05-07 | git 补 commit `4cfba80` = M3.2 + M3.3 合并 | M3.2 整批从未 commit + M3.3 也未 commit；editor.html 中间态 318 行版本已不可还原，强分两段为伪历史 → 合一个 commit + message 内分段说明范围 |
+| 2026-05-07 | M3.4 启动 · 第二个真实关卡案例 = HUB 结构 = gangster_mansion_boss | Part 1 是线性 5 Beat，schema 表达力没被压到；HUB 结构（多 Key 收集 + 中央分流点 + 知识锁 + 回流循环）是 schema 第二种压力测试，也是 M3.x 候选表里"暴露问题最快"项。`[来源: Steve 直接指示（2026-05-07）]` |
+| 2026-05-07 | M3.4 ✅ 完成 | 1 spec 新建 `bubble_diagram_gangster_mansion_boss`（13 节点 / 14 边，Phase I/II/III）；mechanical_check 0/0 ✓，template_diff skipped ✓，Mermaid 渲染 11306 chars。**关键验证**：(a) 8 种 node type / 5 种 edge type 闭合枚举对 HUB 结构表达足够（未触枚举扩展）；(b) loop 边在 HUB 回流场景首次被真实使用（Part 1 全 sequential/branch）；(c) 7/8 node type / 3/5 edge type 在两个真实案例下使用过，闭合枚举的"够用度"得到二次确认。`[来源: 第一原理推导 + extracted_design.md Page 29-32]` |
+| 2026-05-07 | M3.4 暴露 4 项 schema 缺字段（候选） | 按刚需排序：(1) edges[] 的 `requires:[node_id]` 表达合取前置（knowledge_lock 入边的 Key02∧Key03，最刚需）；(2) nodes[] 的 `phase:string` 标 Phase 归属（13 节点天然分 3 阶段，加完可 Mermaid subgraph 分组）；(3) nodes[] 的 `est_minutes:[min,max]` 估时；(4) nodes[] 的 `tbd:bool` + `tbd_reason`。**决策**：候选表加"bubble_diagram schema 补字段"项，按真实需求驱动单独加，不批量推。`[来源: 第一原理推导 + M3.4 实跑暴露]` |
+| 2026-05-07 | M3.4 Steve 浏览器实测判定 · HUB 布局够用 | Steve 原话「布局还不错，可以接受」→ Mermaid TD 默认布局对 4 出 3 入中央节点 + 2 条 loop 回流不纠缠；PoC 期不需要 layout hint。M3.x 候选表「加 layout hint」对应项可降优先级。`[来源: Steve 直接指示（2026-05-07）]` |
 
 ---
 
