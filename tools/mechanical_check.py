@@ -201,6 +201,19 @@ def check_bubble_diagram(spec, v):
         if nid not in refed:
             v.add_review(f"nodes[{nid}]", "isolated", f"node {nid!r} has no in/out edge")
 
+    # 5. M3.5: edges[].requires 引用必须命中 nodes[].id（合取前置语法层校验）
+    # 祖先可达性留作 M3.x 候选（HUB+loop 下 DAG 语义模糊）
+    for i, e in enumerate(edges):
+        if not isinstance(e, dict):
+            continue
+        reqs = e.get("requires") or []
+        if not isinstance(reqs, list):
+            continue
+        for j, ref in enumerate(reqs):
+            if ref not in seen:
+                v.add_error(f"edges[{i}].requires[{j}]", "ref_integrity",
+                            f"requires {ref!r} not in nodes (available: {sorted(seen)})")
+
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)

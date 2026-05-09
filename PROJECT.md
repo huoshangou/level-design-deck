@@ -233,6 +233,12 @@ level-design-deck/
 | 2026-05-07 | M3.4 ✅ 完成 | 1 spec 新建 `bubble_diagram_gangster_mansion_boss`（13 节点 / 14 边，Phase I/II/III）；mechanical_check 0/0 ✓，template_diff skipped ✓，Mermaid 渲染 11306 chars。**关键验证**：(a) 8 种 node type / 5 种 edge type 闭合枚举对 HUB 结构表达足够（未触枚举扩展）；(b) loop 边在 HUB 回流场景首次被真实使用（Part 1 全 sequential/branch）；(c) 7/8 node type / 3/5 edge type 在两个真实案例下使用过，闭合枚举的"够用度"得到二次确认。`[来源: 第一原理推导 + extracted_design.md Page 29-32]` |
 | 2026-05-07 | M3.4 暴露 4 项 schema 缺字段（候选） | 按刚需排序：(1) edges[] 的 `requires:[node_id]` 表达合取前置（knowledge_lock 入边的 Key02∧Key03，最刚需）；(2) nodes[] 的 `phase:string` 标 Phase 归属（13 节点天然分 3 阶段，加完可 Mermaid subgraph 分组）；(3) nodes[] 的 `est_minutes:[min,max]` 估时；(4) nodes[] 的 `tbd:bool` + `tbd_reason`。**决策**：候选表加"bubble_diagram schema 补字段"项，按真实需求驱动单独加，不批量推。`[来源: 第一原理推导 + M3.4 实跑暴露]` |
 | 2026-05-07 | M3.4 Steve 浏览器实测判定 · HUB 布局够用 | Steve 原话「布局还不错，可以接受」→ Mermaid TD 默认布局对 4 出 3 入中央节点 + 2 条 loop 回流不纠缠；PoC 期不需要 layout hint。M3.x 候选表「加 layout hint」对应项可降优先级。`[来源: Steve 直接指示（2026-05-07）]` |
+| 2026-05-07 | M3.5 启动 · 加 `edges[].requires:[node_id]` 表达合取前置依赖 | M3.4 暴露的最刚需缺字段（4 项第 1）。HUB 终点边 butsudo_hub→knowledge_lock 的 "Key02 ∧ Key03" 当前只能写 label 文字 + notes，无法机械校验。`[来源: M3.4 暴露案例]` |
+| 2026-05-07 | M3.5 schema bump · bubble_diagram 0.1.0 → 0.2.0 | 新增 optional 字段 `edges[].requires:[string]` 向后兼容。`[来源: CLAUDE.md 第 5 条变更纪律]` |
+| 2026-05-07 | M3.5 关键决策 · 字段位置 = edges[] 而非 nodes[] | requires 是"通过这条边的条件"，归属边而非节点（同一节点可能有多条入边各自前置不同）。`[来源: 第一原理推导]` |
+| 2026-05-07 | M3.5 关键决策 · 校验深度只到语法层（ref_integrity） | M3.5 只校 requires 字符串命中 nodes[].id；不做"祖先可达性"。理由：HUB+loop 下 DAG 语义模糊（loop 引入环），祖先校验易误伤；设计意图层校验是 designer 责任，机械层先把"引用合法性"兜住。祖先校验留作 M3.x 候选。`[来源: 第一原理推导]` |
+| 2026-05-07 | M3.5 关键决策 · Mermaid 呈现 = label 前缀 `[需 X+Y] ` | Mermaid 无 inline comment；单独节点表达前置破坏图结构。前缀 + 现有 label 共存是侵入最小的选择。python/js 双实现同步约定靠注释互引。`[来源: 第一原理推导]` |
+| 2026-05-07 | M3.5 ✅ 完成 | 4 文件改（schema/check/render/editor）+ 1 spec 回填（gangster_mansion_boss 的 butsudo_hub→knowledge_lock 边加 requires=[ayami_room_key02, closet_dorm_key03]，label 简化到「进入终局」，knowledge_lock notes 移除「[限制: schema 缺前置依赖字段]」）。验证：spec 0/0 ✓ / 故意破坏（注 ghost_key）→ ERROR ref_integrity ✓ / Mermaid 含「[需 ayami_room_key02+closet_dorm_key03] 进入终局」前缀 ✓ / Part 1 + demo + lighting_req 3 项回归全过 ✓。行数：editor 820→835 / mechanical_check 257→270 / render 156→158，均 <硬上限。`[来源: 第一原理推导]` |
 
 ---
 

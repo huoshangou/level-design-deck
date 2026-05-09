@@ -2,8 +2,8 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "level-design-deck/schema/bubble_diagram.schema.json",
   "title": "bubble_diagram spec",
-  "description": "关卡流程气泡图 spec schema。节点级真源（spec.nodes[] / spec.edges[]）。M3.2 v0.1.0。schema 字段从第一原理推导，不参考 pipeline 旧 /bubble-diagram 实现（已废弃）。图级语义断言（id 唯一、edge 端点引用完整、入口/出口、孤立节点）由 mechanical_check 语义层执行。",
-  "version": "0.1.0",
+  "description": "关卡流程气泡图 spec schema。节点级真源（spec.nodes[] / spec.edges[]）。schema 字段从第一原理推导，不参考 pipeline 旧 /bubble-diagram 实现（已废弃）。图级语义断言（id 唯一、edge 端点引用完整、入口/出口、孤立节点、requires 引用合法性）由 mechanical_check 语义层执行。M3.2 v0.1.0；M3.5 v0.2.0 加 edges[].requires 表达合取前置依赖。",
+  "version": "0.2.0",
   "applies_to": ["POI", "gameplay", "mixed"],
   "type": "object",
   "required": ["meta", "context", "nodes", "edges"],
@@ -114,6 +114,15 @@
           "label": {
             "type": "string",
             "description": "可选：边的触发条件或语义说明（如「通过解谜后」「拒绝交易则」）"
+          },
+          "requires": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "可选：合取前置依赖。列出该边触发所需的前置 node id（全部满足即可通过，AND 语义）。典型场景：HUB 终点边（如知识锁需要多 Key 同时持有）。mechanical_check 语义层校验所有 id 必须命中 nodes[].id；祖先可达性留作 M3.x 候选 [来源: M3.4 暴露案例]"
           }
         }
       }

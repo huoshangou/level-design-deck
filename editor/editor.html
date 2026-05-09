@@ -98,6 +98,7 @@ legend .schema-desc{color:var(--muted);font-weight:400;font-size:11px;margin-lef
 .edge-chip:hover{background:#e0eeff}
 .edge-chip.readonly{background:#f5f5f5;border-color:var(--line);color:var(--muted)}
 .edge-chip .chip-type{color:var(--muted);font-size:10px}
+.edge-chip .chip-req{color:var(--accent);font-weight:500;font-size:10px}
 .empty-chip{font-size:11px;color:var(--muted);font-style:italic}
 .add-edge-btn{padding:1px 8px;font-size:11px;border:1px dashed var(--accent);color:var(--accent);background:none;cursor:pointer;border-radius:12px}
 .add-node-btn{margin-top:12px;padding:8px 16px;border:1px dashed var(--accent);color:var(--accent);background:none;cursor:pointer;border-radius:4px;font-size:12px;width:100%}
@@ -442,10 +443,13 @@ function specToMermaid(spec) {
     const et = e.type || 'sequential';
     const arrow = EDGE_ARROW[et] || '-->';
     const lbl = String(e.label || '').replace(/"/g, '\\"');
+    // M3.5: requires 前缀（合取前置依赖），与 tools/render.py:spec_to_mermaid 同步
+    const reqs = Array.isArray(e.requires) ? e.requires : [];
+    const prefix = reqs.length ? `[需 ${reqs.join('+')}] ` : '';
     let edgePart;
-    if (et === 'failure' && lbl) edgePart = `${arrow}|"${lbl} (失败)"|`;
-    else if (et === 'failure') edgePart = `${arrow}|"失败"|`;
-    else if (lbl) edgePart = `${arrow}|"${lbl}"|`;
+    if (et === 'failure' && lbl) edgePart = `${arrow}|"${prefix}${lbl} (失败)"|`;
+    else if (et === 'failure') edgePart = `${arrow}|"${prefix}失败"|`;
+    else if (prefix || lbl) edgePart = `${arrow}|"${prefix}${lbl}"|`;
     else edgePart = arrow;
     lines.push(`  ${e.from || ''} ${edgePart} ${e.to || ''}`);
   }
@@ -566,7 +570,7 @@ function renderNodeCard(node, idx, edges) {
         <div class="edges-row">
           <span class="edges-label">出边 (${outEdges.length})</span>
           <span class="edges-chips">
-            ${outEdges.map(({e, ei}) => `<span class="edge-chip" onclick="openEditEdge(${ei})" title="点击编辑">→ ${escapeHtml(e.to || '?')} <span class="chip-type">[${escapeHtml(e.type || 'sequential')}]</span>${e.label ? ' ' + escapeHtml(e.label) : ''}</span>`).join('') || '<span class="empty-chip">(无出边)</span>'}
+            ${outEdges.map(({e, ei}) => `<span class="edge-chip" onclick="openEditEdge(${ei})" title="点击编辑">→ ${escapeHtml(e.to || '?')} <span class="chip-type">[${escapeHtml(e.type || 'sequential')}]</span>${(e.requires && e.requires.length) ? ' <span class="chip-req">需' + e.requires.map(escapeHtml).join('+') + '</span>' : ''}${e.label ? ' ' + escapeHtml(e.label) : ''}</span>`).join('') || '<span class="empty-chip">(无出边)</span>'}
             <button class="add-edge-btn" onclick="openForkFrom('${escapeAttr(id)}')" title="从此节点添加出边">+</button>
           </span>
         </div>
@@ -772,6 +776,7 @@ function openEditEdge(edgeIdx) {
   const e = (SPEC.edges || [])[edgeIdx];
   if (!e) return;
   const nodeIds = (SPEC.nodes || []).map(n => n.id).filter(x => x);
+  const reqsCur = Array.isArray(e.requires) ? e.requires : [];
   showPopover(`
     <h3>编辑边 #${edgeIdx}</h3>
     <label>from</label>
@@ -782,6 +787,13 @@ function openEditEdge(edgeIdx) {
     <select id="pop-edge-type">${EDGE_TYPES.map(t => `<option value="${t}" ${t===(e.type||'sequential')?'selected':''}>${t}</option>`).join('')}</select>
     <label>label (可选)</label>
     <input id="pop-edge-label" type="text" value="${escapeHtml(e.label || '')}">
+    <label>requires (合取前置, 多选)</label>
+    <select id="pop-requires" multiple size="6" style="height:auto">
+      ${nodeIds.filter(nid => nid !== e.from && nid !== e.to).map(nid =>
+        `<option value="${escapeHtml(nid)}" ${reqsCur.includes(nid)?'selected':''}>${escapeHtml(nid)}</option>`
+      ).join('')}
+    </select>
+    <div class="hint">按 Cmd/Ctrl 多选；选中的节点必须全部已访问，本边才触发（如知识锁需 Key02+Key03）</div>
     <div class="popover-actions">
       <button onclick="closePopover()">取消</button>
       <button class="danger" onclick="commitDeleteEdge(${edgeIdx})">删除边</button>
@@ -794,9 +806,12 @@ function commitUpdateEdge(edgeIdx) {
   const to = document.getElementById('pop-to').value;
   const type = document.getElementById('pop-edge-type').value;
   const label = document.getElementById('pop-edge-label').value.trim();
+  const reqsEl = document.getElementById('pop-requires');
+  const reqs = Array.from(reqsEl.selectedOptions).map(o => o.value);
   const e = SPEC.edges[edgeIdx];
   e.from = from; e.to = to; e.type = type;
   if (label) e.label = label; else delete e.label;
+  if (reqs.length) e.requires = reqs; else delete e.requires;
   closePopover();
   renderForm();
   toast('边已更新');

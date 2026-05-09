@@ -100,12 +100,15 @@ def spec_to_mermaid(spec):
         et = e.get("type", "sequential")
         arrow = EDGE_ARROW.get(et, "-->")
         lbl = (e.get("label") or "").replace('"', '\\"')
+        # M3.5: requires 前缀（合取前置依赖），与 editor.html:specToMermaid 同步
+        reqs = e.get("requires") or []
+        prefix = f"[需 {'+'.join(reqs)}] " if reqs else ""
         if et == "failure" and lbl:
-            edge_part = f'{arrow}|"{lbl} (失败)"|'
+            edge_part = f'{arrow}|"{prefix}{lbl} (失败)"|'
         elif et == "failure":
-            edge_part = f'{arrow}|"失败"|'
-        elif lbl:
-            edge_part = f'{arrow}|"{lbl}"|'
+            edge_part = f'{arrow}|"{prefix}失败"|'
+        elif prefix or lbl:
+            edge_part = f'{arrow}|"{prefix}{lbl}"|'
         else:
             edge_part = arrow
         lines.append(f'  {e.get("from", "")} {edge_part} {e.get("to", "")}')

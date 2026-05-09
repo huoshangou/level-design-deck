@@ -1,7 +1,7 @@
 # HANDOVER · level-design-deck
 
 > **创建**：2026-04-30
-> **最近更新**：2026-05-07（M3.4 完成）
+> **最近更新**：2026-05-07（M3.5 完成）
 > **目标读者**：未来的 Steve + 新 session 的 Claude
 
 ---
@@ -9,8 +9,8 @@
 ## TL;DR（30 秒看完）
 
 - **项目**：`level-design-deck`，spec 真源 + schema-driven 编辑 + 机械校验工作台
-- **状态**：**M0 / M1 / M2 全部 ✅**；**M3.1 真实 POI 案例（gangster_mansion）端到端 ✅**；**M3.2 第二个 module（bubble_diagram，图状数据 + Mermaid 渲染）端到端 ✅**；**M3.3 bubble_diagram editor 图状专用视图 ✅**（嵌 Mermaid 实时预览 + 双向高亮 + 4 种图操作 popover）；**M3.4 HUB 结构第二真实关卡案例（gangster_mansion_boss，13 节点 / 14 边）✅**
-- **下一步**：M3.x 剩余候选（bubble_diagram schema 补字段 / 第三个 module / 批量优化美学）
+- **状态**：**M0 / M1 / M2 全部 ✅**；**M3.1 真实 POI 案例（gangster_mansion）端到端 ✅**；**M3.2 第二个 module（bubble_diagram，图状数据 + Mermaid 渲染）端到端 ✅**；**M3.3 bubble_diagram editor 图状专用视图 ✅**（嵌 Mermaid 实时预览 + 双向高亮 + 4 种图操作 popover）；**M3.4 HUB 结构第二真实关卡案例（gangster_mansion_boss，13 节点 / 14 边）✅**；**M3.5 bubble_diagram schema bump 0.2.0 加 `edges[].requires` 表达合取前置依赖 ✅**
+- **下一步**：M3.x 剩余候选（schema 补字段剩 3 项：phase / est_minutes / tbd / 第三个 module / 批量优化美学）
 
 ---
 
@@ -61,6 +61,7 @@ python3 tools/render.py specs/<id>.spec.json templates/lighting_req.html.tmpl ou
 | **M3.2** | ✅ 完成 | 第二个 module = `bubble_diagram`（节点级 schema + Mermaid 渲染）+ 真实案例端到端 | demo 0/0 ✓；**真实 case `bubble_diagram_gangster_mansion`（11 节点 / 10 边，主动线 5 Beat）0/0 ✓**；template_diff skipped；4 项故意破坏命中预期；regenerate by-id 切对 sub-schema；editor 加 spec 选择器（318 行 < 400 bumped）|
 | **M3.3** | ✅ 完成 | bubble_diagram editor 图状专用视图：嵌 Mermaid 实时预览 + 节点 type 上色卡片 + 双向高亮 + 4 种图操作 popover（在此后插入 / 分叉 / 编辑边 / 删除节点 / 添加孤立） | editor.html 318 → 820 行（< 900 bumped，下次再超强制拆 .js）；module 分发让 lighting_req 通用 form 路径完全不变（回归 ✓）|
 | **M3.4** | ✅ 完成 | 第二个真实关卡 bubble_diagram 案例（HUB 结构）= `bubble_diagram_gangster_mansion_boss`（13 节点 / 14 边，Phase I/II/III）| mechanical_check 0/0 ✓；template_diff skipped ✓；render Mermaid 出图 ✓；HUB 中央节点（4 出 3 入）+ loop 回流边表达成立。schema 暴露 4 项缺字段（前置依赖合取条件 / 物件依赖 / Phase 归属 / 估时 / TBD 标记）记入候选表。详见 M3.4 经验节 |
+| **M3.5** | ✅ 完成 | bubble_diagram schema v0.1.0 → v0.2.0：加 `edges[].requires:[node_id]` 表达合取前置依赖。同步 mechanical_check 加第 5 项断言 / render Mermaid label 加 `[需 X+Y] ` 前缀 / editor edge popover 加 multi-select | spec 0/0 ✓ + 故意破坏 ERROR ref_integrity ✓ + Mermaid 前缀对位 ✓ + Part 1/demo/lighting_req 3 项回归全过 ✓。editor 820→835 / mechanical_check 257→270 / render 156→158 行均 < 硬上限 |
 | **M3.x** | 🔮 候选 | 见末尾候选表 | — |
 
 ---
@@ -76,7 +77,9 @@ python3 tools/render.py specs/<id>.spec.json templates/lighting_req.html.tmpl ou
 | ~~**真实关卡 bubble_diagram 案例**~~ | ~~验证 schema-driven 对图在真实关卡复杂度下成立；Mermaid 自动布局是否够用要真实节点数才知道~~ | ~~已完成 2026-05-06（M3.2 同日补做），跑了 case_05 黑帮大宅 Part 1 主动线 11 节点 / 10 边~~ |
 | ~~**第二个真实关卡 bubble_diagram 案例（HUB 结构）**~~ | ~~case_05 Part 2 = 稻泽薰 40 体 boss = HUB 分支循环结构~~ | ~~已完成 2026-05-07 (M3.4)，详见 M3.4 经验节~~ |
 | **第三个 module**（如 vfx_req / spatial_layout / audio_req） | 看是否暴露第三种维度（如 spatial_layout 的几何/坐标） | 重复 M3.2 同款流程，但 vfx_req 等近似克隆，价值递减 |
-| **bubble_diagram schema 补字段（前置依赖 / Phase / 估时 / TBD）** | M3.4 暴露 4 项缺字段，逐项决定加哪个：(a) edges[] 的 `requires:[node_id]` 表达合取前置 (b) nodes[] 的 `phase:string` 标 Phase 归属 (c) nodes[] 的 `est_minutes:[min,max]` (d) nodes[] 的 `tbd:bool` + `tbd_reason` | 加一个字段就要改 schema + mechanical_check + render(mermaid 子图分组) + editor 卡片 4 处；范围比想象大，按真实需求驱动单独加 |
+| ~~**bubble_diagram schema 补字段第 1 项 = `edges[].requires`**~~ | ~~M3.4 暴露最刚需~~ | ~~已完成 2026-05-07 (M3.5)，详见 M3.5 经验节~~ |
+| **bubble_diagram schema 补字段剩 3 项**（Phase / 估时 / TBD） | (a) nodes[] 的 `phase:string` 标 Phase 归属（加完可 Mermaid subgraph 分组）(b) nodes[] 的 `est_minutes:[min,max]` (c) nodes[] 的 `tbd:bool` + `tbd_reason` | 加一个字段需要改 schema + mechanical_check + render + editor 4 处；按真实需求驱动单独加 |
+| **`edges[].requires` 祖先可达性校验**（M3.5 留尾） | M3.5 只做语法层 ref_integrity（命中 nodes[].id），祖先可达性留作此项。需要在 HUB+loop 下处理环 / 多入口 | 算法非平凡（带环图的可达性 + 多入口），且 PoC 期 designer 心智可承担；价值未必高 |
 | ~~**bubble_diagram editor 图状专用视图**~~ | ~~M3.2 暴露通用 schema-driven form 对图状数据功能性不可用~~ | ~~已完成 2026-05-07 (M3.3)，详见 M3.3 经验节~~ |
 | **批量优化美学+交互** | 兑现 M1 后"延后到批量做"的承诺；schema-driven UI 改一次所有 module 受益（注意：bubble_diagram 已走专用视图，批量美学只惠及 lighting_req 类通用 form） | 美学优化的"完成定义"模糊，容易超出 PoC 范围 |
 | ~~**给项目加 git**~~ | ~~已完成 2026-05-06，commit `03580f0`~~ | — |
@@ -90,6 +93,8 @@ python3 tools/render.py specs/<id>.spec.json templates/lighting_req.html.tmpl ou
 > **2026-05-07 update**：bubble_diagram editor 图状专用视图已完成（M3.3）。剩余优先级建议：HUB 案例 > 第三个 module > 批量美学。
 >
 > **2026-05-07 update 2**：HUB 案例已完成（M3.4，bubble_diagram_gangster_mansion_boss）。剩余优先级建议：bubble_diagram schema 补字段（驱动力强：M3.4 暴露 4 项实际缺字段，1 项已用 notes 文字 fallback）> 第三个 module > 批量美学。
+>
+> **2026-05-07 update 3**：M3.4 暴露 4 项 schema 缺字段第 1 项 `edges[].requires` 已完成（M3.5）。剩 3 项（phase / est_minutes / tbd）按真实需求驱动单独加。剩余优先级建议：第三个 module（spatial_layout 等暴露第三种维度）> schema 补剩 3 项（无强 case 驱动暂缓）> 批量美学。
 
 ---
 
@@ -392,6 +397,76 @@ python3 tools/serve_editor.py --port 8765
 4. editor `?spec=bubble_diagram_gangster_mansion_boss` → 顶部 Mermaid 实时预览 / 双向高亮 / 13 张节点卡片 / type 上色（entry 绿 / choice 橙 / puzzle 橙 / cutscene 粉 / combat 红 / exit 灰 / scene 蓝）
 5. 切回 `?spec=bubble_diagram_gangster_mansion`（Part 1，11 节点）→ M3.3 已验回归 ✓ 这次复测一遍
 6. 切到 `?spec=lighting_req_gangster_mansion` → 通用 form 路径完全不变（**回归 ✓**）
+
+---
+
+## M3.5 经验（bubble_diagram schema bump 0.2.0 加 `edges[].requires`）
+
+### 触发原因
+
+M3.4 真实跑暴露 4 项 schema 缺字段，第 1 项 `edges[].requires` 是最刚需：HUB 终点边 `butsudo_hub → knowledge_lock` 的语义 "Key02 ∧ Key03 同时持有 → 进入终局" 当前只能在 edge.label 写文字描述（"Key02 + Key03 齐 → 进入终局（合取条件无字段，见 notes）"）+ knowledge_lock.notes 加 `[限制: schema 缺前置依赖字段]`。无法机械校验，无法在 Mermaid 里清晰呈现。
+
+### 关键决策（详见 PROJECT.md 决策记录）
+
+- **字段位置 = `edges[]` 而非 `nodes[]`**：requires 是"通过这条边的条件"，归属边而非节点（同一节点可能有多条入边各自前置不同）
+- **语义 = 合取（AND）**：多前置即"全部满足"。析取（OR）暂不支持，PoC 期未见需求
+- **校验深度 = 只到语法层（ref_integrity）**：requires 字符串必须命中 nodes[].id；不做"祖先可达性"。理由：HUB+loop 下 DAG 语义模糊（loop 引入环），祖先校验易误伤；机械层先把"引用合法性"兜住。祖先校验留作 M3.x 候选
+- **Mermaid 呈现 = label 前缀 `[需 X+Y] `**：Mermaid 无 inline comment；单独节点表达前置破坏图结构。前缀 + 现有 label 共存是侵入最小的选择
+- **schema bump = 0.1.0 → 0.2.0**：minor，新增 optional 字段向后兼容
+
+### 落盘（4 文件 + 1 spec 回填 + 文档同步）
+
+- `schema/bubble_diagram.schema.json`：版本 + edges.items.properties 加 `requires`
+- `tools/mechanical_check.py`：`check_bubble_diagram()` 加第 5 项断言（+12 行）
+- `tools/render.py`：`spec_to_mermaid()` 加 requires 前缀（+5 行）
+- `editor/editor.html`：specToMermaid 同步 + edge chip 加 `chip-req` 样式 + editEdge popover 加 multi-select + commitUpdateEdge 收集 requires（+15 行 / 820→835）
+- `specs/bubble_diagram_gangster_mansion_boss.spec.json` 回填：edges[9] 加 `"requires": ["ayami_room_key02", "closet_dorm_key03"]` / label 简化为「进入终局」/ knowledge_lock.notes 移除 `[限制: schema 缺前置依赖字段]`
+
+### 🟢 范式胜利
+
+- **schema bump 流程顺畅**：minor bump + 4 文件改动总 +35 行，无外部依赖、无破坏性改动；既有 specs（Part 1 + demo + lighting_req）零修改通过回归
+- **Python/JS 双实现同步成本可控**：约定靠注释互引（`// 与 tools/render.py:spec_to_mermaid 同步` / `# 与 editor.html:specToMermaid 同步`），改一处时自动想起改另一处
+- **mechanical_check 第 5 项断言模式可复用**：`for ... if ref not in seen: add_error` 模板与第 2 项 edge ref_integrity 一致，未来加 nodes[].requires-like 字段可复用
+
+### 🟡 PoC 接受但未来要看的粗糙边
+
+- **multi-select UX 在 macOS Cmd 多选不直观**：popover 内加了 hint 文字，但 native `<select multiple>` 在触摸板下选项体验差。M3.x 候选「批量优化美学+交互」可换 checkbox group
+- **Mermaid label 撑长**：HUB 案例 `[需 ayami_room_key02+closet_dorm_key03] 进入终局` 约 50 字符；Steve 实测后再判定。短 label 模式（用节点 idx）是后备
+- **祖先可达性校验缺位**：known limitation，HANDOVER 候选表已记。若 designer 把 requires 指向 from 的下游节点（拓扑非法），mechanical_check 不会报；只能靠 designer 心智 + 渲染时 Mermaid 视觉发现
+
+### 🔴 工具暴露的真实问题（M3.5 已解决）
+
+- M3.4 暴露的 schema 缺字段第 1 项 → M3.5 落地解决。第 2-4 项（phase / est_minutes / tbd）按真实需求驱动单独加，不批量推
+
+### 故意破坏验证（机械检测健壮性）
+
+| # | 破坏 | 期望 | 实际 |
+|---|---|---|---|
+| 1 | edges[9].requires 注入 ghost_key | ERROR ref_integrity | ✅ 命中 |
+
+破坏命中说明 mechanical_check 第 5 项断言工作正常。
+
+### Steve 人眼验收点
+
+启动（如未启）：
+```bash
+cd ~/Desktop/level-design-deck
+python3 tools/serve_editor.py --port 8765
+```
+浏览器：`http://127.0.0.1:8765/editor/editor.html?spec=bubble_diagram_gangster_mansion_boss`
+
+验收清单：
+1. 顶部 Mermaid：`butsudo_hub → knowledge_lock` 边 label 显示 `[需 ayami_room_key02+closet_dorm_key03] 进入终局`
+2. butsudo_hub 节点卡片 → 出边区找到 → knowledge_lock 的 chip → 含蓝色高亮 `需ayami_room_key02+closet_dorm_key03` 标记
+3. 点该 chip → popover 弹出 → requires multi-select 已勾选 ayami_room_key02 / closet_dorm_key03 / 自动排除 from(butsudo_hub) 和 to(knowledge_lock)
+4. multi-select Cmd+点击切换勾选 → 保存 → 顶部 Mermaid label 200ms 内更新
+5. 切到 `?spec=bubble_diagram_gangster_mansion`（Part 1，无 requires 字段）→ 所有 chip 无 `需X+Y` 标记 → popover requires 多选全空（**回归 ✓**）
+
+### 反污染合规自检 ✅
+
+- 全程未读 pipeline 任何 contracts/skills/** / changelog.md / render_standards.md
+- requires 字段语义、校验深度、Mermaid 呈现方式均从 M3.4 暴露的真实案例 + 第一原理推导
+- multi-select UI 不参考任何 pipeline 编辑器实现（pipeline 没图状编辑器）
 
 ---
 
