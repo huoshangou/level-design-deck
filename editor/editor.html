@@ -431,14 +431,41 @@ function isBubbleSpec(spec) {
 }
 
 function specToMermaid(spec) {
+  const nodes = spec.nodes || [];
+  const edges = spec.edges || [];
   const lines = ['graph TD'];
-  for (const n of (spec.nodes || [])) {
-    if (!n || typeof n !== 'object') continue;
+  // M3.6: subgraph 分组逻辑与 tools/render.py:spec_to_mermaid 同步
+  const hasAnyPhase = nodes.some(n => n && typeof n === 'object' && n.phase);
+  const nodeDecl = (n) => {
     const [l, r] = NODE_SHAPE[n.type] || ['[', ']'];
     const label = String(n.label || n.id || '').replace(/"/g, '\\"');
-    lines.push(`  ${n.id || ''}${l}"${label}"${r}`);
+    return `${n.id || ''}${l}"${label}"${r}`;
+  };
+  if (hasAnyPhase) {
+    const order = [], groups = {};
+    for (const n of nodes) {
+      if (!n || typeof n !== 'object') continue;
+      const ph = n.phase || '';
+      if (!(ph in groups)) { groups[ph] = []; order.push(ph); }
+      groups[ph].push(n);
+    }
+    for (const ph of order) {
+      if (ph === '') {
+        for (const n of groups[ph]) lines.push(`  ${nodeDecl(n)}`);
+      } else {
+        const slug = ph.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '') || 'x';
+        lines.push(`  subgraph phase_${slug}["${ph.replace(/"/g, '\\"')}"]`);
+        for (const n of groups[ph]) lines.push(`    ${nodeDecl(n)}`);
+        lines.push('  end');
+      }
+    }
+  } else {
+    for (const n of nodes) {
+      if (!n || typeof n !== 'object') continue;
+      lines.push(`  ${nodeDecl(n)}`);
+    }
   }
-  for (const e of (spec.edges || [])) {
+  for (const e of edges) {
     if (!e || typeof e !== 'object') continue;
     const et = e.type || 'sequential';
     const arrow = EDGE_ARROW[et] || '-->';
@@ -528,6 +555,9 @@ function renderBubbleDiagramView(spec, schema) {
       ${renderObject(ctx, ctxSchema, 'context')}
     </fieldset>
     <h3 class="section-title">节点 <span class="muted">${nodes.length} 个 / 边 ${edges.length} 条</span></h3>
+    <datalist id="phase-suggestions">
+      ${[...new Set(nodes.map(n => n && n.phase).filter(Boolean))].map(p => `<option value="${escapeHtml(p)}">`).join('')}
+    </datalist>
     <div id="nodes-list">
       ${nodes.map((n, i) => renderNodeCard(n, i, edges)).join('')}
     </div>
@@ -561,6 +591,8 @@ function renderNodeCard(node, idx, edges) {
         <select data-bind-type="${path}.type" onchange="onNodeTypeChange(this, ${idx})">
           ${NODE_TYPES.map(t => `<option value="${t}" ${t===type?'selected':''}>${t}</option>`).join('')}
         </select>
+        <label>phase</label>
+        <input type="text" data-bind="${path}.phase" value="${escapeHtml(node.phase || '')}" placeholder="可选 (如 Phase I / Act 1)" list="phase-suggestions">
         <label>label</label>
         <input type="text" data-bind="${path}.label" value="${escapeHtml(node.label || '')}" placeholder="中文短描述">
         <label>notes</label>

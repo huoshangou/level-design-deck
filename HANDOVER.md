@@ -62,6 +62,7 @@ python3 tools/render.py specs/<id>.spec.json templates/lighting_req.html.tmpl ou
 | **M3.3** | ✅ 完成 | bubble_diagram editor 图状专用视图：嵌 Mermaid 实时预览 + 节点 type 上色卡片 + 双向高亮 + 4 种图操作 popover（在此后插入 / 分叉 / 编辑边 / 删除节点 / 添加孤立） | editor.html 318 → 820 行（< 900 bumped，下次再超强制拆 .js）；module 分发让 lighting_req 通用 form 路径完全不变（回归 ✓）|
 | **M3.4** | ✅ 完成 | 第二个真实关卡 bubble_diagram 案例（HUB 结构）= `bubble_diagram_gangster_mansion_boss`（13 节点 / 14 边，Phase I/II/III）| mechanical_check 0/0 ✓；template_diff skipped ✓；render Mermaid 出图 ✓；HUB 中央节点（4 出 3 入）+ loop 回流边表达成立。schema 暴露 4 项缺字段（前置依赖合取条件 / 物件依赖 / Phase 归属 / 估时 / TBD 标记）记入候选表。详见 M3.4 经验节 |
 | **M3.5** | ✅ 完成 | bubble_diagram schema v0.1.0 → v0.2.0：加 `edges[].requires:[node_id]` 表达合取前置依赖。同步 mechanical_check 加第 5 项断言 / render Mermaid label 加 `[需 X+Y] ` 前缀 / editor edge popover 加 multi-select | spec 0/0 ✓ + 故意破坏 ERROR ref_integrity ✓ + Mermaid 前缀对位 ✓ + Part 1/demo/lighting_req 3 项回归全过 ✓。editor 820→835 / mechanical_check 257→270 / render 156→158 行均 < 硬上限 |
+| **M3.6** | ✅ 完成 | bubble_diagram schema v0.2.0 → v0.3.0：加 `nodes[].phase:string`（free string）+ Mermaid `subgraph` 分组渲染。同步 mechanical_check 加第 6 项 `phase_mixed` REVIEW / render `spec_to_mermaid` + editor `specToMermaid` 双端 subgraph 分组（任一节点有 phase 即启用） / 节点卡片加 phase input + datalist autocomplete | spec 0/0 ✓ + 故意混用 → REVIEW phase_mixed ✓ + Mermaid 渲出 3 subgraph (Phase I/II/III) ✓ + Part 1 无 phase → 0 subgraph 回归 ✓ + demo/lighting_req 回归全过 ✓ + M3.5 requires 仍生效 ✓。editor 835→867 / mechanical_check 270→279 / render 158→190 均 < 硬上限 |
 | **M3.x** | 🔮 候选 | 见末尾候选表 | — |
 
 ---
@@ -78,7 +79,8 @@ python3 tools/render.py specs/<id>.spec.json templates/lighting_req.html.tmpl ou
 | ~~**第二个真实关卡 bubble_diagram 案例（HUB 结构）**~~ | ~~case_05 Part 2 = 稻泽薰 40 体 boss = HUB 分支循环结构~~ | ~~已完成 2026-05-07 (M3.4)，详见 M3.4 经验节~~ |
 | **第三个 module**（如 vfx_req / spatial_layout / audio_req） | 看是否暴露第三种维度（如 spatial_layout 的几何/坐标） | 重复 M3.2 同款流程，但 vfx_req 等近似克隆，价值递减 |
 | ~~**bubble_diagram schema 补字段第 1 项 = `edges[].requires`**~~ | ~~M3.4 暴露最刚需~~ | ~~已完成 2026-05-07 (M3.5)，详见 M3.5 经验节~~ |
-| **bubble_diagram schema 补字段剩 3 项**（Phase / 估时 / TBD） | (a) nodes[] 的 `phase:string` 标 Phase 归属（加完可 Mermaid subgraph 分组）(b) nodes[] 的 `est_minutes:[min,max]` (c) nodes[] 的 `tbd:bool` + `tbd_reason` | 加一个字段需要改 schema + mechanical_check + render + editor 4 处；按真实需求驱动单独加 |
+| ~~**bubble_diagram schema 补字段第 2 项 = `nodes[].phase`**~~ | ~~Mermaid subgraph 分组对 HUB 类多阶段图视觉收益直接~~ | ~~已完成 2026-05-09 (M3.6)，详见 M3.6 经验节~~ |
+| **bubble_diagram schema 补字段剩 2 项**（估时 / TBD） | (a) nodes[] 的 `est_minutes:[min,max]`（不影响图结构，仅文档侧 badge） (b) nodes[] 的 `tbd:bool` + `tbd_reason`（机械层加 REVIEW） | 单字段改 4 处（schema/check/render/editor），按真实需求驱动单独加；目前无强 case 驱动 |
 | **`edges[].requires` 祖先可达性校验**（M3.5 留尾） | M3.5 只做语法层 ref_integrity（命中 nodes[].id），祖先可达性留作此项。需要在 HUB+loop 下处理环 / 多入口 | 算法非平凡（带环图的可达性 + 多入口），且 PoC 期 designer 心智可承担；价值未必高 |
 | ~~**bubble_diagram editor 图状专用视图**~~ | ~~M3.2 暴露通用 schema-driven form 对图状数据功能性不可用~~ | ~~已完成 2026-05-07 (M3.3)，详见 M3.3 经验节~~ |
 | **批量优化美学+交互** | 兑现 M1 后"延后到批量做"的承诺；schema-driven UI 改一次所有 module 受益（注意：bubble_diagram 已走专用视图，批量美学只惠及 lighting_req 类通用 form） | 美学优化的"完成定义"模糊，容易超出 PoC 范围 |
@@ -95,6 +97,8 @@ python3 tools/render.py specs/<id>.spec.json templates/lighting_req.html.tmpl ou
 > **2026-05-07 update 2**：HUB 案例已完成（M3.4，bubble_diagram_gangster_mansion_boss）。剩余优先级建议：bubble_diagram schema 补字段（驱动力强：M3.4 暴露 4 项实际缺字段，1 项已用 notes 文字 fallback）> 第三个 module > 批量美学。
 >
 > **2026-05-07 update 3**：M3.4 暴露 4 项 schema 缺字段第 1 项 `edges[].requires` 已完成（M3.5）。剩 3 项（phase / est_minutes / tbd）按真实需求驱动单独加。剩余优先级建议：第三个 module（spatial_layout 等暴露第三种维度）> schema 补剩 3 项（无强 case 驱动暂缓）> 批量美学。
+>
+> **2026-05-09 update 4**：M3.4 缺字段第 2 项 `nodes[].phase` 已完成（M3.6，加 Mermaid subgraph 分组）。剩 2 项（est_minutes / tbd）暂无强 case 驱动。剩余优先级建议：第三个 module（spatial_layout 等暴露第三种维度）> 批量美学 > schema 补剩 2 项。
 
 ---
 
@@ -467,6 +471,88 @@ python3 tools/serve_editor.py --port 8765
 - 全程未读 pipeline 任何 contracts/skills/** / changelog.md / render_standards.md
 - requires 字段语义、校验深度、Mermaid 呈现方式均从 M3.4 暴露的真实案例 + 第一原理推导
 - multi-select UI 不参考任何 pipeline 编辑器实现（pipeline 没图状编辑器）
+
+---
+
+## M3.6 经验（bubble_diagram schema bump 0.3.0 加 `nodes[].phase` + Mermaid subgraph 分组）
+
+### 触发原因
+
+M3.4 暴露 4 项 schema 缺字段第 2 项 `nodes[].phase`：HUB 案例 13 节点天然分 Phase I/II/III，当前只能在 `node.notes` 文字前缀写「Phase II 起。...」。无法机械校验、无法在 Mermaid 上做视觉分组。
+
+### 关键决策（详见 PROJECT.md 决策记录）
+
+- **字段位置 = `nodes[]`**：phase 是节点的归属属性
+- **类型 = free string**（非 enum）：不同关卡 phase 命名差异大（"Phase I/II/III" / "Act 1/2/3" / "Tutorial/Main/Boss"），enum 限死会反复触发 schema bump；free string + REVIEW 警告"混用"足够 PoC
+- **校验深度 = 只做混用 REVIEW**：spec 内"部分节点有 phase / 部分没"→ REVIEW phase_mixed。**不做** phase 间拓扑顺序校验（"Phase II 节点不能连 Phase I"），原因：HUB+loop 下 phase 边界本身可能模糊（loop 边回流），过早机械化易误伤；留作 M3.x 候选
+- **Mermaid 渲染 = 任一有 phase 即启用 subgraph 分组**：同 phase 节点进同名 subgraph，无 phase 节点游离；spec 内全部无 phase 时行为完全不变（向后兼容，Part 1 / demo / lighting_req 零修改通过回归）
+- **subgraph id = `phase_<slug>`**：sanitize 后加 `phase_` 前缀防 Mermaid 关键字 / 节点 id 冲突；display label 用原 phase 字符串
+- **schema bump = 0.2.0 → 0.3.0**：minor，新增 optional 字段向后兼容
+
+### 落盘（4 文件 + 1 spec 回填 + 文档同步）
+
+- `schema/bubble_diagram.schema.json`：版本 + nodes.items.properties 加 `phase`
+- `tools/mechanical_check.py`：`check_bubble_diagram()` 加第 6 项 `phase_mixed` REVIEW（+9 行）
+- `tools/render.py`：`spec_to_mermaid()` 整段重写节点输出（边输出不动）支持 subgraph 分组（+32 行）
+- `editor/editor.html`：specToMermaid 同步 + renderNodeCard 加 phase input + renderBubbleDiagramView 加全局 datalist 自动补全（+32 行 / 835→867）
+- `specs/bubble_diagram_gangster_mansion_boss.spec.json` 回填：13 节点全加 phase 字段；notes 中 "Phase II 起。" / "Phase II 中央枢纽。" / "Phase III 收束。" 等前缀 13 处全部精简；side_entrance label 去 "（Phase I 起点）" 后缀（phase 字段已表达归属）
+
+### 🟢 范式胜利
+
+- **schema bump 流程顺畅程度同 M3.5**：minor bump + 4 文件改动总 +73 行（M3.5 是 +35），主因 render 段重写比插入复杂；既有 specs 零修改通过回归；机械层 + UI 同步一次到位
+- **Mermaid subgraph 自动适配**：13 节点 + 3 phase + 2 条 loop 回流 + 多入口 HUB 中央节点，TD 默认布局把 3 个 phase 矩形竖排排列符合 Steve 心智里"Phase 推进顺序" —— 视觉收益直接、不需手工 layout hint
+- **datalist autocomplete 引导一致性**：用户改第 2 个节点时 input 候选已含 "Phase I" 等已用值，避免大小写 / 全半角错位（Mermaid subgraph 是按字符串完全相等分组）
+- **回退路径自然**：spec 内全部无 phase → 行为完全等同 M3.5，无破坏性
+
+### 🟡 PoC 接受但未来要看的粗糙边
+
+- **subgraph id `phase_phase_i` 双前缀**：用户命名 "Phase I" 时 sanitize 出 "phase_i"，再加固定 "phase_" 前缀变 `phase_phase_i`。Cosmetic 不影响功能（Mermaid 内部 id，用户看到的是 `["Phase I"]` label）。优化方案：sanitize 后若 slug 已 `phase_*` 开头则跳过加前缀，PoC 期不动
+- **混用 REVIEW 措辞**：当前 message 是 "may indicate omission"，但 designer 可能是故意"只标关键节点"，REVIEW 会误伤。M3.x 若实际用法暴露则改成可关闭 / 可选模式
+- **phase 顺序 = spec.nodes[] 遍历序**：subgraph 出现顺序 = 节点首次出现的录入顺序。若 designer 把 Phase III 节点录在 Phase I 节点之间，subgraph 顺序就乱。当前依赖 designer 录入习惯，未来可考虑 spec 加 `phase_order:[string]` 显式声明
+- **对 Mermaid TD 布局的扰动未充分测试**：13 节点 + 3 subgraph 在 Part 2 上验证视觉够清晰；更复杂的多嵌套 / 多分组场景待真实 case 触发
+
+### 🔴 工具暴露的真实问题（M3.6 已解决）
+
+- M3.4 暴露的 schema 缺字段第 2 项 → M3.6 落地解决。剩 2 项（est_minutes / tbd）暂无强 case 驱动，按真实需求驱动单独加
+
+### 故意破坏验证（机械检测健壮性）
+
+| # | 破坏 | 期望 | 实际 |
+|---|---|---|---|
+| 1 | 删除 1 节点的 phase 字段 → 12 有 / 1 无 | REVIEW phase_mixed | ✅ 命中（"missing: ['side_entrance']"）|
+
+### 回归验证（防破坏既有 spec）
+
+| # | spec | 期望 | 实际 |
+|---|---|---|---|
+| 1 | bubble_diagram_gangster_mansion (Part 1, 无 phase) | 0 subgraph 渲染 / 0 ERROR | ✅ subgraph_count=0 |
+| 2 | demo_bubble_diagram (无 phase) | 0/0 | ✅ |
+| 3 | lighting_req_gangster_mansion | 渲染 OK | ✅ |
+| 4 | M3.5 requires 仍生效 | Mermaid 含「[需 ayami_room_key02+closet_dorm_key03]」前缀 | ✅ |
+
+### Steve 人眼验收点
+
+启动（如未启）：
+```bash
+cd ~/Desktop/level-design-deck
+python3 tools/serve_editor.py --port 8765
+```
+浏览器：`http://127.0.0.1:8765/editor/editor.html?spec=bubble_diagram_gangster_mansion_boss`
+
+验收清单：
+1. 顶部 Mermaid 应渲出 3 个分组矩形（Phase I / Phase II / Phase III）包住对应节点
+2. 节点卡片 grid 内应有 phase input 行（紧跟 type 后），值为对应 Phase 字符串
+3. 点 phase input → 应弹出 autocomplete 列表显示已用 phase 值（Phase I/II/III）
+4. 改某节点 phase → 顶部 Mermaid 200ms 内重组分组（节点从原 subgraph 移出 → 进新 subgraph，或新建 subgraph）
+5. 删某节点 phase 字段（清空 input）→ 该节点游离到 subgraph 外（仍渲染）
+6. 切到 `?spec=bubble_diagram_gangster_mansion`（Part 1，无 phase 字段）→ Mermaid 无 subgraph，行为完全等同 M3.5（**回归 ✓**）
+7. 节点卡片改字段（id / label / notes）→ Mermaid 实时更新（与 M3.3/3.5 一致）
+
+### 反污染合规自检 ✅
+
+- 全程未读 pipeline 任何 contracts/skills/** / changelog.md / render_standards.md
+- phase 字段语义、free string vs enum 选择、subgraph 渲染策略均从 M3.4 暴露的真实案例 + 第一原理推导
+- subgraph 分组逻辑不参考 pipeline render 实现（pipeline 没图状渲染）
 
 ---
 

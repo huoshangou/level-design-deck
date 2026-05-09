@@ -239,6 +239,12 @@ level-design-deck/
 | 2026-05-07 | M3.5 关键决策 · 校验深度只到语法层（ref_integrity） | M3.5 只校 requires 字符串命中 nodes[].id；不做"祖先可达性"。理由：HUB+loop 下 DAG 语义模糊（loop 引入环），祖先校验易误伤；设计意图层校验是 designer 责任，机械层先把"引用合法性"兜住。祖先校验留作 M3.x 候选。`[来源: 第一原理推导]` |
 | 2026-05-07 | M3.5 关键决策 · Mermaid 呈现 = label 前缀 `[需 X+Y] ` | Mermaid 无 inline comment；单独节点表达前置破坏图结构。前缀 + 现有 label 共存是侵入最小的选择。python/js 双实现同步约定靠注释互引。`[来源: 第一原理推导]` |
 | 2026-05-07 | M3.5 ✅ 完成 | 4 文件改（schema/check/render/editor）+ 1 spec 回填（gangster_mansion_boss 的 butsudo_hub→knowledge_lock 边加 requires=[ayami_room_key02, closet_dorm_key03]，label 简化到「进入终局」，knowledge_lock notes 移除「[限制: schema 缺前置依赖字段]」）。验证：spec 0/0 ✓ / 故意破坏（注 ghost_key）→ ERROR ref_integrity ✓ / Mermaid 含「[需 ayami_room_key02+closet_dorm_key03] 进入终局」前缀 ✓ / Part 1 + demo + lighting_req 3 项回归全过 ✓。行数：editor 820→835 / mechanical_check 257→270 / render 156→158，均 <硬上限。`[来源: 第一原理推导]` |
+| 2026-05-09 | M3.6 启动 · 加 `nodes[].phase:string` 标 Phase 归属 + Mermaid subgraph 分组 | M3.4 暴露的 4 项缺字段第 2 项。HUB 案例 13 节点天然分 Phase I/II/III，当前只能在 notes 文字前缀写。`[来源: M3.4 暴露案例]` |
+| 2026-05-09 | M3.6 schema bump · bubble_diagram 0.2.0 → 0.3.0 | 新增 optional 字段 `nodes[].phase:string` 向后兼容。`[来源: CLAUDE.md 第 5 条变更纪律]` |
+| 2026-05-09 | M3.6 关键决策 · phase = free string 而非 enum | 不同关卡 phase 命名差异大（"Phase I/II/III" / "Act 1/2/3" / "Tutorial/Main/Boss"），enum 限死会反复触发 schema bump；自由命名 + REVIEW 警告"混用"已够 PoC。`[来源: 第一原理推导]` |
+| 2026-05-09 | M3.6 关键决策 · 校验深度只做"混用 REVIEW"，不做拓扑顺序校验 | "Phase II 节点不能连 Phase I" 这种拓扑校验在 HUB+loop 下边界本身可能模糊（如 loop 边回流），过早机械化易误伤；留作 M3.x 候选。`[来源: 第一原理推导]` |
+| 2026-05-09 | M3.6 关键决策 · Mermaid subgraph 分组渲染（任一有 phase 即启用） | spec 内任一节点有 phase → 同 phase 节点进同名 subgraph，无 phase 节点游离在外；全部无 phase 时行为完全不变（向后兼容）。subgraph id `phase_<slug>`，display label 用原 phase 字符串。python/js 双实现同步约定靠注释互引。`[来源: 第一原理推导]` |
+| 2026-05-09 | M3.6 ✅ 完成 | 4 文件改（schema/check/render/editor）+ 1 spec 回填（gangster_mansion_boss 13 节点全加 phase + 简化 notes 中 "Phase X 起/中段/收束" 等前缀；side_entrance label 去 "（Phase I 起点）" 后缀）。验证：spec 0/0 ✓ / 故意混用（删 1 节点 phase）→ REVIEW phase_mixed ✓ / Mermaid 渲出 3 subgraph (Phase I/II/III) ✓ / Part 1 无 phase → 0 subgraph 回归 ✓ / demo + lighting_req 3 项回归全过 ✓ / M3.5 requires 仍生效 ✓。行数：editor 835→867 / mechanical_check 270→279 / render 158→190，均 < 硬上限。`[来源: 第一原理推导]` |
 
 ---
 

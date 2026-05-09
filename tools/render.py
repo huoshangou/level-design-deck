@@ -87,14 +87,46 @@ EDGE_ARROW = {
 
 def spec_to_mermaid(spec):
     """spec.nodes/edges → Mermaid flowchart 文本。"""
+    nodes = spec.get("nodes", []) or []
+    edges = spec.get("edges", []) or []
     lines = ["graph TD"]
-    for n in spec.get("nodes", []):
-        if not isinstance(n, dict):
-            continue
+
+    # M3.6: 任一节点有 phase 即启用 subgraph 分组；完全无 phase 时回退原行为
+    # 与 editor/editor.html:specToMermaid 同步
+    has_any_phase = any(isinstance(n, dict) and n.get("phase") for n in nodes)
+
+    def node_decl(n):
         l, r = NODE_SHAPE.get(n.get("type"), ("[", "]"))
         label = (n.get("label") or n.get("id", "")).replace('"', '\\"')
-        lines.append(f'  {n.get("id", "")}{l}"{label}"{r}')
-    for e in spec.get("edges", []):
+        return f'{n.get("id", "")}{l}"{label}"{r}'
+
+    if has_any_phase:
+        order, groups = [], {}
+        for n in nodes:
+            if not isinstance(n, dict):
+                continue
+            ph = n.get("phase") or ""
+            if ph not in groups:
+                groups[ph] = []
+                order.append(ph)
+            groups[ph].append(n)
+        for ph in order:
+            if ph == "":
+                for n in groups[ph]:
+                    lines.append(f"  {node_decl(n)}")
+            else:
+                slug = re.sub(r"[^a-z0-9]+", "_", ph.lower()).strip("_") or "x"
+                lines.append(f'  subgraph phase_{slug}["{ph}"]')
+                for n in groups[ph]:
+                    lines.append(f"    {node_decl(n)}")
+                lines.append("  end")
+    else:
+        for n in nodes:
+            if not isinstance(n, dict):
+                continue
+            lines.append(f"  {node_decl(n)}")
+
+    for e in edges:
         if not isinstance(e, dict):
             continue
         et = e.get("type", "sequential")

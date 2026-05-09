@@ -214,6 +214,15 @@ def check_bubble_diagram(spec, v):
                 v.add_error(f"edges[{i}].requires[{j}]", "ref_integrity",
                             f"requires {ref!r} not in nodes (available: {sorted(seen)})")
 
+    # 6. M3.6: phase 字段混用 REVIEW（部分节点有 phase / 部分没有 → 提示是否漏标）
+    phased = [n for n in nodes if isinstance(n, dict) and n.get("phase")]
+    unphased = [n for n in nodes if isinstance(n, dict) and not n.get("phase")]
+    if phased and unphased:
+        missing_ids = [n.get("id", "?") for n in unphased]
+        v.add_review("nodes", "phase_mixed",
+                     f"{len(phased)} nodes have phase, {len(unphased)} don't (missing: {missing_ids}). "
+                     f"Either tag all or none — partial tagging may indicate omission.")
+
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
