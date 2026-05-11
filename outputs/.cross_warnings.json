@@ -1,7 +1,8 @@
 {
-  "checked_at": "2026-05-11T08:32:33.459968+00:00",
+  "checked_at": "2026-05-11T09:11:04.199684+00:00",
   "level_id": "gangster_mansion",
   "spec_paths": [
+    "specs/atmosphere_ref_gangster_mansion.spec.json",
     "specs/bubble_diagram_gangster_mansion.spec.json",
     "specs/bubble_diagram_gangster_mansion_boss.spec.json",
     "specs/level_overview_gangster_mansion.spec.json",
@@ -9,13 +10,15 @@
     "specs/spatial_layout_gangster_mansion.spec.json"
   ],
   "modules": [
+    "atmosphere_ref",
     "bubble_diagram",
     "level_overview",
     "lighting_req",
     "spatial_layout"
   ],
   "cross_checks_run": [
-    "lighting_req.ambience_refs[].region_id ∈ spatial_layout.shapes[].label"
+    "lighting_req.ambience_refs[].region_id ∈ spatial_layout.shapes[].label",
+    "atmosphere_ref.zones[].zone_id ∈ spatial_layout.shapes[].label"
   ],
   "errors": [],
   "reviews": [],

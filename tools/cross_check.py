@@ -50,18 +50,24 @@ def register_cross_check(desc):
     return deco
 
 
+def _get_spatial_labels(spatial: dict) -> set:
+    """从 spatial_layout spec 提取所有非空 shape label 集合。"""
+    labels = set()
+    for s in spatial.get("layout", {}).get("shapes", []):
+        if isinstance(s, dict):
+            label = (s.get("label") or "").strip()
+            if label:
+                labels.add(label)
+    return labels
+
+
 @register_cross_check("lighting_req.ambience_refs[].region_id ∈ spatial_layout.shapes[].label")
 def check_lighting_zone_refs(specs_by_module, v):
     lighting = specs_by_module.get("lighting_req")
     spatial = specs_by_module.get("spatial_layout")
     if not lighting or not spatial:
         return
-    spatial_labels = set()
-    for s in spatial.get("layout", {}).get("shapes", []):
-        if isinstance(s, dict):
-            label = (s.get("label") or "").strip()
-            if label:
-                spatial_labels.add(label)
+    spatial_labels = _get_spatial_labels(spatial)
     for i, ref in enumerate(lighting.get("ambience_refs", [])):
         if not isinstance(ref, dict):
             continue
@@ -75,6 +81,30 @@ def check_lighting_zone_refs(specs_by_module, v):
                 f"lighting_req.ambience_refs[{i}].region_id",
                 "cross_ref_integrity",
                 f"region_id {zid!r} not in spatial_layout.shapes[].label "
+                f"(available labels: {sample}{tail})",
+            )
+
+
+@register_cross_check("atmosphere_ref.zones[].zone_id ∈ spatial_layout.shapes[].label")
+def check_atmosphere_zone_refs(specs_by_module, v):
+    atmos = specs_by_module.get("atmosphere_ref")
+    spatial = specs_by_module.get("spatial_layout")
+    if not atmos or not spatial:
+        return
+    spatial_labels = _get_spatial_labels(spatial)
+    for i, zone in enumerate(atmos.get("zones", [])):
+        if not isinstance(zone, dict):
+            continue
+        zid = (zone.get("zone_id") or "").strip()
+        if not zid:
+            continue
+        if zid not in spatial_labels:
+            sample = sorted(spatial_labels)[:10]
+            tail = "..." if len(spatial_labels) > 10 else ""
+            v.add_error(
+                f"atmosphere_ref.zones[{i}].zone_id",
+                "cross_ref_integrity",
+                f"zone_id {zid!r} not in spatial_layout.shapes[].label "
                 f"(available labels: {sample}{tail})",
             )
 

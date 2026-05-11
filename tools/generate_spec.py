@@ -50,6 +50,14 @@ MODULES = {
         "spec_id_pattern": "level_overview_<level_short_name>",
         "lvm_generated": True,
     },
+    # M3.10: atmosphere_ref = 氛围参考墙，图片收集型，与 spatial_layout 联动
+    "atmosphere_ref": {
+        "schema_path": "schema/atmosphere_ref.schema.json",
+        "demo_path": None,
+        "workdoc_key": None,
+        "spec_id_pattern": "atmosphere_ref_<level_short_name>",
+        "lvm_generated": True,
+    },
 }
 
 WORK_DOCS_PATH = "reference/work_docs_extract.json"

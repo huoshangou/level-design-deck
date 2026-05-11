@@ -1,0 +1,126 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "level-design-deck/schema/atmosphere_ref.schema.json",
+  "title": "atmosphere_ref spec",
+  "description": "POI 氛围参考墙 — 整体氛围 + 按区域多个参考图。与 spatial_layout 联动（zones[].zone_id 指代同 level spatial_layout.shapes[].label）。M3.10 v0.1.0",
+  "version": "0.1.0",
+  "applies_to": ["POI", "mixed"],
+  "type": "object",
+  "required": ["meta", "context", "overall"],
+  "additionalProperties": false,
+  "properties": {
+    "meta": {
+      "title": "元信息",
+      "type": "object",
+      "required": ["spec_id", "level_id", "version"],
+      "additionalProperties": false,
+      "properties": {
+        "spec_id": {
+          "title": "Spec ID",
+          "type": "string",
+          "pattern": "^atmosphere_ref_[a-z0-9_]+$",
+          "description": "spec 唯一 ID，命名规则 atmosphere_ref_<level_short_name>"
+        },
+        "level_id": {"title": "关卡 ID", "type": "string", "minLength": 1},
+        "version": {"title": "版本号", "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$"},
+        "owner": {"title": "责任方", "type": "string", "default": "level"}
+      }
+    },
+    "context": {
+      "title": "上下文",
+      "type": "object",
+      "required": ["intent", "level_type"],
+      "additionalProperties": false,
+      "properties": {
+        "intent": {"title": "设计意图", "type": "string", "minLength": 10},
+        "level_type": {"title": "关卡类型", "type": "string", "enum": ["poi", "gameplay", "mixed"]}
+      }
+    },
+    "overall": {
+      "title": "整体氛围",
+      "type": "object",
+      "required": ["description"],
+      "additionalProperties": false,
+      "description": "POI 整体氛围（一个 POI 一份）",
+      "properties": {
+        "keywords": {
+          "title": "氛围关键词",
+          "type": "array",
+          "description": "短词描述整体氛围，如「神秘」「紧张」「宁静」",
+          "items": {"type": "string", "minLength": 1}
+        },
+        "description": {
+          "title": "整体氛围描述",
+          "type": "string",
+          "minLength": 10,
+          "description": "整体氛围 + 脏污程度 + 季节/时间感"
+        },
+        "refs": {
+          "title": "参考图列表",
+          "type": "array",
+          "description": "POI 整体的参考图（图片墙）",
+          "items": {
+            "title": "参考图项",
+            "type": "object",
+            "required": ["image_url"],
+            "additionalProperties": false,
+            "properties": {
+              "image_url": {
+                "title": "图片地址",
+                "type": "string",
+                "minLength": 1,
+                "description": "URL 或相对路径（如 assets/gangster_mansion/foo.png）"
+              },
+              "caption": {"title": "图注", "type": "string"},
+              "tags": {
+                "title": "标签",
+                "type": "array",
+                "items": {"type": "string"}
+              }
+            }
+          }
+        }
+      }
+    },
+    "zones": {
+      "title": "区域级氛围",
+      "type": "array",
+      "description": "按 spatial_layout 的 zone（shape.label）分组的氛围参考。zone_id 由 cross_check.py 校验必须命中同 level spatial_layout.shapes[].label",
+      "items": {
+        "title": "区域氛围项",
+        "type": "object",
+        "required": ["zone_id", "description"],
+        "additionalProperties": false,
+        "properties": {
+          "zone_id": {
+            "title": "区域名",
+            "type": "string",
+            "minLength": 1,
+            "description": "指代同 level 的 spatial_layout.shapes[].label（中文区域名，如「玄关」「礼佛堂」）。M3.10 起由 cross_check.py 校验：必须命中至少一个 shape 的 label。"
+          },
+          "description": {
+            "title": "区域氛围描述",
+            "type": "string",
+            "minLength": 5,
+            "description": "该区域的氛围描述（材质/光线/脏污/情绪）"
+          },
+          "refs": {
+            "title": "参考图列表",
+            "type": "array",
+            "items": {
+              "title": "参考图项",
+              "type": "object",
+              "required": ["image_url"],
+              "additionalProperties": false,
+              "properties": {
+                "image_url": {"title": "图片地址", "type": "string", "minLength": 1},
+                "caption": {"title": "图注", "type": "string"},
+                "tags": {"title": "标签", "type": "array", "items": {"type": "string"}}
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

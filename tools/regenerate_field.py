@@ -31,6 +31,7 @@ MODULES = {
     "bubble_diagram": {"lvm_generated": True},
     "spatial_layout": {"lvm_generated": False},
     "level_overview": {"lvm_generated": True},
+    "atmosphere_ref": {"lvm_generated": True},
 }
 
 

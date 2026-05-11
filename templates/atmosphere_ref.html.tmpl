@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>{{meta.level_id}} · 氛围参考</title>
+<style>
+:root { --fg:#222; --muted:#888; --bg:#fafaf6; --line:#e8e8e0; --accent:#1a73e8; --code-bg:#f0f0ea; }
+* { box-sizing:border-box; margin:0; padding:0; }
+body { font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif; color:var(--fg); background:var(--bg); line-height:1.7; padding:40px 24px; max-width:900px; margin:0 auto; font-size:14px; }
+.header { padding-bottom:20px; border-bottom:2px solid var(--fg); margin-bottom:24px; }
+.header h1 { font-size:26px; font-weight:700; letter-spacing:.02em; margin-bottom:6px; }
+.meta-bar { color:var(--muted); font-family:"JetBrains Mono","Consolas",monospace; font-size:11px; }
+.meta-bar span { margin-right:16px; }
+h2 { font-size:12px; font-weight:600; color:var(--accent); margin:24px 0 8px; padding-top:16px; border-top:1px solid var(--line); text-transform:uppercase; letter-spacing:.08em; }
+.keywords { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
+.kw { display:inline-block; font-size:12px; padding:3px 10px; border-radius:12px; background:var(--code-bg); color:var(--fg); border:1px solid var(--line); }
+p { margin-bottom:8px; }
+.img-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:10px; }
+.img-grid img { width:100%; height:160px; object-fit:cover; border-radius:4px; border:1px solid var(--line); }
+.img-caption { font-size:11px; color:var(--muted); margin-top:3px; }
+.no-refs { font-size:12px; color:var(--muted); font-style:italic; padding:8px 0; }
+.zone-card { border:1px solid var(--line); border-radius:6px; padding:16px; margin-bottom:16px; background:#fff; }
+.zone-card h3 { font-size:16px; font-weight:700; margin-bottom:8px; color:var(--fg); }
+.zone-card p { font-size:13px; color:var(--fg); margin-bottom:10px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>氛围参考墙</h1>
+  <div class="meta-bar">
+    <span><b>spec_id:</b> {{meta.spec_id}}</span>
+    <span><b>level_id:</b> {{meta.level_id}}</span>
+    <span><b>v</b>{{meta.version}}</span>
+    <span><b>owner:</b> {{meta.owner}}</span>
+    <span><b>type:</b> {{context.level_type}}</span>
+  </div>
+</div>
+
+<h2>设计意图</h2>
+<p>{{context.intent}}</p>
+
+<h2>整体氛围关键词</h2>
+<div class="keywords" id="keywords-container"></div>
+
+<h2>整体氛围描述</h2>
+<p>{{overall.description}}</p>
+
+<h2>整体参考图</h2>
+<div id="overall-refs-container"></div>
+
+<h2>区域级氛围</h2>
+<div id="zones-container"></div>
+
+<script>
+(function() {
+  var keywords = {{overall.keywords}};
+  var overallRefs = {{overall.refs}};
+  var zones = {{zones}};
+
+  var kwEl = document.getElementById('keywords-container');
+  if (Array.isArray(keywords) && keywords.length > 0) {
+    keywords.forEach(function(kw) {
+      var span = document.createElement('span');
+      span.className = 'kw';
+      span.textContent = kw;
+      kwEl.appendChild(span);
+    });
+  } else {
+    kwEl.innerHTML = '<span class="no-refs">暂无关键词</span>';
+  }
+
+  function renderRefs(refs, container) {
+    if (!Array.isArray(refs) || refs.length === 0) {
+      container.innerHTML = '<div class="no-refs">暂无参考图（请上传到 assets/gangster_mansion/ 或贴 URL）</div>';
+      return;
+    }
+    var grid = document.createElement('div');
+    grid.className = 'img-grid';
+    refs.forEach(function(ref) {
+      var wrap = document.createElement('div');
+      var img = document.createElement('img');
+      img.src = ref.image_url;
+      img.alt = ref.caption || '';
+      img.onerror = function() { this.style.display='none'; };
+      wrap.appendChild(img);
+      if (ref.caption) {
+        var cap = document.createElement('div');
+        cap.className = 'img-caption';
+        cap.textContent = ref.caption;
+        wrap.appendChild(cap);
+      }
+      grid.appendChild(wrap);
+    });
+    container.appendChild(grid);
+  }
+
+  renderRefs(overallRefs, document.getElementById('overall-refs-container'));
+
+  var zonesEl = document.getElementById('zones-container');
+  if (!Array.isArray(zones) || zones.length === 0) {
+    zonesEl.innerHTML = '<div class="no-refs">暂无区域氛围数据</div>';
+  } else {
+    zones.forEach(function(zone) {
+      var card = document.createElement('div');
+      card.className = 'zone-card';
+      var h3 = document.createElement('h3');
+      h3.textContent = zone.zone_id;
+      card.appendChild(h3);
+      var p = document.createElement('p');
+      p.textContent = zone.description;
+      card.appendChild(p);
+      var refsDiv = document.createElement('div');
+      renderRefs(zone.refs || [], refsDiv);
+      card.appendChild(refsDiv);
+      zonesEl.appendChild(card);
+    });
+  }
+})();
+</script>
+
+</body>
+</html>
