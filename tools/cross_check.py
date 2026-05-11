@@ -61,28 +61,56 @@ def _get_spatial_labels(spatial: dict) -> set:
     return labels
 
 
+def _check_zone_field(v, spatial_labels, items, field_path_prefix, id_key):
+    """通用 zone ref 校验：遍历 items，取 id_key，不在 spatial_labels 则报 ERROR。"""
+    sample = sorted(spatial_labels)[:10]
+    tail = "..." if len(spatial_labels) > 10 else ""
+    for i, item in enumerate(items):
+        if not isinstance(item, dict):
+            continue
+        zid = (item.get(id_key) or "").strip()
+        if not zid:
+            continue
+        if zid not in spatial_labels:
+            v.add_error(
+                f"{field_path_prefix}[{i}].{id_key}",
+                "cross_ref_integrity",
+                f"{id_key} {zid!r} not in spatial_layout.shapes[].label "
+                f"(available labels: {sample}{tail})",
+            )
+
+
 @register_cross_check("lighting_req.ambience_refs[].region_id ∈ spatial_layout.shapes[].label")
 def check_lighting_zone_refs(specs_by_module, v):
     lighting = specs_by_module.get("lighting_req")
     spatial = specs_by_module.get("spatial_layout")
     if not lighting or not spatial:
         return
-    spatial_labels = _get_spatial_labels(spatial)
-    for i, ref in enumerate(lighting.get("ambience_refs", [])):
-        if not isinstance(ref, dict):
-            continue
-        zid = (ref.get("region_id") or "").strip()
-        if not zid:
-            continue
-        if zid not in spatial_labels:
-            sample = sorted(spatial_labels)[:10]
-            tail = "..." if len(spatial_labels) > 10 else ""
-            v.add_error(
-                f"lighting_req.ambience_refs[{i}].region_id",
-                "cross_ref_integrity",
-                f"region_id {zid!r} not in spatial_layout.shapes[].label "
-                f"(available labels: {sample}{tail})",
-            )
+    _check_zone_field(v, _get_spatial_labels(spatial),
+                      lighting.get("ambience_refs", []),
+                      "lighting_req.ambience_refs", "region_id")
+
+
+@register_cross_check("vfx_req.effects[].zone_id ∈ spatial_layout.shapes[].label")
+def check_vfx_zone_refs(specs_by_module, v):
+    vfx = specs_by_module.get("vfx_req")
+    spatial = specs_by_module.get("spatial_layout")
+    if not vfx or not spatial:
+        return
+    _check_zone_field(v, _get_spatial_labels(spatial),
+                      vfx.get("effects", []),
+                      "vfx_req.effects", "zone_id")
+
+
+@register_cross_check("audio_req.ambient_sounds[].region_id ∈ spatial_layout.shapes[].label")
+def check_audio_zone_refs(specs_by_module, v):
+    audio = specs_by_module.get("audio_req")
+    spatial = specs_by_module.get("spatial_layout")
+    if not audio or not spatial:
+        return
+    _check_zone_field(v, _get_spatial_labels(spatial),
+                      audio.get("ambient_sounds", []),
+                      "audio_req.ambient_sounds", "region_id")
 
 
 @register_cross_check("atmosphere_ref.zones[].zone_id ∈ spatial_layout.shapes[].label")
@@ -91,22 +119,9 @@ def check_atmosphere_zone_refs(specs_by_module, v):
     spatial = specs_by_module.get("spatial_layout")
     if not atmos or not spatial:
         return
-    spatial_labels = _get_spatial_labels(spatial)
-    for i, zone in enumerate(atmos.get("zones", [])):
-        if not isinstance(zone, dict):
-            continue
-        zid = (zone.get("zone_id") or "").strip()
-        if not zid:
-            continue
-        if zid not in spatial_labels:
-            sample = sorted(spatial_labels)[:10]
-            tail = "..." if len(spatial_labels) > 10 else ""
-            v.add_error(
-                f"atmosphere_ref.zones[{i}].zone_id",
-                "cross_ref_integrity",
-                f"zone_id {zid!r} not in spatial_layout.shapes[].label "
-                f"(available labels: {sample}{tail})",
-            )
+    _check_zone_field(v, _get_spatial_labels(spatial),
+                      atmos.get("zones", []),
+                      "atmosphere_ref.zones", "zone_id")
 
 
 # ---------------------------------------------------------------------------

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>{{meta.spec_id}} · 音频需求</title>
+<style>
+:root { --fg:#222; --muted:#888; --bg:#fafaf6; --line:#e8e8e0; --accent:#1a73e8; --code-bg:#f0f0ea; }
+* { box-sizing:border-box; margin:0; padding:0; }
+body { font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif; color:var(--fg); background:var(--bg); line-height:1.7; padding:40px 24px; max-width:860px; margin:0 auto; font-size:14px; }
+.header { padding-bottom:20px; border-bottom:2px solid var(--fg); margin-bottom:24px; }
+.header h1 { font-size:22px; font-weight:700; letter-spacing:.02em; margin-bottom:6px; }
+.meta-bar { color:var(--muted); font-family:"JetBrains Mono","Consolas",monospace; font-size:11px; }
+.meta-bar span { margin-right:16px; }
+.section-label { font-size:11px; font-weight:600; color:var(--accent); text-transform:uppercase; letter-spacing:.08em; margin:24px 0 8px; padding-top:16px; border-top:1px solid var(--line); }
+.overall-card { background:var(--code-bg); border-left:3px solid var(--accent); border-radius:0 4px 4px 0; padding:12px 16px; margin-bottom:8px; color:var(--fg); }
+.sound-card { border:1px solid var(--line); border-radius:6px; padding:14px 16px; margin-bottom:12px; background:#fff; }
+.music-card { border:1px solid #c4b5fd; border-radius:6px; padding:14px 16px; margin-bottom:12px; background:#faf5ff; border-left:3px solid #8b5cf6; }
+.scene-name { font-size:16px; font-weight:700; margin-bottom:8px; }
+.sound-desc { color:var(--fg); margin-bottom:10px; font-size:13px; }
+.chips { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+.chip { display:inline-block; font-size:11px; padding:2px 8px; border-radius:10px; background:var(--code-bg); color:var(--fg); border:1px solid var(--line); }
+.chip b { color:var(--muted); font-weight:400; margin-right:3px; }
+.chip-region { display:inline-block; font-size:11px; padding:2px 8px; border-radius:10px; background:#e8f0fe; border:1px solid #aecbfa; color:#1a56db; }
+.chip-region b { font-weight:400; margin-right:3px; }
+.status-pending { display:inline-block; font-size:11px; padding:2px 8px; border-radius:3px; font-weight:500; background:#fff7e6; color:#d97706; }
+.status-in_progress { display:inline-block; font-size:11px; padding:2px 8px; border-radius:3px; font-weight:500; background:#e0f2fe; color:#0369a1; }
+.status-done { display:inline-block; font-size:11px; padding:2px 8px; border-radius:3px; font-weight:500; background:#dcfce7; color:#16a34a; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>POI 音频需求</h1>
+  <div class="meta-bar">
+    <span><b>spec_id:</b> {{meta.spec_id}}</span>
+    <span><b>level_id:</b> {{meta.level_id}}</span>
+    <span><b>v</b>{{meta.version}}</span>
+    <span><b>owner:</b> {{meta.owner}}</span>
+    <span><b>type:</b> {{context.level_type}}</span>
+  </div>
+</div>
+
+<div class="section-label">设计意图</div>
+<p>{{context.intent}}</p>
+
+<div class="section-label">整体音频氛围</div>
+<div class="overall-card">{{overall}}</div>
+
+<div class="section-label">环境音列表 <span style="font-weight:400;color:var(--muted);text-transform:none;font-family:monospace;font-size:11px">ambient_sounds</span></div>
+
+{{#each ambient_sounds}}
+<div class="sound-card">
+  <div class="sound-desc">{{description}}</div>
+  <div class="chips">
+    <span class="chip-region"><b>区域</b>{{region_id}}</span>
+    <span class="chip"><b>时间</b>{{time_period}}</span>
+    <span class="chip"><b>天气</b>{{weather}}</span>
+    <span class="chip"><b>音源</b>{{source}}</span>
+    <span class="chip"><b>范围</b>{{audible_range}}</span>
+    <span class="chip"><b>频率</b>{{frequency}}</span>
+    <span class="status-{{status}}">{{status}}</span>
+  </div>
+</div>
+{{/each}}
+
+<div class="section-label">配乐列表 <span style="font-weight:400;color:var(--muted);text-transform:none;font-family:monospace;font-size:11px">music</span></div>
+
+{{#each music}}
+<div class="music-card">
+  <div class="scene-name">{{scene_name}}</div>
+  <div class="sound-desc">{{mood_description}}</div>
+  <div class="chips">
+    <span class="chip"><b>时长</b>{{duration_estimate}}</span>
+    <span class="status-{{status}}">{{status}}</span>
+  </div>
+</div>
+{{/each}}
+
+</body>
+</html>

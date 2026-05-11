@@ -76,6 +76,8 @@ def main():
         "bubble_diagram_": "graph-type module (nodes/edges, not field-clipboard)",
         "spatial_layout_": "geometry/external-tool module (LevelCraft 2D export, not field-clipboard)",
         "atmosphere_ref_": "atmosphere/refs module (image-collection, not field-clipboard)",
+        "vfx_req_": "vfx module (effects-collection, not field-clipboard)",
+        "audio_req_": "audio module (ambient-sounds-collection, not field-clipboard)",
     }
     skip_reason = next((r for p, r in SKIP_PREFIXES.items() if spec_id.startswith(p)), None)
     if skip_reason:

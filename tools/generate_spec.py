@@ -58,6 +58,22 @@ MODULES = {
         "spec_id_pattern": "atmosphere_ref_<level_short_name>",
         "lvm_generated": True,
     },
+    # M3.11: vfx_req = 视觉特效需求，环境/可交互物件特效
+    "vfx_req": {
+        "schema_path": "schema/vfx_req.schema.json",
+        "demo_path": None,
+        "workdoc_key": None,
+        "spec_id_pattern": "vfx_req_<level_short_name>",
+        "lvm_generated": True,
+    },
+    # M3.12: audio_req = 音频需求，环境音 + 配乐
+    "audio_req": {
+        "schema_path": "schema/audio_req.schema.json",
+        "demo_path": None,
+        "workdoc_key": None,
+        "spec_id_pattern": "audio_req_<level_short_name>",
+        "lvm_generated": True,
+    },
 }
 
 WORK_DOCS_PATH = "reference/work_docs_extract.json"

@@ -1,0 +1,83 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "level-design-deck/schema/audio_req.schema.json",
+  "title": "audio_req spec",
+  "description": "POI 音频需求（环境音 + 配乐）。环境音字段参考 work_docs '环境音需求_室内外'。M3.12 v0.1.0",
+  "version": "0.1.0",
+  "applies_to": ["POI", "mixed"],
+  "type": "object",
+  "required": ["meta", "context", "overall"],
+  "additionalProperties": false,
+  "properties": {
+    "meta": {
+      "title": "元信息",
+      "type": "object",
+      "required": ["spec_id", "level_id", "version"],
+      "additionalProperties": false,
+      "properties": {
+        "spec_id": {
+          "title": "Spec ID",
+          "type": "string",
+          "pattern": "^audio_req_[a-z0-9_]+$"
+        },
+        "level_id": {"title": "关卡 ID", "type": "string", "minLength": 1},
+        "version": {"title": "版本号", "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$"},
+        "owner": {"title": "责任方", "type": "string", "default": "level"}
+      }
+    },
+    "context": {
+      "title": "上下文",
+      "type": "object",
+      "required": ["intent", "level_type"],
+      "additionalProperties": false,
+      "properties": {
+        "intent": {"title": "设计意图", "type": "string", "minLength": 10},
+        "level_type": {"title": "关卡类型", "type": "string", "enum": ["poi", "gameplay", "mixed"]}
+      }
+    },
+    "overall": {
+      "title": "整体音频氛围",
+      "type": "string",
+      "minLength": 10,
+      "description": "POI 整体音频方向（如静谧潜行 + 局部仪式感 + Boss 战压迫）"
+    },
+    "ambient_sounds": {
+      "title": "环境音列表",
+      "type": "array",
+      "description": "按区域/场景的环境音需求。region_id 由 cross_check.py 校验：必须命中同 level spatial_layout.shapes[].label",
+      "items": {
+        "title": "环境音项",
+        "type": "object",
+        "required": ["description"],
+        "additionalProperties": false,
+        "properties": {
+          "region_id": {"title": "区域名", "type": "string", "description": "可选 — 指代同 level spatial_layout.shapes[].label"},
+          "description": {"title": "声音描述", "type": "string", "minLength": 5, "description": "如「夜风穿过竹林的沙沙声 + 远处偶发犬吠」"},
+          "time_period": {"title": "时间段", "type": "string", "description": "如「夜间 21:00-6:00」「白天」「不限」"},
+          "weather": {"title": "天气影响", "type": "string", "description": "如「雨天加雨声」「晴」"},
+          "source": {"title": "音源类型", "type": "string", "description": "如「点音源 - 神龛供桌」「环境层 - 庭院」"},
+          "audible_range": {"title": "可听范围", "type": "string", "description": "如「全屋可闻」「3m 内」"},
+          "frequency": {"title": "播放频率", "type": "string", "description": "如「常驻」「随机间隔 30-60s」"},
+          "status": {"title": "状态", "type": "string", "enum": ["pending", "in_progress", "done"]}
+        }
+      }
+    },
+    "music": {
+      "title": "配乐列表",
+      "type": "array",
+      "description": "场景配乐需求（如有）",
+      "items": {
+        "title": "配乐项",
+        "type": "object",
+        "required": ["scene_name", "mood_description"],
+        "additionalProperties": false,
+        "properties": {
+          "scene_name": {"title": "场景名", "type": "string", "description": "如「Part1 潜入主线」「Part2 Boss 战」"},
+          "mood_description": {"title": "情绪/风格", "type": "string", "minLength": 5},
+          "duration_estimate": {"title": "预计时长", "type": "string"},
+          "status": {"title": "状态", "type": "string", "enum": ["pending", "in_progress", "done"]}
+        }
+      }
+    }
+  }
+}

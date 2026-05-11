@@ -32,6 +32,8 @@ MODULES = {
     "spatial_layout": {"lvm_generated": False},
     "level_overview": {"lvm_generated": True},
     "atmosphere_ref": {"lvm_generated": True},
+    "vfx_req": {"lvm_generated": True},
+    "audio_req": {"lvm_generated": True},
 }
 
 

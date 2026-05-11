@@ -1,0 +1,74 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "level-design-deck/schema/vfx_req.schema.json",
+  "title": "vfx_req spec",
+  "description": "POI 视觉特效需求（环境特效 + 可交互物件特效；不含玩法技能特效）。M3.11 v0.1.0",
+  "version": "0.1.0",
+  "applies_to": ["POI", "mixed"],
+  "type": "object",
+  "required": ["meta", "context", "overall"],
+  "additionalProperties": false,
+  "properties": {
+    "meta": {
+      "title": "元信息",
+      "type": "object",
+      "required": ["spec_id", "level_id", "version"],
+      "additionalProperties": false,
+      "properties": {
+        "spec_id": {
+          "title": "Spec ID",
+          "type": "string",
+          "pattern": "^vfx_req_[a-z0-9_]+$"
+        },
+        "level_id": {"title": "关卡 ID", "type": "string", "minLength": 1},
+        "version": {"title": "版本号", "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$"},
+        "owner": {"title": "责任方", "type": "string", "default": "level"}
+      }
+    },
+    "context": {
+      "title": "上下文",
+      "type": "object",
+      "required": ["intent", "level_type"],
+      "additionalProperties": false,
+      "properties": {
+        "intent": {"title": "设计意图", "type": "string", "minLength": 10},
+        "level_type": {"title": "关卡类型", "type": "string", "enum": ["poi", "gameplay", "mixed"]}
+      }
+    },
+    "overall": {
+      "title": "整体特效需求",
+      "type": "string",
+      "minLength": 10,
+      "description": "POI 整体的特效氛围/方向描述（如夜间萤火虫 + 远处闪电营造潜入紧张感）"
+    },
+    "effects": {
+      "title": "特效列表",
+      "type": "array",
+      "description": "具体特效需求（环境/可交互物件）。zone_id 由 cross_check.py 校验：必须命中同 level spatial_layout.shapes[].label",
+      "items": {
+        "title": "特效项",
+        "type": "object",
+        "required": ["name", "description"],
+        "additionalProperties": false,
+        "properties": {
+          "name": {"title": "特效名", "type": "string", "minLength": 1, "description": "如「香火烟雾」「门开光斑」"},
+          "category": {
+            "title": "类别",
+            "type": "string",
+            "enum": ["environmental", "interactive_object", "ambient", "narrative"],
+            "description": "environmental = 环境特效（烟/雾/雨）；interactive_object = 可交互物件触发的；ambient = 整体氛围；narrative = 剧情节点"
+          },
+          "description": {"title": "描述", "type": "string", "minLength": 5},
+          "zone_id": {
+            "title": "区域名",
+            "type": "string",
+            "description": "可选 — 指代同 level spatial_layout.shapes[].label。整体特效可不填"
+          },
+          "trigger": {"title": "触发条件", "type": "string", "description": "如「常驻」「玩家接近 5m」「Boss 战开始」"},
+          "ref_image_url": {"title": "参考图链接", "type": "string"},
+          "status": {"title": "状态", "type": "string", "enum": ["pending", "in_progress", "done"]}
+        }
+      }
+    }
+  }
+}
