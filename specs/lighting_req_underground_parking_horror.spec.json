@@ -3,7 +3,8 @@
     "spec_id": "lighting_req_underground_parking_horror",
     "poi_id": "underground_parking_horror",
     "version": "0.1.0",
-    "owner": "level"
+    "owner": "level",
+    "level_id": "underground_parking_horror"
   },
   "map_constraint": {
     "description": "清晨破晓的微光从坡道入口顶部格栅缓缓渗入（色温 5500K-6000K 偏冷白），与残留的应急荧光灯余光在停车场内交错；故障灯条已熄灭不再闪烁，整体亮度从极低逐步提升至中低，剪影感转为可辨识的轮廓；远端逐渐可见，强化夜晚已尽、求生告一段落的疲惫与希望感。",

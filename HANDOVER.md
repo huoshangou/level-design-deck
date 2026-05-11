@@ -584,6 +584,53 @@ python3 tools/serve_editor.py --port 8765
 
 ---
 
+## M3.8 · 跨 module 联动校验 PoC（B 阶段，2026-05-11）
+
+### 做了什么
+- lighting_req schema bump v0.1 → v0.2
+  - `ambience_refs[].region_id` 语义从"对应 IR SPACE.regions[].id"改为"指代同 level spatial_layout.shapes[].label"
+  - `meta` 新增 required 字段 `level_id`（M1 漏的 cross_check hub）
+- 3 个 lighting_req spec 数据回填
+  - 5 个 region_id 从英文蛇形改成中文 label：玄关 / 春院 / 议事堂 / 礼佛堂 / 仓库
+  - 3 个 spec 都加 meta.level_id
+- 新建 `tools/cross_check.py`（241 行）
+  - 装饰器注册模式：`@register_cross_check(desc) def f(specs_by_module, v)`
+  - 接 `--level-id` 或 `--specs` 两种模式
+  - 单 spec → noop 跳过；多 spec → 跑跨 spec 校验
+  - 第一条规则：lighting_req.ambience_refs[].region_id ∈ spatial_layout.shapes[].label
+- serve_editor.py 集成
+  - `_run_check` 内 subprocess 调用 cross_check.py
+  - `/api/cross-check?level_id=X` 独立端点
+  - 输出写 `outputs/.cross_warnings.json`
+- editor.html 集成（877 行 +8）
+  - `loadAll()` 加第 5 个并发 fetch `.cross_warnings.json`
+  - alerts 合并时 msg 加 `[cross]` 前缀区分来源
+  - 404 时静默降级
+
+### 经验
+1. **跨 module 联动是 deck 范식相对零散文档的核心优势** — pipeline 没探索过的方向。机械连通性校验是 word/wiki 完全做不到的
+2. **真实数据案例驱动决策**：spatial label 38 → 25 unique 13 重复，最初想强制唯一，看到真实案例（"中央庭院"被拆 3 矩形拼接）发现重复有合理性，改成"多对一允许，0 对 ERROR"。**比凭想象决策好得多**
+3. **schema 命名一致性是技术债早期信号**：M1 lighting_req 用 poi_id，M3.x 后续 module 用 level_id，B 阶段才暴露不一致。改 lighting_req schema 加 level_id 修复，但 poi_id 历史遗留还在，留 M4.x 候选统一为 `subject_id`
+4. **装饰器注册模式让加新规则零成本**：未来 atmosphere_ref ref spatial / vfx_req ref bubble_diagram 等都是加一个 `@register_cross_check` 函数
+
+### 行数统计
+- tools/cross_check.py 新建 241 行（< 300 ✓）
+- editor.html 873 → 877（+4，< 900 ✓）
+- serve_editor.py 集成
+- schema/lighting_req.schema.json bump
+- 3 个 lighting_req spec 回填
+
+### 待审 / 待办
+- M4.x 候选：所有 spec meta 统一 `level_id` + `subject_id`（POI 子需求 subject_id = poi_id 特化）
+- M3.x 候选：cross_check 加更多规则
+  - atmosphere_ref（M3.9+ 计划）引用 spatial_layout zone
+  - bubble_diagram nodes 可选引用 spatial_layout zone（标 beat 在哪个房间）
+  - 跨 module phase 一致性（lighting_req 和 bubble_diagram 同 level 的 phase 命名应对齐）
+- A 阶段（M3.9+）：补 module — level_overview（hub）→ atmosphere_ref → vfx_req / audio_req → asset_list
+- 浏览器实测请求：Steve 刷新 editor 看左侧 alerts 是否新增 cross 标识告警 + 故意把 region_id 改坏看是否报红
+
+---
+
 ## 反污染常驻提醒
 
 ⚠️ AI 默认会"回到熟悉状态"。每次涉及 level-design-deck，请记住：

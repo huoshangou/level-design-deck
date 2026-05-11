@@ -100,13 +100,18 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         super().do_GET()
 
     def do_POST(self):
-        # POST /api/check?spec=<id>  → 跑 mechanical_check + template_diff
-        # POST /api/render?spec=<id> → 跑 render.py
+        # POST /api/check?spec=<id>       → 跑 mechanical_check + template_diff + cross_check
+        # POST /api/render?spec=<id>      → 跑 render.py
+        # POST /api/cross-check?level_id= → 单独跑 cross_check（供 editor.html 按需调用）
         parsed = urlparse(self.path)
         if parsed.path == "/api/check":
             self._run_check(self._spec_id_from_query(parsed))
         elif parsed.path == "/api/render":
             self._run_render(self._spec_id_from_query(parsed))
+        elif parsed.path == "/api/cross-check":
+            qs = parse_qs(parsed.query)
+            level_id = qs.get("level_id", [""])[0]
+            self._run_cross_check(level_id)
         else:
             self.send_error(404)
 
@@ -136,9 +141,47 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                            cwd=PROJECT_ROOT, check=False, capture_output=True)
             subprocess.run([sys.executable, "tools/template_diff.py", str(spec), "--quiet"],
                            cwd=PROJECT_ROOT, check=False, capture_output=True)
+            # 额外跑 cross_check，结果独立写 .cross_warnings.json
+            level_id = self._extract_level_id(spec)
+            if level_id:
+                subprocess.run([sys.executable, "tools/cross_check.py", "--level-id", level_id],
+                               cwd=PROJECT_ROOT, check=False, capture_output=True)
             self._json_ok({"ok": True, "spec_id": spec_id})
         except Exception as e:
             self.send_error(500, str(e))
+
+    def _run_cross_check(self, level_id):
+        if not level_id:
+            self.send_error(400, "level_id required")
+            return
+        try:
+            subprocess.run([sys.executable, "tools/cross_check.py", "--level-id", level_id],
+                           cwd=PROJECT_ROOT, check=False, capture_output=True)
+            self._json_ok({"ok": True, "level_id": level_id,
+                           "output": "outputs/.cross_warnings.json"})
+        except Exception as e:
+            self.send_error(500, str(e))
+
+    def _extract_level_id(self, spec_path: Path) -> str:
+        try:
+            import json as _json
+            spec = _json.loads(spec_path.read_text(encoding="utf-8"))
+            meta = spec.get("meta", {})
+            if meta.get("level_id"):
+                return meta["level_id"].strip()
+            spec_id = (meta.get("spec_id") or "").strip()
+            schema_dir = PROJECT_ROOT / "schema"
+            modules = sorted(
+                (p.name[:-len(".schema.json")] for p in schema_dir.glob("*.schema.json")),
+                key=len, reverse=True,
+            )
+            for module in modules:
+                prefix = module + "_"
+                if spec_id.startswith(prefix):
+                    return spec_id[len(prefix):]
+        except Exception:
+            pass
+        return ""
 
     def _run_render(self, spec_id):
         paths = self._resolve_paths_or_500(spec_id)

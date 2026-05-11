@@ -157,8 +157,9 @@ legend .schema-desc{color:var(--muted);font-weight:400;font-size:11px;margin-lef
 const URL_SPEC = new URLSearchParams(location.search).get('spec') || 'demo_lighting_req';
 const WARNINGS_PATH = '/outputs/.warnings.json';
 const DIFF_PATH = '/outputs/.diff.json';
+const CROSS_WARNINGS_PATH = '/outputs/.cross_warnings.json';
 
-let PATHS = null, SPEC = null, SCHEMA = null, ALERTS = [];
+let PATHS = null, SPEC = null, SCHEMA = null, ALERTS = [], CROSS_ALERTS = [];
 
 function switchSpec(id) { location.assign('?spec=' + encodeURIComponent(id)); }
 
@@ -176,11 +177,12 @@ async function loadAll() {
   const r = await fetch('/api/paths?spec=' + encodeURIComponent(URL_SPEC));
   if (!r.ok) throw new Error(`无法解析 spec_id "${URL_SPEC}" 的路径，请确认 specs/ 下有对应文件`);
   PATHS = await r.json();
-  const [spec, schema, warn, diff, _list] = await Promise.all([
+  const [spec, schema, warn, diff, cross, _list] = await Promise.all([
     fetch(PATHS.spec).then(r => r.json()),
     fetch(PATHS.schema).then(r => r.json()),
     fetch(WARNINGS_PATH).then(r => r.ok ? r.json() : {errors:[],reviews:[]}).catch(()=>({errors:[],reviews:[]})),
     fetch(DIFF_PATH).then(r => r.ok ? r.json() : {missing:[],extra:[]}).catch(()=>({missing:[],extra:[]})),
+    fetch(CROSS_WARNINGS_PATH).then(r => r.ok ? r.json() : {errors:[],reviews:[]}).catch(()=>({errors:[],reviews:[]})),
     loadSpecList(),
   ]);
   SPEC = spec; SCHEMA = schema;
@@ -189,6 +191,8 @@ async function loadAll() {
     ...(warn.reviews || []).map(a => ({...a, kind: 'REVIEW', path: a.field_path})),
     ...(diff.missing || []).map(a => ({...a, kind: 'MISSING', path: a.expected_spec_path, msg: a.msg})),
     ...(diff.extra || []).map(a => ({...a, kind: 'EXTRA', path: a.spec_path, msg: a.msg})),
+    ...(cross.errors || []).map(a => ({...a, kind: 'ERROR', path: a.field_path, msg: `[cross] ${a.msg}`})),
+    ...(cross.reviews || []).map(a => ({...a, kind: 'REVIEW', path: a.field_path, msg: `[cross] ${a.msg}`})),
   ];
   renderForm();
   renderAlerts();

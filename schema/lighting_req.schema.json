@@ -2,8 +2,8 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "level-design-deck/schema/lighting_req.schema.json",
   "title": "lighting_req spec",
-  "description": "POI 灯光需求 spec schema。字段来源 work_docs_extract.json poi_lighting_fields。M1 v0.1.0。",
-  "version": "0.1.0",
+  "description": "POI 灯光需求 spec schema。字段来源 work_docs_extract.json poi_lighting_fields。M1 v0.1.0；M3.8 v0.2.0：ambience_refs[].region_id 语义改为指代同 level 的 spatial_layout.shapes[].label，由 cross_check.py 跨 spec 校验。",
+  "version": "0.2.0",
   "applies_to": ["POI"],
   "type": "object",
   "required": ["meta", "map_constraint", "level_constraint", "mission_constraint", "concept_art"],
@@ -11,7 +11,7 @@
   "properties": {
     "meta": {
       "type": "object",
-      "required": ["spec_id", "poi_id", "version"],
+      "required": ["spec_id", "poi_id", "level_id", "version"],
       "additionalProperties": false,
       "properties": {
         "spec_id": {
@@ -23,6 +23,11 @@
           "type": "string",
           "minLength": 1,
           "description": "对应的 POI ID（公司内部命名待对接）"
+        },
+        "level_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "所属关卡 ID。M3.8 起所有 spec 必填，cross_check.py 按 level_id 分组跑跨 spec 校验。POI 子需求 spec 的 level_id 与同关卡的 spatial_layout / bubble_diagram 等 module 一致。"
         },
         "version": {
           "type": "string",
@@ -139,7 +144,7 @@
           "region_id": {
             "type": "string",
             "minLength": 1,
-            "description": "对应 IR SPACE.regions[].id"
+            "description": "指代同 level 的 spatial_layout.shapes[].label（中文区域名）。M3.8 起由 cross_check.py 校验：必须命中至少一个 shape 的 label（多对一允许，0 对 ERROR）。如该 level 无 spatial_layout spec，cross_check 跳过该校验。"
           },
           "description": {
             "type": "string",
