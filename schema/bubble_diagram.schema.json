@@ -4,32 +4,50 @@
   "title": "bubble_diagram spec",
   "description": "关卡流程气泡图 spec schema。节点级真源（spec.nodes[] / spec.edges[]）。schema 字段从第一原理推导，不参考 pipeline 旧 /bubble-diagram 实现（已废弃）。图级语义断言（id 唯一、edge 端点引用完整、入口/出口、孤立节点、requires 引用合法性、phase 混用）由 mechanical_check 语义层执行。M3.2 v0.1.0；M3.5 v0.2.0 加 edges[].requires 表达合取前置依赖；M3.6 v0.3.0 加 nodes[].phase 标 Phase 归属（Mermaid subgraph 分组渲染）。",
   "version": "0.3.0",
-  "applies_to": ["POI", "gameplay", "mixed"],
+  "applies_to": [
+    "POI",
+    "gameplay",
+    "mixed"
+  ],
   "type": "object",
-  "required": ["meta", "context", "nodes", "edges"],
+  "required": [
+    "meta",
+    "context",
+    "nodes",
+    "edges"
+  ],
   "additionalProperties": false,
   "properties": {
     "meta": {
+      "title": "元信息",
       "type": "object",
-      "required": ["spec_id", "level_id", "version"],
+      "required": [
+        "spec_id",
+        "level_id",
+        "version"
+      ],
       "additionalProperties": false,
       "properties": {
         "spec_id": {
+          "title": "Spec ID",
           "type": "string",
           "pattern": "^bubble_diagram_[a-z0-9_]+$",
           "description": "spec 唯一 ID，命名规则 bubble_diagram_<level_short_name>"
         },
         "level_id": {
+          "title": "关卡 ID",
           "type": "string",
           "minLength": 1,
           "description": "对应的关卡或玩法 ID（公司内部命名待对接）"
         },
         "version": {
+          "title": "版本号",
           "type": "string",
           "pattern": "^\\d+\\.\\d+\\.\\d+$",
           "description": "spec 语义化版本号"
         },
         "owner": {
+          "title": "责任方",
           "type": "string",
           "default": "level",
           "description": "需求归属方，关卡流程图默认 OWNER=关卡 [来源: 第一原理推导]"
@@ -37,53 +55,83 @@
       }
     },
     "context": {
+      "title": "上下文",
       "type": "object",
-      "required": ["intent", "level_type"],
+      "required": [
+        "intent",
+        "level_type"
+      ],
       "additionalProperties": false,
       "description": "图所描述的关卡/玩法上下文",
       "properties": {
         "intent": {
+          "title": "设计意图",
           "type": "string",
           "minLength": 10,
           "description": "一句话概括该流程的设计意图（玩家体验目标 / 节奏 / 关键反差等）"
         },
         "level_type": {
+          "title": "关卡类型",
           "type": "string",
-          "enum": ["poi", "gameplay", "mixed"],
+          "enum": [
+            "poi",
+            "gameplay",
+            "mixed"
+          ],
           "description": "关卡类型：poi=POI 关卡 / gameplay=玩法关卡 / mixed=混合"
         }
       }
     },
     "nodes": {
+      "title": "节点列表",
       "type": "array",
       "minItems": 2,
       "description": "图节点列表。至少 2 个；至少包含 1 个 type=entry（mechanical_check 语义层校验）",
       "items": {
+        "title": "节点",
         "type": "object",
-        "required": ["id", "type", "label"],
+        "required": [
+          "id",
+          "type",
+          "label"
+        ],
         "additionalProperties": false,
         "properties": {
           "id": {
+            "title": "唯一 ID",
             "type": "string",
             "pattern": "^[a-z][a-z0-9_]*$",
             "minLength": 1,
             "description": "节点唯一 ID（snake_case），全 spec 内唯一（mechanical_check 语义层校验）"
           },
           "type": {
+            "title": "节点类型",
             "type": "string",
-            "enum": ["entry", "scene", "combat", "puzzle", "dialogue", "choice", "cutscene", "exit"],
+            "enum": [
+              "entry",
+              "scene",
+              "combat",
+              "puzzle",
+              "dialogue",
+              "choice",
+              "cutscene",
+              "exit"
+            ],
             "description": "节点类型闭合枚举 [来源: 第一原理推导]：entry=入口/exit=出口/scene=普通场景/combat=战斗/puzzle=解谜/dialogue=对话/choice=分支选择/cutscene=演出"
           },
           "label": {
+            "title": "节点显示名",
             "type": "string",
             "minLength": 1,
             "description": "节点中文短描述（用于图渲染和明细列表）"
           },
           "notes": {
+            "title": "备注",
             "type": "string",
             "description": "可选：设计意图 / 关键参数 / 与其他模块联动等自由文本"
           },
           "phase": {
+            "title": "所属阶段",
             "type": "string",
             "minLength": 1,
             "description": "可选：节点所属 Phase / Act 标签（自由字符串，如 'Phase I' / 'Act 1' / 'Tutorial'）。同 phase 节点会在 Mermaid 渲染中分组到同名 subgraph。混用（部分节点有部分没有）触发 mechanical_check REVIEW [来源: M3.4 暴露案例]"
@@ -92,35 +140,51 @@
       }
     },
     "edges": {
+      "title": "边列表",
       "type": "array",
       "minItems": 1,
       "description": "图边列表。from/to 必须命中已声明 node id（mechanical_check 语义层校验）",
       "items": {
+        "title": "边",
         "type": "object",
-        "required": ["from", "to"],
+        "required": [
+          "from",
+          "to"
+        ],
         "additionalProperties": false,
         "properties": {
           "from": {
+            "title": "起点",
             "type": "string",
             "minLength": 1,
             "description": "起点 node id（必须存在于 nodes[].id）"
           },
           "to": {
+            "title": "终点",
             "type": "string",
             "minLength": 1,
             "description": "终点 node id（必须存在于 nodes[].id）"
           },
           "type": {
+            "title": "边类型",
             "type": "string",
-            "enum": ["sequential", "branch", "optional", "loop", "failure"],
+            "enum": [
+              "sequential",
+              "branch",
+              "optional",
+              "loop",
+              "failure"
+            ],
             "default": "sequential",
             "description": "边类型闭合枚举 [来源: 第一原理推导]：sequential=顺序推进/branch=玩家选择分支/optional=可选/loop=循环/failure=失败回退"
           },
           "label": {
+            "title": "条件说明",
             "type": "string",
             "description": "可选：边的触发条件或语义说明（如「通过解谜后」「拒绝交易则」）"
           },
           "requires": {
+            "title": "前置依赖",
             "type": "array",
             "uniqueItems": true,
             "items": {

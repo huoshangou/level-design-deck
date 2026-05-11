@@ -35,9 +35,11 @@ fieldset{border:1px solid var(--line);border-radius:6px;padding:14px 16px;margin
 legend{font-size:13px;font-weight:600;color:var(--accent);padding:0 8px}
 legend .schema-desc{color:var(--muted);font-weight:400;font-size:11px;margin-left:8px}
 .field{margin-bottom:12px}
-.field label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px;font-family:"JetBrains Mono","Consolas",monospace}
+.field label{display:block;font-size:12px;color:var(--text);margin-bottom:4px;font-weight:500}
 .field label .required{color:var(--error);margin-left:4px}
-.field label .desc{color:var(--muted);font-family:-apple-system,sans-serif;font-weight:400;margin-left:8px;text-transform:none}
+.field label .desc{color:var(--muted);font-weight:400;margin-left:8px;font-size:11px}
+.field label .key{color:#aaa;font-family:"JetBrains Mono","Consolas",monospace;font-weight:400;font-size:10px;margin-left:6px}
+legend .key{color:#aaa;font-family:"JetBrains Mono","Consolas",monospace;font-weight:400;font-size:10px;margin-left:6px}
 .field input[type=text],.field textarea,.field select{width:100%;padding:6px 10px;border:1px solid var(--line);border-radius:4px;font-size:13px;font-family:inherit;background:#fff}
 .field textarea{resize:vertical;min-height:80px;line-height:1.6}
 .field input:focus,.field textarea:focus,.field select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px rgba(0,102,204,0.1)}
@@ -264,14 +266,28 @@ function renderObject(value, schema, path) {
   }).join('');
 }
 
+function labelFor(schema, key) {
+  return (schema && schema.title) ? schema.title : key;
+}
+function fieldLabelHtml(schema, key, isRequired) {
+  const title = schema && schema.title;
+  const desc = schema && schema.description ? `<span class="desc">${escapeHtml(schema.description)}</span>` : '';
+  const req = isRequired ? '<span class="required">*</span>' : '';
+  const main = title ? escapeHtml(title) : escapeHtml(key);
+  const keyHint = title ? `<span class="key">${escapeHtml(key)}</span>` : '';
+  return `${main}${req}${keyHint}${desc}`;
+}
 function renderField(value, schema, path, key, isRequired) {
-  const desc = schema.description || '';
   const t = schema.type;
   const alertClass = ALERTS.some(a => a.path === path && a.kind === 'ERROR') ? 'has-error'
                     : ALERTS.some(a => a.path === path && a.kind === 'REVIEW') ? 'has-review' : '';
   if (t === 'object') {
+    const title = schema.title;
+    const main = title ? escapeHtml(title) : escapeHtml(key);
+    const keyHint = title ? `<span class="key">${escapeHtml(key)}</span>` : '';
+    const desc = schema.description ? `<span class="schema-desc">${escapeHtml(schema.description)}</span>` : '';
     return `<fieldset data-path="${path}">
-      <legend>${key}<span class="schema-desc">${escapeHtml(desc)}</span></legend>
+      <legend>${main}${keyHint}${desc}</legend>
       ${renderObject(value || {}, schema, path)}
     </fieldset>`;
   }
@@ -279,13 +295,13 @@ function renderField(value, schema, path, key, isRequired) {
     const items = value || [];
     const itemSchema = schema.items;
     return `<div class="field ${alertClass}" data-path="${path}">
-      <label>${key}${isRequired?'<span class="required">*</span>':''}<span class="desc">${escapeHtml(desc)}</span></label>
+      <label>${fieldLabelHtml(schema, key, isRequired)}</label>
       ${itemSchema.type === 'string' ? renderStringTagList(items, path) : renderObjectArray(items, itemSchema, path)}
     </div>`;
   }
   if (schema.enum) {
     return `<div class="field ${alertClass}" data-path="${path}">
-      <label>${key}${isRequired?'<span class="required">*</span>':''}<span class="desc">${escapeHtml(desc)}</span></label>
+      <label>${fieldLabelHtml(schema, key, isRequired)}</label>
       <select data-bind="${path}">
         ${schema.enum.map(o => `<option value="${o}" ${o===value?'selected':''}>${o}</option>`).join('')}
       </select>
@@ -299,11 +315,11 @@ function renderField(value, schema, path, key, isRequired) {
       ? `<textarea data-bind="${path}" rows="3">${escapeHtml(value || '')}</textarea>`
       : `<input type="text" data-bind="${path}" value="${escapeHtml(value || '')}">`;
     return `<div class="field ${alertClass}" data-path="${path}">
-      <label>${key}${isRequired?'<span class="required">*</span>':''}<span class="desc">${escapeHtml(desc)}</span></label>
+      <label>${fieldLabelHtml(schema, key, isRequired)}</label>
       ${ctrl}${patternHint}
     </div>`;
   }
-  return `<div class="field" data-path="${path}"><label>${key} (unsupported type: ${t})</label></div>`;
+  return `<div class="field" data-path="${path}"><label>${escapeHtml(labelFor(schema, key))} (unsupported type: ${t})</label></div>`;
 }
 
 function renderStringTagList(items, path) {

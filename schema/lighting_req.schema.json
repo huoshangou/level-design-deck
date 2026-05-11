@@ -10,31 +10,37 @@
   "additionalProperties": false,
   "properties": {
     "meta": {
+      "title": "元信息",
       "type": "object",
       "required": ["spec_id", "poi_id", "level_id", "version"],
       "additionalProperties": false,
       "properties": {
         "spec_id": {
+          "title": "Spec ID",
           "type": "string",
           "pattern": "^lighting_req_[a-z0-9_]+$",
           "description": "spec 唯一 ID，命名规则 lighting_req_<poi_short_name>"
         },
         "poi_id": {
+          "title": "POI ID",
           "type": "string",
           "minLength": 1,
           "description": "对应的 POI ID（公司内部命名待对接）"
         },
         "level_id": {
+          "title": "关卡 ID",
           "type": "string",
           "minLength": 1,
           "description": "所属关卡 ID。M3.8 起所有 spec 必填，cross_check.py 按 level_id 分组跑跨 spec 校验。POI 子需求 spec 的 level_id 与同关卡的 spatial_layout / bubble_diagram 等 module 一致。"
         },
         "version": {
+          "title": "版本号",
           "type": "string",
           "pattern": "^\\d+\\.\\d+\\.\\d+$",
           "description": "spec 语义化版本号"
         },
         "owner": {
+          "title": "责任方",
           "type": "string",
           "default": "level",
           "description": "需求归属方，POI 灯光默认 OWNER=关卡（来自 PDF 第六节）"
@@ -42,17 +48,20 @@
       }
     },
     "map_constraint": {
+      "title": "地图收束",
       "type": "object",
       "required": ["description"],
       "additionalProperties": false,
       "description": "地图收束_环境光（POI 文档第六节第 1 项）",
       "properties": {
         "description": {
+          "title": "需求描述",
           "type": "string",
           "minLength": 10,
           "description": "地图收束阶段的环境光需求描述"
         },
         "ir_refs": {
+          "title": "IR 参考",
           "type": "array",
           "items": { "type": "string" },
           "description": "可选引用 IR 字段路径，如 FEEL.overall_tone / SPACE.environment_type"
@@ -60,98 +69,115 @@
       }
     },
     "level_constraint": {
+      "title": "关卡收束",
       "type": "object",
       "required": ["description"],
       "additionalProperties": false,
       "description": "关卡收束_常亮指引光（POI 文档第六节第 2 项）",
       "properties": {
         "description": {
+          "title": "需求描述",
           "type": "string",
           "minLength": 10,
           "description": "关卡收束阶段的常亮指引光需求描述"
         },
         "ir_refs": {
+          "title": "IR 参考",
           "type": "array",
           "items": { "type": "string" }
         }
       }
     },
     "mission_constraint": {
+      "title": "任务收束",
       "type": "object",
       "required": ["description"],
       "additionalProperties": false,
       "description": "任务收束_任务流程灯光（POI 文档第六节第 3 项）",
       "properties": {
         "description": {
+          "title": "需求描述",
           "type": "string",
           "minLength": 10,
           "description": "任务收束阶段与任务流程有关的灯光需求描述"
         },
         "ir_refs": {
+          "title": "IR 参考",
           "type": "array",
           "items": { "type": "string" }
         }
       }
     },
     "concept_art": {
+      "title": "原画效果图",
       "type": "object",
       "required": ["ambient_only", "with_mission"],
       "additionalProperties": false,
       "description": "原画两版效果图（POI 文档 3.0 更新要求）",
       "properties": {
         "ambient_only": {
+          "title": "环境光版",
           "type": "object",
           "required": ["status"],
           "additionalProperties": false,
           "description": "效果图①：环境光+常亮指引光",
           "properties": {
-            "url": { "type": "string", "description": "图片 URL 或内网路径" },
+            "url": { "title": "图片链接", "type": "string", "description": "图片 URL 或内网路径" },
             "status": {
+              "title": "状态",
               "type": "string",
               "enum": ["pending", "in_progress", "done"]
             },
-            "notes": { "type": "string" }
+            "notes": { "title": "备注", "type": "string" }
           }
         },
         "with_mission": {
+          "title": "任务灯光版",
           "type": "object",
           "required": ["status"],
           "additionalProperties": false,
           "description": "效果图②：环境光+常亮指引光+任务流程灯光",
           "properties": {
-            "url": { "type": "string" },
+            "url": { "title": "图片链接", "type": "string" },
             "status": {
+              "title": "状态",
               "type": "string",
               "enum": ["pending", "in_progress", "done"]
             },
-            "notes": { "type": "string" }
+            "notes": { "title": "备注", "type": "string" }
           }
         }
       }
     },
     "position_notes": {
+      "title": "位置说明",
       "type": "string",
       "description": "夜景光效位置说明（PPTX 模板，可选）"
     },
     "ambience_refs": {
+      "title": "灯光氛围参考",
       "type": "array",
       "description": "灯光氛围参考（按区域多个，关键区域设计的子项）",
       "items": {
+        "title": "氛围参考项",
         "type": "object",
         "required": ["region_id", "description"],
         "additionalProperties": false,
         "properties": {
           "region_id": {
+            "title": "区域名",
             "type": "string",
             "minLength": 1,
             "description": "指代同 level 的 spatial_layout.shapes[].label（中文区域名）。M3.8 起由 cross_check.py 校验：必须命中至少一个 shape 的 label（多对一允许，0 对 ERROR）。如该 level 无 spatial_layout spec，cross_check 跳过该校验。"
           },
           "description": {
+            "title": "氛围描述",
             "type": "string",
             "minLength": 5,
             "description": "该区域的灯光氛围描述"
           },
           "ref_image_url": {
+            "title": "参考图链接",
             "type": "string",
             "description": "氛围参考图链接（可选）"
           }
