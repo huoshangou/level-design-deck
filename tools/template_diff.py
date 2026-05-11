@@ -72,18 +72,23 @@ def main():
     # M3.2: 图状 module 走跳过分支（template_fields.json 是字段填空型 derived from gameplay_template.html，
     # 对图状 spec 无映射意义，强行套是反污染失误）。[来源: 第一原理推导]
     spec_id = spec.get("meta", {}).get("spec_id", "")
-    if spec_id.startswith("bubble_diagram_"):
+    SKIP_PREFIXES = {
+        "bubble_diagram_": "graph-type module (nodes/edges, not field-clipboard)",
+        "spatial_layout_": "geometry/external-tool module (LevelCraft 2D export, not field-clipboard)",
+    }
+    skip_reason = next((r for p, r in SKIP_PREFIXES.items() if spec_id.startswith(p)), None)
+    if skip_reason:
         payload = {
             "diffed_at": datetime.now(timezone.utc).isoformat(),
             "spec_path": str(args.spec),
-            "scope": "bubble_diagram (graph-type, no field-clipboard diff applies)",
+            "scope": skip_reason,
             "stats": {"mapped": 0, "missing": 0, "extra": 0},
             "mapped": [], "missing": [], "extra": [],
-            "rationale": "bubble_diagram is graph-typed; template_fields.json/work_docs_extract.json are field-clipboard derived. No mapping applicable. [来源: 第一原理推导]",
+            "rationale": f"{skip_reason}; template_fields.json/work_docs_extract.json are field-clipboard derived. No mapping applicable. [来源: 第一原理推导]",
         }
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
-        print("mapped=0 missing=0 extra=0 (skipped: graph-type module)")
+        print(f"mapped=0 missing=0 extra=0 (skipped: {skip_reason})")
         print(f"OK: diff written to {args.output}")
         sys.exit(0)
 
