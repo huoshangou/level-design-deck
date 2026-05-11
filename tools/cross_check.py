@@ -234,7 +234,8 @@ def print_result(result: dict, v: CrossValidator):
 def write_output(result: dict, out_path: Path):
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
-    print(f"OK: warnings written to {out_path.relative_to(PROJECT_ROOT)}")
+    out_display = out_path.relative_to(PROJECT_ROOT) if out_path.is_relative_to(PROJECT_ROOT) else out_path
+    print(f"OK: warnings written to {out_display}")
 
 
 def main():
@@ -242,11 +243,16 @@ def main():
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--level-id", metavar="ID", help="按 level_id 扫描 specs/")
     group.add_argument("--specs", nargs="+", metavar="FILE", help="直接列 spec 文件（fallback）")
-    parser.add_argument("--output", metavar="FILE", default=str(DEFAULT_OUTPUT),
-                        help=f"输出路径（默认 {DEFAULT_OUTPUT.relative_to(PROJECT_ROOT)}）")
+    parser.add_argument("--output", metavar="FILE", default=None,
+                        help=f"输出路径（默认: --level-id 模式 → {DEFAULT_OUTPUT.relative_to(PROJECT_ROOT)}；--specs 模式 → /tmp/.cross_warnings_specs.json，避免污染正式告警）")
     args = parser.parse_args()
 
-    out_path = Path(args.output)
+    if args.output:
+        out_path = Path(args.output)
+    elif args.level_id:
+        out_path = DEFAULT_OUTPUT
+    else:
+        out_path = Path("/tmp/.cross_warnings_specs.json")
 
     if args.level_id:
         level_id = args.level_id
