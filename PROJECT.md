@@ -245,6 +245,13 @@ level-design-deck/
 | 2026-05-09 | M3.6 关键决策 · 校验深度只做"混用 REVIEW"，不做拓扑顺序校验 | "Phase II 节点不能连 Phase I" 这种拓扑校验在 HUB+loop 下边界本身可能模糊（如 loop 边回流），过早机械化易误伤；留作 M3.x 候选。`[来源: 第一原理推导]` |
 | 2026-05-09 | M3.6 关键决策 · Mermaid subgraph 分组渲染（任一有 phase 即启用） | spec 内任一节点有 phase → 同 phase 节点进同名 subgraph，无 phase 节点游离在外；全部无 phase 时行为完全不变（向后兼容）。subgraph id `phase_<slug>`，display label 用原 phase 字符串。python/js 双实现同步约定靠注释互引。`[来源: 第一原理推导]` |
 | 2026-05-09 | M3.6 ✅ 完成 | 4 文件改（schema/check/render/editor）+ 1 spec 回填（gangster_mansion_boss 13 节点全加 phase + 简化 notes 中 "Phase X 起/中段/收束" 等前缀；side_entrance label 去 "（Phase I 起点）" 后缀）。验证：spec 0/0 ✓ / 故意混用（删 1 节点 phase）→ REVIEW phase_mixed ✓ / Mermaid 渲出 3 subgraph (Phase I/II/III) ✓ / Part 1 无 phase → 0 subgraph 回归 ✓ / demo + lighting_req 3 项回归全过 ✓ / M3.5 requires 仍生效 ✓。行数：editor 835→867 / mechanical_check 270→279 / render 158→190，均 < 硬上限。`[来源: 第一原理推导]` |
+| 2026-05-11 | M3.7 启动 · 第三个 module = `spatial_layout` | 关卡空间布局第三维度，输入 = LevelCraft 2D 导出 JSON，输出 = 2D SVG + 3D Three.js + 区域表。真实案例复用 pipeline case_05（41 shapes / 6 layers）。`[来源: Steve 直接指示（2026-05-09）]` |
+| 2026-05-11 | M3.7 反污染解锁 · CLAUDE.md v0.5 → v0.6 | 加 M3.7 例外块，有限解锁 `template.html` + `layout_data.json`；仍禁读 contract/scorer/manifest 等工程实现。`[来源: Steve 直接指示（2026-05-09）+ CLAUDE.md 变更纪律]` |
+| 2026-05-11 | M3.7 schema 设计 · `meta` + `context` + `layout` 三段 + additionalProperties:true | LevelCraft 协议直接嵌入（不中间转译），未来协议演进 deck 不应阻断。`[来源: 第一原理推导]` |
+| 2026-05-11 | M3.7 校验设计 · 强档（ERROR）+ 弱档（REVIEW）| ERROR：shape/entity.layerId ref_integrity / shape.id 唯一 / layers/shapes 非空。REVIEW：label 缺失或纯数字（设计意图提示）。不做：shape 重叠率（几何计算非平凡）/ 拓扑校验（loop 下 DAG 语义模糊）。`[来源: 第一原理推导]` |
+| 2026-05-11 | M3.7 编辑器设计 · 第三种视图（spatial_layout）| `isSpatialLayout()` 分发 → `renderSpatialLayoutView()`。仅编辑 meta/context，layout 显示 read-only summary card（layer/shape/entity 数 + label coverage）+ "Open rendered HTML" 按钮。理由：layout 是 LevelCraft 工具产物，deck 仅校验和渲染，不编辑。`[来源: 第一原理推导]` |
+| 2026-05-11 | M3.7 生成工具设计 · generate_spec / regenerate_field 拒绝 spatial_layout | 数据来源是 LevelCraft，不走 LLM。MODULES 加 `lvm_generated: false` 标记，调用时检查后报错。`[来源: 第一原理推导]` |
+| 2026-05-11 | M3.7 ✅ 完成 | 11 文件改 + 3 文件新建（schema/template/spec）+ 2 文件复制（cases）。验证：spec 0 ERROR / 3 REVIEW（label_missing 预期）✓ / 故意破坏 → ERROR ref_integrity ✓ / render 119KB HTML ✓ / generate/regenerate 拒绝 ✓ / lighting_req/bubble_diagram 回归 0 ERROR ✓ / editor.html 880 行 < 900 约束 ✓。行数：editor 867→880 / mechanical_check 279→317 / render 190→198 / generate_spec 180→184 / regenerate_field 195→209，均 < 硬上限。`[来源: 第一原理推导]` |
 
 ---
 

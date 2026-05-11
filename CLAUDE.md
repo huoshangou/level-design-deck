@@ -33,6 +33,22 @@
 ### 唯一允许引用的 pipeline 资产
 - ✅ `~/Desktop/level-skill-pipeline/src/contracts/ir_schema.json` —— IR v3.1 schema，作为 spec 的上游输入参考
 
+### M3.7 例外（2026-05-09 解锁）
+
+Steve 直接指示（2026-05-09）：spatial_layout 模块的"最终呈现"和 pipeline 对应同名部分保持一致。
+为此**有限解锁**以下 pipeline 资产可读：
+
+- ✅ `~/Desktop/level-skill-pipeline/src/contracts/skills/spatial_layout/template.html`
+  （用作 deck `templates/spatial_layout.html.tmpl` 渲染基线）
+- ✅ `~/Desktop/level-skill-pipeline/src/test_cases/case_05_gangster_mansion/layout_data.json`
+  （真实案例输入素材，复制到 deck `cases/`）
+
+**仍禁读**（M3.7 解锁不扩散）：
+- ❌ spatial_layout 的 `contract.yaml` / `scorer` / `manifest` / `EDITOR_ENHANCEMENT_PLAN.md` / `levelcraft/` bundle 等工程实现
+- ❌ pipeline 其它 skill（lighting_req / bubble_chart / audio_req / vfx_req 等）—— 仍走第一原理
+
+`[来源: Steve 直接指示（2026-05-09）]`
+
 详细承袭/反承袭表见 [INHERITANCE.md](INHERITANCE.md)。
 
 ---
@@ -158,4 +174,4 @@ L3 防线由**两个机制**组成：自问（4.A）+ 决策来源标签（4.B�
 
 ## 版本
 
-CLAUDE.md v0.5（2026-04-30 创建；2026-05-06 加 4.B 决策来源标签输出契约；2026-05-06 同日：补 work_docs_extract.json 和 Steve 直接指示 2 种来源枚举；2026-05-06 M3.2：editor.html 行数约束从 < 300 bump 到 < 400；2026-05-07 M3.3：editor.html 从 < 400 bump 到 < 900，加 bubble_diagram 图状专用视图）
+CLAUDE.md v0.6（2026-04-30 创建；2026-05-06 加 4.B 决策来源标签输出契约；2026-05-06 同日：补 work_docs_extract.json 和 Steve 直接指示 2 种来源枚举；2026-05-06 M3.2：editor.html 行数约束从 < 300 bump 到 < 400；2026-05-07 M3.3：editor.html 从 < 400 bump 到 < 900，加 bubble_diagram 图状专用视图；2026-05-09 M3.7：加反污染 M3.7 例外块，有限解锁 pipeline spatial_layout/template.html + test_cases/case_05/layout_data.json）

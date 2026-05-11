@@ -231,7 +231,11 @@ function renderForm() {
   document.getElementById('page-title').textContent = `${meta.spec_id || URL_SPEC}: ${subj} v${meta.version || '?'}`;
 
   const preview = document.getElementById('mermaid-preview');
-  if (isBubbleSpec(SPEC)) {
+  if (isSpatialLayout(SPEC)) {
+    preview.hidden = true;
+    root.innerHTML = renderSpatialLayoutView(SPEC, SCHEMA);
+    bindInputs(root);
+  } else if (isBubbleSpec(SPEC)) {
     preview.hidden = false;
     root.innerHTML = renderBubbleDiagramView(SPEC, SCHEMA);
     bindBubbleDiagramHandlers(root);
@@ -428,6 +432,15 @@ const EDGE_ARROW = {
 
 function isBubbleSpec(spec) {
   return ((spec && spec.meta && spec.meta.spec_id) || '').startsWith('bubble_diagram_');
+}
+
+function isSpatialLayout(spec) { return ((spec && spec.meta && spec.meta.spec_id) || '').startsWith('spatial_layout_'); }
+function renderSpatialLayoutView(spec, schema) {
+  const m=spec.meta||{}, c=spec.context||{}, l=spec.layout||{};
+  const sh=l.shapes||[], la=l.layers||[], e=l.entities||[];
+  const lc=sh.filter(s=>s.label&&!/^\d+[.\-]*\d*$/.test(s.label.trim())).length;
+  const u=`/outputs/${escapeHtml(m.spec_id)}.html`;
+  return `<fieldset><legend>meta</legend>${renderObject(m,schema.properties.meta,'meta')}</fieldset><fieldset><legend>context</legend>${renderObject(c,schema.properties.context,'context')}</fieldset><fieldset><legend>layout (read-only)</legend><div style="font-size:12px;color:#666;margin:0 0 12px">⚙️ Layout在LevelCraft中编辑后导出JSON；deck仅校验和渲染</div><div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;font-size:11px;margin-bottom:14px;line-height:1.6"><div><b>name</b>: ${escapeHtml(l.name||'?')}</div><div><b>gridSize</b>: ${l.gridSize||'?'}</div><div><b>layers</b>: ${la.length}</div><div><b>shapes</b>: ${sh.length}</div><div><b>entities</b>: ${e.length}</div><div><b>label cov</b>: ${lc}/${sh.length}</div></div><button style="background:#444;color:#fff;padding:8px 16px;border:none;cursor:pointer" onclick="window.open('${u}','_blank')">Open HTML →</button></fieldset>`;
 }
 
 function specToMermaid(spec) {

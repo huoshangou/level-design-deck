@@ -27,6 +27,7 @@ MODULES = {
         "demo_path": "specs/demo_lighting_req.spec.json",
         "workdoc_key": "poi_lighting_fields",
         "spec_id_pattern": "lighting_req_<poi_short_name>",
+        "lvm_generated": True,
     },
     # M3.2: 图状 module，无 work_docs 字段映射（schema 即真源）
     "bubble_diagram": {
@@ -34,6 +35,12 @@ MODULES = {
         "demo_path": "specs/demo_bubble_diagram.spec.json",
         "workdoc_key": None,
         "spec_id_pattern": "bubble_diagram_<level_short_name>",
+        "lvm_generated": True,
+    },
+    # M3.7: spatial_layout = LevelCraft 工具导出，不支持 LLM 生成
+    "spatial_layout": {
+        "schema_path": "schema/spatial_layout.schema.json",
+        "lvm_generated": False,
     },
 }
 
@@ -185,6 +192,11 @@ def main():
 
     if not args.module or not args.intent:
         parser.error("--module 和 --intent 都必须提供（或用 --list-modules）")
+
+    # M3.7: spatial_layout 不支持 LLM 生成（数据源是 LevelCraft 工具）
+    if not MODULES[args.module].get("lvm_generated", True):
+        sys.exit(f"ERROR: {args.module} 数据来源是 LevelCraft 2D 工具，不支持 LLM 生成。"
+                 f"请用 LevelCraft 编辑后导出 JSON，手动包装成 spec。")
 
     prompt = build_prompt(args.module, args.intent)
 

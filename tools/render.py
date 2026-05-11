@@ -152,6 +152,12 @@ def enrich_for_render(spec):
     spec_id = spec.get("meta", {}).get("spec_id", "")
     if spec_id.startswith("bubble_diagram_"):
         spec.setdefault("__derived__", {})["mermaid_source"] = spec_to_mermaid(spec)
+    elif spec_id.startswith("spatial_layout_"):
+        # 把 spec.layout 序列化成 JSON 嵌进 HTML（escape </ 防 XSS）
+        layout = spec.get("layout") or {}
+        json_str = json.dumps(layout, ensure_ascii=False, separators=(',', ':'))
+        json_str = json_str.replace("</", "<\\/")
+        spec.setdefault("__derived__", {})["layout_json"] = json_str
     return spec
 
 

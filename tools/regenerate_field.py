@@ -25,6 +25,13 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 PLACEHOLDER_PATTERNS = "待定 / 待补充 / TBD / TODO / 参考xxx / 全 ~~~ / 全 ???"
 CAVEAT_PATTERNS = "（待xxx确认） / 暂用xxx代替 / 临时xxx方案"
 
+# 模块注册表（与 tools/generate_spec.py 同步）
+MODULES = {
+    "lighting_req": {"lvm_generated": True},
+    "bubble_diagram": {"lvm_generated": True},
+    "spatial_layout": {"lvm_generated": False},
+}
+
 
 def infer_schema_path(spec_path):
     """从 spec 文件名匹配 schema/<module>.schema.json。
@@ -219,8 +226,15 @@ def main():
         schema_path = args.schema
         if not schema_path.exists():
             sys.exit(f"ERROR: schema not found: {schema_path}")
+        # 推断 module 名用于检查
+        module = schema_path.stem.replace(".schema", "")
     else:
-        schema_path, _ = infer_schema_path(args.spec)
+        schema_path, module = infer_schema_path(args.spec)
+
+    # M3.7: spatial_layout 不支持 LLM 重生成（数据源是 LevelCraft 工具）
+    if not MODULES.get(module, {}).get("lvm_generated", True):
+        sys.exit(f"ERROR: {module} 数据来源是 LevelCraft 2D 工具，不支持字段重生成。"
+                 f"请用 LevelCraft 编辑后导出 JSON，手动更新。")
 
     prompt = build_prompt(args.spec, schema_path, args.field_path, args.hint)
 

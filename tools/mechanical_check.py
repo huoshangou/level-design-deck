@@ -127,19 +127,12 @@ class Validator:
         return f"{path}.{key}"
 
 
-# === module 语义层 dispatcher (M3.2) ===
-# schema 表达不了"图级语义"（id 唯一、edge 端点存在、入口出口）。
-# 通用 schema validator 跑完后，按 module 派发到对应语义检查函数。
-
 SEMANTIC_CHECKS = {}
-
-
 def register_semantic_check(module):
     def deco(f):
         SEMANTIC_CHECKS[module] = f
         return f
     return deco
-
 
 def infer_module(spec, schema):
     """从 spec.meta.spec_id 前缀或 schema.$id 推断 module 名。"""
@@ -222,6 +215,33 @@ def check_bubble_diagram(spec, v):
         v.add_review("nodes", "phase_mixed",
                      f"{len(phased)} nodes have phase, {len(unphased)} don't (missing: {missing_ids}). "
                      f"Either tag all or none — partial tagging may indicate omission.")
+
+
+@register_semantic_check("spatial_layout")
+def check_spatial_layout(spec, v):
+    layout = spec.get("layout", {})
+    shapes = layout.get("shapes", [])
+    layers = layout.get("layers", [])
+    entities = layout.get("entities", [])
+    layer_ids = {l.get("id") for l in layers if isinstance(l, dict)}
+    seen_ids = set()
+    for i, s in enumerate(shapes):
+        if not isinstance(s, dict): continue
+        sid = s.get("id")
+        if sid in seen_ids: v.add_error(f"layout.shapes[{i}].id", "unique_id", f"dup {sid!r}")
+        if sid: seen_ids.add(sid)
+        lid = s.get("layerId")
+        if lid and lid not in layer_ids:
+            v.add_error(f"layout.shapes[{i}].layerId", "ref_integrity", f"{lid!r} not in layers")
+        label = (s.get("label") or "").strip()
+        if not label or label.replace(".", "").replace("-", "").isdigit():
+            v.add_review(f"layout.shapes[{i}].label", "label_missing",
+                         f"shape {s.get('id','?')[:8]} label: {label!r}")
+    for i, e in enumerate(entities):
+        if not isinstance(e, dict): continue
+        lid = e.get("layerId")
+        if lid and lid not in layer_ids:
+            v.add_error(f"layout.entities[{i}].layerId", "ref_integrity", f"{lid!r} not in layers")
 
 
 def main():
