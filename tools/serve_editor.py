@@ -112,6 +112,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             qs = parse_qs(parsed.query)
             level_id = qs.get("level_id", [""])[0]
             self._run_cross_check(level_id)
+        elif parsed.path == "/api/render-level":
+            qs = parse_qs(parsed.query)
+            level_id = qs.get("level_id", [""])[0]
+            self._run_render_level(level_id)
         else:
             self.send_error(404)
 
@@ -195,6 +199,18 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self._json_ok({"ok": True, "spec_id": spec_id, "output": f"outputs/{spec_id}.html"})
         except subprocess.CalledProcessError as e:
             self.send_error(500, e.stderr.decode("utf-8", errors="replace") if e.stderr else "render failed")
+
+    def _run_render_level(self, level_id):
+        if not level_id:
+            self.send_error(400, "level_id required")
+            return
+        try:
+            r = subprocess.run([sys.executable, "tools/render_level.py", "--level-id", level_id, "--render-missing"],
+                               cwd=PROJECT_ROOT, check=True, capture_output=True)
+            self._json_ok({"ok": True, "level_id": level_id, "output": f"outputs/level_{level_id}__full.html",
+                           "stdout": r.stdout.decode("utf-8", errors="replace").strip()})
+        except subprocess.CalledProcessError as e:
+            self.send_error(500, e.stderr.decode("utf-8", errors="replace") if e.stderr else "render-level failed")
 
     def _json_ok(self, payload):
         self.send_response(200)

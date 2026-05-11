@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <title>level-design-deck · editor</title>
 <script src="views/spatial_layout.js"></script>
+<script src="views/level_doc.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
 <script>mermaid.initialize({startOnLoad:false, theme:'default', securityLevel:'loose', flowchart:{useMaxWidth:true, htmlLabels:true}});</script>
 <style>
@@ -140,6 +141,7 @@ legend .key{color:#aaa;font-family:"JetBrains Mono","Consolas",monospace;font-we
     <button onclick="reloadAll()">↻ 重跑检测</button>
     <button onclick="saveSpec()" class="primary" id="save-btn">保存</button>
     <button onclick="renderHtml()">重渲染 HTML</button>
+    <button onclick="openFullDocument()" title="同 level 多 module 拼成一份完整文档">📚 完整关卡文档</button>
   </div>
   <div id="mermaid-preview" hidden>
     <div class="mermaid-header">
