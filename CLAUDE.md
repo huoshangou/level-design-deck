@@ -33,21 +33,31 @@
 ### 唯一允许引用的 pipeline 资产
 - ✅ `~/Desktop/level-skill-pipeline/src/contracts/ir_schema.json` —— IR v3.1 schema，作为 spec 的上游输入参考
 
-### M3.7 例外（2026-05-09 解锁）
+### M3.7 例外（2026-05-09 解锁 / 2026-05-11 扩展）
 
 Steve 直接指示（2026-05-09）：spatial_layout 模块的"最终呈现"和 pipeline 对应同名部分保持一致。
-为此**有限解锁**以下 pipeline 资产可读：
+Steve 直接指示（2026-05-11）：保留 LevelCraft 2D 编辑器作为 deck spatial_layout 流程的**外部编辑工具**，复制其 web app 到 deck 内供运行时使用。
 
+为此**有限解锁**以下 pipeline 资产：
+
+**作为参考可读**（Read 级别）：
 - ✅ `~/Desktop/level-skill-pipeline/src/contracts/skills/spatial_layout/template.html`
   （用作 deck `templates/spatial_layout.html.tmpl` 渲染基线）
 - ✅ `~/Desktop/level-skill-pipeline/src/test_cases/case_05_gangster_mansion/layout_data.json`
   （真实案例输入素材，复制到 deck `cases/`）
 
-**仍禁读**（M3.7 解锁不扩散）：
-- ❌ spatial_layout 的 `contract.yaml` / `scorer` / `manifest` / `EDITOR_ENHANCEMENT_PLAN.md` / `levelcraft/` bundle 等工程实现
+**作为运行时资产可复制**（cp 级别，**不读其源码、不参考其架构**）：
+- ✅ `~/Desktop/level-skill-pipeline/src/contracts/skills/spatial_layout/editor.html`（LevelCraft 2D 编辑器入口）
+- ✅ `~/Desktop/level-skill-pipeline/src/contracts/skills/spatial_layout/levelcraft/`（编辑器依赖 bundle：app.js / game.css / lib.min.js / 等）
+  → 复制目标：deck `tools/levelcraft/`（保留原相对路径结构）
+  → 用法：deck editor.html 通过 `window.open('/tools/levelcraft/editor.html')` 调起；用户在 LevelCraft 编辑后导出 JSON，deck 通过 Import JSON 按钮替换 spec.layout
+  → **运行时资产 ≠ 思维污染源**：类似 Mermaid CDN 角色，只是当 web app bundle 用，绝不 grep / Read / 参考其代码风格
+
+**仍禁读 / 仍禁复制**（M3.7 解锁不扩散）：
+- ❌ spatial_layout 的 `contract.yaml` / `scorer` / `manifest` / `EDITOR_ENHANCEMENT_PLAN.md` 等工程实现（这些是设计/校验/状态机思路，是污染源）
 - ❌ pipeline 其它 skill（lighting_req / bubble_chart / audio_req / vfx_req 等）—— 仍走第一原理
 
-`[来源: Steve 直接指示（2026-05-09）]`
+`[来源: Steve 直接指示（2026-05-09 / 2026-05-11）]`
 
 详细承袭/反承袭表见 [INHERITANCE.md](INHERITANCE.md)。
 
@@ -174,4 +184,4 @@ L3 防线由**两个机制**组成：自问（4.A）+ 决策来源标签（4.B�
 
 ## 版本
 
-CLAUDE.md v0.6（2026-04-30 创建；2026-05-06 加 4.B 决策来源标签输出契约；2026-05-06 同日：补 work_docs_extract.json 和 Steve 直接指示 2 种来源枚举；2026-05-06 M3.2：editor.html 行数约束从 < 300 bump 到 < 400；2026-05-07 M3.3：editor.html 从 < 400 bump 到 < 900，加 bubble_diagram 图状专用视图；2026-05-09 M3.7：加反污染 M3.7 例外块，有限解锁 pipeline spatial_layout/template.html + test_cases/case_05/layout_data.json）
+CLAUDE.md v0.7（2026-04-30 创建；2026-05-06 加 4.B 决策来源标签输出契约；2026-05-06 同日：补 work_docs_extract.json 和 Steve 直接指示 2 种来源枚举；2026-05-06 M3.2：editor.html 行数约束从 < 300 bump 到 < 400；2026-05-07 M3.3：editor.html 从 < 400 bump 到 < 900，加 bubble_diagram 图状专用视图；2026-05-09 M3.7：加反污染 M3.7 例外块，有限解锁 pipeline spatial_layout/template.html + test_cases/case_05/layout_data.json；2026-05-11 M3.7 扩展：例外块加"运行时资产可复制"层级，解锁 LevelCraft editor.html + levelcraft/ bundle 复制到 deck 内供 spatial_layout 流程使用）

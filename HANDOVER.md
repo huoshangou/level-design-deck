@@ -556,6 +556,34 @@ python3 tools/serve_editor.py --port 8765
 
 ---
 
+## M3.7+ · LevelCraft 集成 + Import 闭环（2026-05-11）
+
+### 做了什么
+- 反污染清单分级（CLAUDE.md v0.6 → v0.7）：例外块从两层扩到三层 — ① 参考可读、② 运行时资产可复制（**禁读源码**）、③ 仍禁读
+- 复制 LevelCraft 2D 编辑器到 deck `tools/levelcraft/`（editor.html 119KB + bundle 共 3.1MB）
+- 拆 `editor/views/spatial_layout.js`（M3.3 决策"editor.html < 900 后续再加视图必拆"兑现）
+- 升级 spatial_layout 视图：3 步指南 details + 4 个按钮（Open LevelCraft / Import JSON / Download Current JSON / Open Rendered HTML）
+- Import JSON 完整闭环：选文件 → JSON.parse + sanity check → confirm → 替换 SPEC.layout → save → check → render → 重绘 → toast
+
+### 经验
+1. **pipeline 工程实现 vs 运行时资产 vs 参考产物 是三种不同污染等级** — 不能一刀切。template.html（产物）可以 Read 当模板基线；editor.html（web app bundle）可以 cp 当资产但禁读源码；contract.yaml / scorer（设计/校验思路）必须禁
+2. **CDN 类比**：把外部 web app bundle 当 Mermaid CDN 看（运行时依赖、不读源码、不学架构）— 这个心智模型解决了"用工具但不被污染"的边界
+3. **Import 闭环 = "更简单更好用 → app 壳" 终极目标的第一个落地证据**：不会 cc 的人在浏览器里能完成 spatial_layout 全流程
+4. **opus 设计 + sonnet 执行的工作分工** 在本里程碑落地：opus 做 CLAUDE.md 措辞 / 架构设计 / UX 设计 / 文档同步；sonnet 做拆 editor.html + 实现 spatial_layout.js + 端到端测试。结果：sonnet 78 行代码一次过 + 4 项 curl 测试自验
+
+### 行数 / 文件统计
+- editor.html 880 → 873（拆出去 7 行净空间，远低于 < 900 约束）
+- editor/views/spatial_layout.js 78 行（新建）
+- tools/levelcraft/ 3.1MB（新增资产）
+- CLAUDE.md / INHERITANCE.md / PROJECT.md 同步更新
+
+### 待审 / 待办
+- LevelCraft 自身的"导入 JSON"功能能否吃 deck Download 的 JSON？需 Steve 浏览器实测
+- 是否要把 "Open LevelCraft" 按钮改成 iframe 嵌入？（PoC 期不做，独立窗口够用）
+- M3.x 候选表第三项以后默认走 `editor/views/<module>.js` 模式（vfx_req / audio_req / atmosphere_ref 等）
+
+---
+
 ## 反污染常驻提醒
 
 ⚠️ AI 默认会"回到熟悉状态"。每次涉及 level-design-deck，请记住：
