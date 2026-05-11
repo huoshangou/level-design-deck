@@ -42,6 +42,14 @@ MODULES = {
         "schema_path": "schema/spatial_layout.schema.json",
         "lvm_generated": False,
     },
+    # M3.9: level_overview = 关卡 README，hub spec（level_id 真源）
+    "level_overview": {
+        "schema_path": "schema/level_overview.schema.json",
+        "demo_path": None,
+        "workdoc_key": None,
+        "spec_id_pattern": "level_overview_<level_short_name>",
+        "lvm_generated": True,
+    },
 }
 
 WORK_DOCS_PATH = "reference/work_docs_extract.json"
@@ -56,9 +64,10 @@ def load_module(name):
         sys.exit(f"ERROR: unknown module '{name}'. Available: {list(MODULES)}")
     cfg = MODULES[name]
     schema = json.loads((PROJECT_ROOT / cfg["schema_path"]).read_text(encoding="utf-8"))
-    demo = json.loads((PROJECT_ROOT / cfg["demo_path"]).read_text(encoding="utf-8"))
+    demo_path = cfg.get("demo_path")
+    demo = json.loads((PROJECT_ROOT / demo_path).read_text(encoding="utf-8")) if demo_path else None
     # workdoc_key=None 表示图状/无字段映射型 module，schema 即真源
-    if cfg["workdoc_key"] is None:
+    if cfg.get("workdoc_key") is None:
         return cfg, schema, demo, []
     work_docs = json.loads((PROJECT_ROOT / WORK_DOCS_PATH).read_text(encoding="utf-8"))
     fields = work_docs.get(cfg["workdoc_key"], [])
@@ -187,7 +196,7 @@ def main():
 
     if args.list_modules:
         for name, cfg in MODULES.items():
-            print(f"{name}\tschema={cfg['schema_path']}\tdemo={cfg['demo_path']}")
+            print(f"{name}\tschema={cfg['schema_path']}\tdemo={cfg.get('demo_path')}")
         return
 
     if not args.module or not args.intent:

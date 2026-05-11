@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>{{title}} · 关卡概览</title>
+<style>
+:root { --fg:#222; --muted:#888; --bg:#fafaf6; --line:#e8e8e0; --accent:#1a73e8; --code-bg:#f0f0ea; }
+* { box-sizing:border-box; margin:0; padding:0; }
+body { font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif; color:var(--fg); background:var(--bg); line-height:1.7; padding:40px 24px; max-width:860px; margin:0 auto; font-size:14px; }
+.header { padding-bottom:20px; border-bottom:2px solid var(--fg); margin-bottom:20px; }
+.header h1 { font-size:26px; font-weight:700; letter-spacing:.02em; margin-bottom:6px; }
+.meta-bar { color:var(--muted); font-family:"JetBrains Mono","Consolas",monospace; font-size:11px; }
+.meta-bar span { margin-right:16px; }
+.chips { display:flex; flex-wrap:wrap; gap:8px; margin:16px 0 8px; }
+.chip { display:inline-block; font-size:12px; padding:3px 10px; border-radius:12px; background:var(--code-bg); color:var(--fg); border:1px solid var(--line); }
+.chip b { color:var(--muted); font-weight:400; margin-right:4px; }
+h2 { font-size:12px; font-weight:600; color:var(--accent); margin:24px 0 8px; padding-top:16px; border-top:1px solid var(--line); text-transform:uppercase; letter-spacing:.08em; }
+p { margin-bottom:8px; color:var(--fg); }
+.two-col { display:grid; grid-template-columns:1fr 1fr; gap:32px; margin-top:24px; }
+.npc-list, .item-list { list-style:none; padding:0; }
+.npc-list li, .item-list li { padding:7px 0; border-bottom:1px solid var(--line); font-size:13px; }
+.npc-list li:last-child, .item-list li:last-child { border-bottom:none; }
+.entry-name { font-weight:600; display:block; margin-bottom:2px; }
+.entry-role { color:var(--muted); font-size:12px; }
+.ecology-block { padding:10px 12px; background:var(--code-bg); border-left:3px solid var(--accent); border-radius:0 4px 4px 0; }
+.eco-status { display:inline-block; font-size:11px; padding:2px 7px; border-radius:3px; margin-bottom:6px; font-weight:500; }
+.status-pending { background:#fff7e6; color:#d97706; }
+.status-in_progress { background:#e0f2fe; color:#0369a1; }
+.status-done { background:#dcfce7; color:#16a34a; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>{{title}}</h1>
+  <div class="meta-bar">
+    <span><b>spec_id:</b> {{meta.spec_id}}</span>
+    <span><b>level_id:</b> {{meta.level_id}}</span>
+    <span><b>v</b>{{meta.version}}</span>
+    <span><b>owner:</b> {{meta.owner}}</span>
+    <span><b>type:</b> {{context.level_type}}</span>
+  </div>
+</div>
+
+<div class="chips">
+  <div class="chip"><b>定位</b>{{positioning}}</div>
+  <div class="chip"><b>时长</b>{{duration_estimate}}</div>
+</div>
+
+<h2>调性</h2>
+<p>{{theme_tone}}</p>
+
+<h2>设计意图</h2>
+<p>{{context.intent}}</p>
+
+<h2>主要玩法</h2>
+<p>{{main_gameplay}}</p>
+
+<h2>生态背景 <span style="font-weight:400;color:var(--muted);text-transform:none;font-family:monospace;font-size:11px">ecology_background</span></h2>
+<div class="ecology-block">
+  <span class="eco-status status-{{ecology_background.status}}">{{ecology_background.status}}</span>
+  <div>{{ecology_background.description}}</div>
+</div>
+
+<div class="two-col">
+  <div>
+    <h2>关键 NPC</h2>
+    <ul class="npc-list">
+    {{#each key_npcs}}
+      <li>
+        <span class="entry-name">{{name}}</span>
+        <span class="entry-role">{{role}}</span>
+      </li>
+    {{/each}}
+    </ul>
+  </div>
+
+  <div>
+    <h2>关键道具</h2>
+    <ul class="item-list">
+    {{#each key_items}}
+      <li>
+        <span class="entry-name">{{name}}</span>
+        <span class="entry-role">{{role}}</span>
+      </li>
+    {{/each}}
+    </ul>
+  </div>
+</div>
+
+</body>
+</html>

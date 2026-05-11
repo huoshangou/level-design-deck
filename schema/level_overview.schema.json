@@ -1,0 +1,135 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "level-design-deck/schema/level_overview.schema.json",
+  "title": "level_overview spec",
+  "description": "关卡 README — 高层定位/主题/玩法/背景。是同 level 所有 module 的 hub spec（level_id 真源）。M3.9 v0.1.0",
+  "version": "0.1.0",
+  "applies_to": ["POI", "gameplay", "mixed"],
+  "type": "object",
+  "required": ["meta", "context", "title"],
+  "additionalProperties": false,
+  "properties": {
+    "meta": {
+      "title": "元信息",
+      "type": "object",
+      "required": ["spec_id", "level_id", "version"],
+      "additionalProperties": false,
+      "properties": {
+        "spec_id": {
+          "title": "Spec ID",
+          "type": "string",
+          "pattern": "^level_overview_[a-z0-9_]+$",
+          "description": "唯一 ID，命名规则 level_overview_<level_short_name>"
+        },
+        "level_id": {
+          "title": "关卡 ID",
+          "type": "string",
+          "minLength": 1,
+          "description": "所属关卡 ID。该 level 其他 module 的 meta.level_id 应与此一致（cross_check 推断 hub）。"
+        },
+        "version": {
+          "title": "版本号",
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$"
+        },
+        "owner": {
+          "title": "责任方",
+          "type": "string",
+          "default": "level"
+        }
+      }
+    },
+    "context": {
+      "title": "上下文",
+      "type": "object",
+      "required": ["intent", "level_type"],
+      "additionalProperties": false,
+      "properties": {
+        "intent": {
+          "title": "设计意图",
+          "type": "string",
+          "minLength": 10,
+          "description": "一句话概括该关卡的核心设计意图"
+        },
+        "level_type": {
+          "title": "关卡类型",
+          "type": "string",
+          "enum": ["poi", "gameplay", "mixed"]
+        }
+      }
+    },
+    "title": {
+      "title": "关卡显示名",
+      "type": "string",
+      "minLength": 1,
+      "description": "面向玩家/团队的关卡名（如「上里组本部」「地下停车场惊魂」）"
+    },
+    "positioning": {
+      "title": "关卡定位",
+      "type": "string",
+      "description": "在大叙事/玩法体系里的位置，如「主线 Chapter 3 转折点」「侧线挑战关卡」"
+    },
+    "theme_tone": {
+      "title": "主题调性",
+      "type": "string",
+      "description": "整体气质/风格（如「暗黑暴力 + 茶道清雅冲突」）"
+    },
+    "main_gameplay": {
+      "title": "主要玩法",
+      "type": "string",
+      "description": "POI 内主要玩法节奏概要"
+    },
+    "ecology_background": {
+      "title": "生态背景",
+      "type": "object",
+      "additionalProperties": false,
+      "description": "待文案组补充的生态背景设定",
+      "properties": {
+        "status": {
+          "title": "状态",
+          "type": "string",
+          "enum": ["pending", "in_progress", "done"]
+        },
+        "description": {
+          "title": "描述",
+          "type": "string"
+        }
+      }
+    },
+    "duration_estimate": {
+      "title": "预计时长",
+      "type": "string",
+      "description": "如「45-60 min」"
+    },
+    "key_npcs": {
+      "title": "关键 NPC",
+      "type": "array",
+      "description": "推动剧情的关键人物",
+      "items": {
+        "title": "NPC",
+        "type": "object",
+        "required": ["name"],
+        "additionalProperties": false,
+        "properties": {
+          "name": {"title": "姓名", "type": "string"},
+          "role": {"title": "角色定位", "type": "string"}
+        }
+      }
+    },
+    "key_items": {
+      "title": "关键道具",
+      "type": "array",
+      "description": "推动剧情的关键道具",
+      "items": {
+        "title": "道具",
+        "type": "object",
+        "required": ["name"],
+        "additionalProperties": false,
+        "properties": {
+          "name": {"title": "名称", "type": "string"},
+          "role": {"title": "用途", "type": "string"}
+        }
+      }
+    }
+  }
+}

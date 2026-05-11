@@ -30,6 +30,7 @@ MODULES = {
     "lighting_req": {"lvm_generated": True},
     "bubble_diagram": {"lvm_generated": True},
     "spatial_layout": {"lvm_generated": False},
+    "level_overview": {"lvm_generated": True},
 }
 
 
