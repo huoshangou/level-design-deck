@@ -74,6 +74,14 @@ MODULES = {
         "spec_id_pattern": "audio_req_<level_short_name>",
         "lvm_generated": True,
     },
+    # M3.13: asset_list = POI 资产清单，给制作团队的对接表
+    "asset_list": {
+        "schema_path": "schema/asset_list.schema.json",
+        "demo_path": None,
+        "workdoc_key": None,
+        "spec_id_pattern": "asset_list_<level_short_name>",
+        "lvm_generated": True,
+    },
 }
 
 WORK_DOCS_PATH = "reference/work_docs_extract.json"

@@ -123,6 +123,15 @@ def check_atmosphere_zone_refs(specs_by_module, v):
                       atmos.get("zones", []),
                       "atmosphere_ref.zones", "zone_id")
 
+@register_cross_check("asset_list.assets[].ref_zone_id ∈ spatial_layout.shapes[].label")
+def check_asset_zone_refs(specs_by_module, v):
+    asset = specs_by_module.get("asset_list")
+    spatial = specs_by_module.get("spatial_layout")
+    if not asset or not spatial:
+        return
+    _check_zone_field(v, _get_spatial_labels(spatial),
+                      asset.get("assets", []),
+                      "asset_list.assets", "ref_zone_id")
 
 # ---------------------------------------------------------------------------
 # Spec loading helpers
@@ -237,7 +246,6 @@ def write_output(result: dict, out_path: Path):
     out_display = out_path.relative_to(PROJECT_ROOT) if out_path.is_relative_to(PROJECT_ROOT) else out_path
     print(f"OK: warnings written to {out_display}")
 
-
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     group = parser.add_mutually_exclusive_group(required=True)
@@ -286,7 +294,6 @@ def main():
     write_output(result, out_path)
 
     sys.exit(1 if v.errors else 0)
-
 
 if __name__ == "__main__":
     main()

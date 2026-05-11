@@ -1,31 +1,38 @@
 {
-  "checked_at": "2026-05-11T09:34:27.866666+00:00",
+  "checked_at": "2026-05-11T10:27:25.473054+00:00",
   "level_id": "gangster_mansion",
   "spec_paths": [
-    "/tmp/bad_audio.json",
-    "specs/spatial_layout_gangster_mansion.spec.json"
+    "specs/asset_list_gangster_mansion.spec.json",
+    "specs/atmosphere_ref_gangster_mansion.spec.json",
+    "specs/audio_req_gangster_mansion.spec.json",
+    "specs/bubble_diagram_gangster_mansion.spec.json",
+    "specs/bubble_diagram_gangster_mansion_boss.spec.json",
+    "specs/level_overview_gangster_mansion.spec.json",
+    "specs/lighting_req_gangster_mansion.spec.json",
+    "specs/spatial_layout_gangster_mansion.spec.json",
+    "specs/vfx_req_gangster_mansion.spec.json"
   ],
   "modules": [
+    "asset_list",
+    "atmosphere_ref",
     "audio_req",
-    "spatial_layout"
+    "bubble_diagram",
+    "level_overview",
+    "lighting_req",
+    "spatial_layout",
+    "vfx_req"
   ],
   "cross_checks_run": [
     "lighting_req.ambience_refs[].region_id ∈ spatial_layout.shapes[].label",
     "vfx_req.effects[].zone_id ∈ spatial_layout.shapes[].label",
     "audio_req.ambient_sounds[].region_id ∈ spatial_layout.shapes[].label",
-    "atmosphere_ref.zones[].zone_id ∈ spatial_layout.shapes[].label"
+    "atmosphere_ref.zones[].zone_id ∈ spatial_layout.shapes[].label",
+    "asset_list.assets[].ref_zone_id ∈ spatial_layout.shapes[].label"
   ],
-  "errors": [
-    {
-      "level": "ERROR",
-      "field_path": "audio_req.ambient_sounds[0].region_id",
-      "rule": "cross_ref_integrity",
-      "msg": "region_id 'ghost_audio_zone' not in spatial_layout.shapes[].label (available labels: ['中央庭院', '仓库', '休息间', '伞舞阁', '健身房', '冬院-干部宿舍区', '剑道堂', '占位房间', '厨房区', '后侧门']...)"
-    }
-  ],
+  "errors": [],
   "reviews": [],
   "stats": {
-    "errors": 1,
+    "errors": 0,
     "reviews": 0
   }
 }

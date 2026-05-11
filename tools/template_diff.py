@@ -78,6 +78,7 @@ def main():
         "atmosphere_ref_": "atmosphere/refs module (image-collection, not field-clipboard)",
         "vfx_req_": "vfx module (effects-collection, not field-clipboard)",
         "audio_req_": "audio module (ambient-sounds-collection, not field-clipboard)",
+        "asset_list_": "asset list module (interface对接表，not field-clipboard)",
     }
     skip_reason = next((r for p, r in SKIP_PREFIXES.items() if spec_id.startswith(p)), None)
     if skip_reason:

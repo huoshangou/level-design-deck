@@ -1,0 +1,85 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "level-design-deck/schema/asset_list.schema.json",
+  "title": "asset_list spec",
+  "description": "POI 资产清单 — 给制作团队的对接表。asset_id 字段公司命名待对接，PoC 期 deck 不编造伪接口名。M3.13 v0.1.0",
+  "version": "0.1.0",
+  "applies_to": ["POI", "mixed"],
+  "type": "object",
+  "required": ["meta", "context", "assets"],
+  "additionalProperties": false,
+  "properties": {
+    "meta": {
+      "title": "元信息",
+      "type": "object",
+      "required": ["spec_id", "level_id", "version"],
+      "additionalProperties": false,
+      "properties": {
+        "spec_id": {
+          "title": "Spec ID",
+          "type": "string",
+          "pattern": "^asset_list_[a-z0-9_]+$"
+        },
+        "level_id": {"title": "关卡 ID", "type": "string", "minLength": 1},
+        "version": {"title": "版本号", "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$"},
+        "owner": {"title": "责任方", "type": "string", "default": "level"}
+      }
+    },
+    "context": {
+      "title": "上下文",
+      "type": "object",
+      "required": ["intent", "level_type"],
+      "additionalProperties": false,
+      "properties": {
+        "intent": {"title": "设计意图", "type": "string", "minLength": 10},
+        "level_type": {"title": "关卡类型", "type": "string", "enum": ["poi", "gameplay", "mixed"]}
+      }
+    },
+    "assets": {
+      "title": "资产清单",
+      "type": "array",
+      "minItems": 1,
+      "description": "POI 所需资产对接表。ref_zone_id 由 cross_check.py 校验：必须命中同 level spatial_layout.shapes[].label",
+      "items": {
+        "title": "资产项",
+        "type": "object",
+        "required": ["name", "category"],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "title": "资产名（人话描述）",
+            "type": "string",
+            "minLength": 1,
+            "description": "中文描述性命名，如「白狐神龛模型」「障子拉门贴图」「香火烟雾粒子」"
+          },
+          "category": {
+            "title": "资产类别",
+            "type": "string",
+            "enum": ["model_3d", "texture", "vfx", "audio", "animation", "interactive_object", "lighting", "other"],
+            "description": "POI 资产常见类别"
+          },
+          "asset_id": {
+            "title": "资产 ID（公司命名待对接）",
+            "type": "string",
+            "description": "**公司内部资产命名，由开发/美术对接定**。PoC 期留空或填「[待对接]」「[公司命名待对接]」。**禁止编造伪接口名**（如 model_xxx_001）。"
+          },
+          "ref_zone_id": {
+            "title": "引用区域",
+            "type": "string",
+            "description": "可选 — 指代同 level spatial_layout.shapes[].label，标记该资产用在哪个区域"
+          },
+          "status": {
+            "title": "状态",
+            "type": "string",
+            "enum": ["pending", "in_progress", "done"]
+          },
+          "notes": {
+            "title": "备注",
+            "type": "string",
+            "description": "对开发/美术的补充说明（如「需要白模阶段先出」「跟参考图严格对齐」）"
+          }
+        }
+      }
+    }
+  }
+}

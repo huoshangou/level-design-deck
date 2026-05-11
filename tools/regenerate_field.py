@@ -34,6 +34,7 @@ MODULES = {
     "atmosphere_ref": {"lvm_generated": True},
     "vfx_req": {"lvm_generated": True},
     "audio_req": {"lvm_generated": True},
+    "asset_list": {"lvm_generated": True},
 }
 
 
