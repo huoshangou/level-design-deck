@@ -299,6 +299,11 @@ level-design-deck/
 | 2026-05-12 | M3.14 资产策略 · lib/ 进 git（仿 LevelCraft 复制策略）| 3.2MB Mermaid bundle 进 git 仓库。理由：(1) 用户克隆即用、零额外步骤；(2) git 大小可承受（vs LevelCraft 3.1MB 已进，类比合理）；(3) 离线壳的"资产 ≠ 代码污染"边界（同 CLAUDE.md M3.7+ "运行时资产可复制"分级）。`[来源: 第一原理推导 + CLAUDE.md M3.7+ 决策类比]` |
 | 2026-05-12 | M3.14 启动脚本设计 · macOS 双击 + POSIX 兼容 | start.command（macOS 可双击，需 .command 后缀 + chmod +x）+ start.sh 软链。功能：cd 脚本目录 → 检测 python3 → kill 旧 server（端口占用）→ nohup 启动 serve_editor → 等就绪 → open 浏览器。**关键 UX**：用户双击就能用，无需终端。日志写 /tmp 不污染项目。`[来源: 第一原理推导 + 用户最少步骤]` |
 | 2026-05-12 | M3.14 ✅ 完成 | 文件：lib/mermaid.min.js 新建（3.2MB）+ editor.html 改 1 处 src + templates/bubble_diagram.html.tmpl 改 1 处 src + start.command 新建（48 行 chmod +x）+ start.sh 软链。验证：editor 引 lib/ ✓ / bubble 渲染产物引 lib/ ✓ / 0 CDN 引用 ✓ / 启动脚本端到端通（kill 旧 server → 启动 → server 就绪 → open 浏览器）✓ / 12 specs 可用 ✓。**当前架构对壳化已 95% 友好**，唯一剩余外网依赖 = spatial_layout template Three.js（已记 TODO）。`[来源: Steve 直接指示（2026-05-12）+ 第一原理推导]` |
+| 2026-05-12 | M3.15 启动 · cc skill 接入（"同事在自己工作目录调 deck"）| Steve 终极目标 align 后定的方向：**同事装好 deck 后，在自己工作目录跑 cc → cc 通过 skill 自动调 deck 工具链**。3 个未解问题已收敛：(1) 装机 = git clone + 双击 start.command（不变）；(2) cc 接入 = skill 起步、MCP server 是产品形态；(3) spec 存哪 = PoC 期硬编码 $DECK_HOME/specs（中央存储），未来散到同事项目再说。`[来源: Steve 直接指示（2026-05-12）]` |
+| 2026-05-12 | M3.15 关键决策 · skill vs MCP server 路径 | 先 skill 验证流程（成本低、今天能做），后 MCP server 升级到产品形态（cc native 工具发现）。skill 是 PoC，MCP 是正式分发。`[来源: 第一原理推导 + 投入产出比]` |
+| 2026-05-12 | M3.15 关键决策 · skill 命名 `/design-deck` | 跟项目名 `level-design-deck` 对应；与 Steve 已有 `/design-level`（pipeline）不冲突。actions = new / add / check / render / open / help（覆盖创建/扩展/校验/渲染/打开闭环）。`[来源: 第一原理推导 + 命名一致性]` |
+| 2026-05-12 | M3.15 关键决策 · DECK_HOME 用 env var 覆盖默认 | 默认 `~/Desktop/level-design-deck`（Steve 习惯路径），可用 env var `LEVEL_DESIGN_DECK_HOME` 覆盖。同事装路径不同时不需要改 skill，只需 export 环境变量。`[来源: 工程惯例]` |
+| 2026-05-12 | M3.15 ✅ 完成 PoC 版 | cc-skills/design-deck.md 新建（176 行）+ cc-skills/README.md（32 行）+ start.command 加 skill 安装提示。**未做端到端测试**（Steve 装到自己 cc 后实测）。下一步候选：(1) Steve 测一遍 skill 实际跑通（用真实新关卡走一轮）；(2) 跑通后看暴露的问题，调 skill；(3) 反馈稳定后做 MCP server 升级到产品形态。`[来源: Steve 直接指示（2026-05-12）+ 第一原理推导]` |
 
 ---
 

@@ -63,3 +63,13 @@ echo "或：  lsof -ti:$PORT | xargs kill"
 echo "─────────────────────────────────────────"
 echo ""
 echo "（此窗口可关闭，server 仍会运行）"
+echo ""
+
+# 检测 cc skill 是否已安装
+SKILL_DST="$HOME/.claude/commands/design-deck.md"
+SKILL_SRC="$SCRIPT_DIR/cc-skills/design-deck.md"
+if [ -f "$SKILL_SRC" ] && [ ! -f "$SKILL_DST" ]; then
+  echo "💡 检测到未安装 Claude Code skill。如要在 cc 中调 deck："
+  echo "   mkdir -p ~/.claude/commands && cp \"$SKILL_SRC\" ~/.claude/commands/"
+  echo "   安装后 cc 里输入 /design-deck help"
+fi
