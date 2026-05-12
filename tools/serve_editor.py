@@ -116,6 +116,20 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             qs = parse_qs(parsed.query)
             level_id = qs.get("level_id", [""])[0]
             self._run_render_level(level_id)
+        elif parsed.path == "/api/render-deck":
+            qs = parse_qs(parsed.query)
+            level_id = qs.get("level_id", [""])[0]
+            if not level_id:
+                self._json_error("missing level_id")
+                return
+            result = subprocess.run(
+                [sys.executable, str(PROJECT_ROOT / "tools" / "render_deck.py"), "--level-id", level_id],
+                capture_output=True, text=True, cwd=str(PROJECT_ROOT)
+            )
+            if result.returncode != 0:
+                self._json_error(result.stderr or "render_deck failed")
+                return
+            self._json_ok({"path": f"outputs/level_{level_id}__deck.html"})
         else:
             self.send_error(404)
 
@@ -217,6 +231,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         self.send_header("Content-Type", "application/json")
         self.end_headers()
         self.wfile.write(json.dumps(payload).encode("utf-8"))
+
+    def _json_error(self, msg):
+        self.send_response(400)
+        self.send_header("Content-Type", "application/json")
+        self.end_headers()
+        self.wfile.write(json.dumps({"error": msg}).encode("utf-8"))
 
 
 def main():
