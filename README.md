@@ -6,6 +6,14 @@
 
 ---
 
+## 演示视频
+
+<video src="https://github.com/huoshangou/level-design-deck/releases/download/v0.1.0/level-design-deck-tutorial.mp4" controls width="100%"></video>
+
+> 无法内嵌播放？[点此直接下载 MP4](https://github.com/huoshangou/level-design-deck/releases/download/v0.1.0/level-design-deck-tutorial.mp4)（4.3 MB，61 秒）
+
+---
+
 ## 是什么 / 不是什么
 
 **是**：
@@ -39,7 +47,7 @@
 **系统要求**：Python 3.8+，macOS 优先（Linux 应该也能跑），不需要 npm/pip install
 
 ```bash
-git clone https://github.com/<your-handle>/level-design-deck.git
+git clone https://github.com/huoshangou/level-design-deck.git
 cd level-design-deck
 ```
 
@@ -148,4 +156,3 @@ spec 只走一个方向：对话 → JSON → HTML。HTML 永远不反向影响 
 | M3 | 完成 | 8 个 module 全部落地 + 跨 module cross_check + LevelCraft 集成 + cc skill + Mermaid 本地化 |
 | 未来方向 | 待定 | app 壳（Tauri/Electron/内网部署）让不会 cc 的设计师直接用；MCP server 升级 skill 到产品形态 |
 
-<!-- TODO: 等真实脱敏案例就绪后，在此补充一个截图或示例渲染产物链接 -->
