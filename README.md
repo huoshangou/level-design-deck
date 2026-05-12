@@ -132,7 +132,7 @@ spec 只走一个方向：对话 → JSON → HTML。HTML 永远不反向影响 
 
 ## 致谢 / Attribution
 
-**LevelCraft 2D 编辑器**：本仓库 `tools/levelcraft/` 包含 LevelCraft 2D 编辑器 bundle，归原作者所有。许可信息正在确认中，如有版权方可联系移除。
+**layoutTools 编辑器**：本仓库 `tools/levelcraft/` 包含 LevelCraft 2D 编辑器 bundle，归原作者所有。已征得使用许可，原工具链接🔗https://www.bilibili.com/video/BV1PrD9BQEo3?buvid=YE42B9E3D53802F14A40AFC21B21359649A4&is_story_h5=false&mid=brROephpd%2B6l7LdnRGTNXQ%3D%3D&p=1&plat_id=168&share_from=ugc&share_medium=iphone&share_plat=ios&share_session_id=5D407EC0-51B9-4407-99C3-349024AAA5F8&share_source=WEIXIN&share_tag=s_i&spmid=main.my-history-search-result.option-more.0&timestamp=1778564824&unique_k=LLuBSPE&up_id=10154071
 
 **Mermaid**：`lib/mermaid.min.js` 使用 [Mermaid](https://github.com/mermaid-js/mermaid)，MIT License。
 
