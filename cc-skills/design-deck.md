@@ -1,8 +1,8 @@
 # Level Design Deck — spec 真源工作台
-<!-- version: 0.2.0 -->
+<!-- version: 0.3.0 -->
 
 > **Quick Start:** `/design-deck [action] [args]`
-> 无参数 → 向导对话；actions: `new` / `add` / `check` / `render` / `open`
+> 无参数 → 向导对话；actions: `new` / `add` / `check` / `render` / `deck` / `open`
 
 把"AI 产 spec、Python 标问题、人定向改字段"做成一键流程。
 spec.json 是真源（git 管控的纯文本），HTML 是派生（render.py 出的）。
@@ -168,12 +168,42 @@ level_overview → spatial_layout → bubble_diagram → atmosphere_ref
 
 ### `render <level_id>`
 
-渲染完整关卡文档。
+渲染完整关卡文档（可滚动长文档版）。
 
 **步骤**：
 1. 跑 `cd $DECK_HOME && python3 tools/render_level.py --level-id <level_id> --render-missing`
 2. 自动打开：`open "http://127.0.0.1:8766/outputs/level_<level_id>__full.html"`
 3. Print URL 方便用户复制
+4. Print 快捷提示：
+   ```
+   ✓ 完整文档已打开。
+   快捷操作：/design-deck deck <level_id>  # 生成汇报用横向翻页 Slide Deck
+   ```
+
+---
+
+### `deck <level_id>`
+
+生成汇报用横向翻页 Slide Deck 并打开。
+[来源: Steve 直接指示（2026-05-12）]
+
+**结构**：Cover（关卡名 + 意图摘要）→ 8 个 module slide（iframe 隔离，浅色沙丘主题）→ Coda。
+**视觉**：WebGL 双背景（深色页全息色散 / 浅色页银色珍珠）+ Playfair Display + Noto Serif SC。
+
+**步骤**：
+1. Server 检测（同其他 action）
+2. 跑 `cd $DECK_HOME && python3 tools/render_deck.py --level-id <level_id>`
+3. 自动打开：`open "http://127.0.0.1:8766/outputs/level_<level_id>__deck.html"`
+4. Print：
+   ```
+   ✓ Slide Deck 已打开（<N> 张 slide）
+   
+   快捷键：← → 翻页  ·  ESC 预览所有 slide  ·  F 全屏
+   点击右半屏 → 下一页，左半屏 → 上一页
+   ```
+
+**输出 spec 不全时**：缺少某些 module 的 HTML 会跳过对应 slide，不报错。
+Print 警告：「⚠️ 以下 module 暂无渲染产物，slide 中已跳过：<module 列表>。可先跑 /design-deck render <level_id> 补齐。」
 
 ---
 
@@ -253,4 +283,9 @@ export LEVEL_DESIGN_DECK_HOME=/path/to/your/level-design-deck
 
 > /design-deck render abandoned_factory
   ✓ 完整文档已打开：http://127.0.0.1:8766/outputs/level_abandoned_factory__full.html
+  快捷操作：/design-deck deck abandoned_factory  # 生成汇报用横向翻页 Slide Deck
+
+> /design-deck deck abandoned_factory
+  ✓ Slide Deck 已打开（10 张 slide）
+  快捷键：← → 翻页 · ESC 预览所有 slide · F 全屏
 ```
