@@ -1,0 +1,121 @@
+{
+  "meta": {
+    "spec_id": "bubble_diagram_abandoned_temple",
+    "level_id": "abandoned_temple",
+    "version": "0.1.0",
+    "owner": "level"
+  },
+  "context": {
+    "intent": "两段式主动线：Part 1 潜入调查以 Key 收集 + 线索解谜为核心（HUB 结构），Part 2 以仪式化 Boss 战收束——钟楼道具打断守护者状态是解谜胜负手。",
+    "level_type": "poi"
+  },
+  "nodes": [
+    {
+      "id": "entry",
+      "type": "entry",
+      "label": "山门入口",
+      "notes": "玩家从山路抵达废弃寺庙山门，触发环境叙事（风化石碑 / 枯萎供花），任务通讯开始。",
+      "phase": "Part 1 潜入"
+    },
+    {
+      "id": "zendo_recon",
+      "type": "scene",
+      "label": "前殿侦查",
+      "notes": "发现守护者的巡逻路径和日记碎片，解锁回廊侧门和藏经阁入口分支。",
+      "phase": "Part 1 潜入"
+    },
+    {
+      "id": "hub_explore",
+      "type": "choice",
+      "label": "探索分流点",
+      "notes": "前殿侦查后玩家进入 HUB 阶段，三把失踪者钥匙分散于回廊、藏经阁、主殿，需全部收集才能开密室。",
+      "phase": "Part 1 潜入"
+    },
+    {
+      "id": "kairoh_key",
+      "type": "puzzle",
+      "label": "回廊钥匙（谜题）",
+      "notes": "回廊连廊中藏有第一把钥匙，通过排列损毁石灯笼的朝向解锁暗格。需潜行绕过守护者巡逻。",
+      "phase": "Part 1 潜入"
+    },
+    {
+      "id": "kyozo_key",
+      "type": "scene",
+      "label": "藏经阁钥匙（收集）",
+      "notes": "藏经阁书架深处的失踪者背包里有第二把钥匙，同时触发录音线索——守护者逐渐失去理性的自述。",
+      "phase": "Part 1 潜入"
+    },
+    {
+      "id": "hondo_key",
+      "type": "combat",
+      "label": "主殿钥匙（遭遇战）",
+      "notes": "主殿中守护者巡逻密度最高，玩家需击晕守护者（非致命）或制造声响诱开后取得第三把钥匙。",
+      "phase": "Part 1 潜入"
+    },
+    {
+      "id": "underground_unlock",
+      "type": "puzzle",
+      "label": "开启地下密室",
+      "notes": "三把钥匙集齐后，在主殿祭坛处同时激活三处机关开启地下入口。守护者此时进入警戒状态。",
+      "phase": "Part 1 潜入"
+    },
+    {
+      "id": "underground_discovery",
+      "type": "scene",
+      "label": "密室遗物发现",
+      "notes": "地下密室内玩家发现符文石碑，读取拓本后触发守护者感知——Part 1 收束，守护者开始主动追击，无法再潜行回避。",
+      "phase": "Part 1 潜入"
+    },
+    {
+      "id": "bell_gambit",
+      "type": "puzzle",
+      "label": "钟楼铃铛策略",
+      "notes": "逃出密室后守护者封锁主殿，玩家可绕行至钟楼敲响铃铛——守护者受到符文共鸣影响短暂失去仪式状态，暴露弱点窗口约 8 秒。",
+      "phase": "Part 2 对峙"
+    },
+    {
+      "id": "boss_confrontation",
+      "type": "combat",
+      "label": "守护者正面对峙",
+      "notes": "前殿为主战场，玩家需利用钟楼铃铛（loop 触发）重复打断守护者仪式状态，累积 3 次伤害窗口完成战斗。loop 边从 boss_confrontation → bell_gambit 表达打断循环。",
+      "phase": "Part 2 对峙"
+    },
+    {
+      "id": "ending_cutscene",
+      "type": "cutscene",
+      "label": "收束过场",
+      "notes": "守护者精神解脱，石碑符文消散，玩家取得失踪者证据。过场揭示幕后组织留下符文的线索——衔接 Chapter 3。",
+      "phase": "Part 2 对峙"
+    },
+    {
+      "id": "exit",
+      "type": "exit",
+      "label": "山门撤离",
+      "notes": "玩家从山门离开寺庙区域，任务结算。",
+      "phase": "Part 2 对峙"
+    }
+  ],
+  "edges": [
+    { "from": "entry", "to": "zendo_recon", "type": "sequential" },
+    { "from": "zendo_recon", "to": "hub_explore", "type": "sequential" },
+    { "from": "hub_explore", "to": "kairoh_key", "type": "branch", "label": "前往回廊" },
+    { "from": "hub_explore", "to": "kyozo_key", "type": "branch", "label": "前往藏经阁" },
+    { "from": "hub_explore", "to": "hondo_key", "type": "branch", "label": "前往主殿" },
+    { "from": "kairoh_key", "to": "hub_explore", "type": "loop", "label": "取得回廊钥匙后返回分流点" },
+    { "from": "kyozo_key", "to": "hub_explore", "type": "loop", "label": "取得藏经阁钥匙后返回分流点" },
+    { "from": "hondo_key", "to": "hub_explore", "type": "loop", "label": "取得主殿钥匙后返回分流点" },
+    {
+      "from": "hub_explore",
+      "to": "underground_unlock",
+      "type": "sequential",
+      "label": "三把钥匙集齐后解锁",
+      "requires": ["kairoh_key", "kyozo_key", "hondo_key"]
+    },
+    { "from": "underground_unlock", "to": "underground_discovery", "type": "sequential" },
+    { "from": "underground_discovery", "to": "bell_gambit", "type": "sequential" },
+    { "from": "bell_gambit", "to": "boss_confrontation", "type": "sequential", "label": "铃铛打断后进入攻击窗口" },
+    { "from": "boss_confrontation", "to": "bell_gambit", "type": "loop", "label": "守护者恢复仪式→再次前往钟楼" },
+    { "from": "boss_confrontation", "to": "ending_cutscene", "type": "sequential", "label": "累积 3 次伤害窗口后触发" },
+    { "from": "ending_cutscene", "to": "exit", "type": "sequential" }
+  ]
+}

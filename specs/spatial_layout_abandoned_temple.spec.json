@@ -1,0 +1,167 @@
+{
+  "meta": {
+    "spec_id": "spatial_layout_abandoned_temple",
+    "level_id": "abandoned_temple",
+    "version": "0.1.0",
+    "owner": "level"
+  },
+  "context": {
+    "intent": "废弃山寺的平面布局——以中轴线主殿为核心，山门→前殿→主殿形成主动线，地下密室和钟楼作为支线空间，藏经阁和回廊提供侧翼探索路径。",
+    "level_type": "poi"
+  },
+  "layout": {
+    "name": "枯寂寺",
+    "gridSize": 20,
+    "layers": [
+      {
+        "id": "layer_ground",
+        "name": "一层（地面）",
+        "height": 300,
+        "color": "#C8B89A",
+        "showWalls": true
+      },
+      {
+        "id": "layer_underground",
+        "name": "地下层",
+        "height": 240,
+        "color": "#7A6B58",
+        "showWalls": true,
+        "wallTargetLayerId": "layer_ground"
+      },
+      {
+        "id": "layer_upper",
+        "name": "二层（钟楼）",
+        "height": 200,
+        "color": "#A09078",
+        "showWalls": true
+      }
+    ],
+    "shapes": [
+      {
+        "id": "shape_sanmon",
+        "type": "rect",
+        "label": "山门",
+        "x": 340,
+        "y": 60,
+        "width": 120,
+        "height": 80,
+        "layerId": "layer_ground",
+        "color": "#E8D5B0",
+        "wallHeight": 300,
+        "strokeExclusions": [
+          { "wall": "bottom", "x": 48, "width": 24, "color": "#6B4226" }
+        ]
+      },
+      {
+        "id": "shape_zendo",
+        "type": "rect",
+        "label": "前殿",
+        "x": 280,
+        "y": 180,
+        "width": 240,
+        "height": 140,
+        "layerId": "layer_ground",
+        "color": "#DCC89A",
+        "wallHeight": 300,
+        "strokeExclusions": [
+          { "wall": "top", "x": 100, "width": 40, "color": "#6B4226" },
+          { "wall": "bottom", "x": 100, "width": 40, "color": "#6B4226" }
+        ]
+      },
+      {
+        "id": "shape_kairoh",
+        "type": "rect",
+        "label": "回廊",
+        "x": 180,
+        "y": 220,
+        "width": 100,
+        "height": 260,
+        "layerId": "layer_ground",
+        "color": "#D0BF9A",
+        "wallHeight": 280
+      },
+      {
+        "id": "shape_hondo",
+        "type": "rect",
+        "label": "主殿",
+        "x": 260,
+        "y": 360,
+        "width": 280,
+        "height": 200,
+        "layerId": "layer_ground",
+        "color": "#C8A87A",
+        "wallHeight": 360,
+        "strokeExclusions": [
+          { "wall": "top", "x": 120, "width": 40, "color": "#6B4226" },
+          { "wall": "left", "x": 80, "width": 30, "color": "#6B4226" }
+        ]
+      },
+      {
+        "id": "shape_chikaku_muro",
+        "type": "rect",
+        "label": "地下密室",
+        "x": 300,
+        "y": 420,
+        "width": 200,
+        "height": 140,
+        "layerId": "layer_underground",
+        "color": "#6B5A45",
+        "wallHeight": 240,
+        "isStairs": false
+      },
+      {
+        "id": "shape_chikaku_stairs",
+        "type": "rect",
+        "label": "地下入口（楼梯）",
+        "x": 300,
+        "y": 500,
+        "width": 60,
+        "height": 60,
+        "layerId": "layer_ground",
+        "color": "#A08860",
+        "isStairs": true
+      },
+      {
+        "id": "shape_shoro",
+        "type": "rect",
+        "label": "钟楼",
+        "x": 520,
+        "y": 200,
+        "width": 100,
+        "height": 100,
+        "layerId": "layer_upper",
+        "color": "#B89870",
+        "wallHeight": 200
+      },
+      {
+        "id": "shape_kyozo",
+        "type": "rect",
+        "label": "藏经阁",
+        "x": 520,
+        "y": 380,
+        "width": 120,
+        "height": 140,
+        "layerId": "layer_ground",
+        "color": "#C4A880",
+        "wallHeight": 300,
+        "strokeExclusions": [
+          { "wall": "left", "x": 50, "width": 30, "color": "#6B4226" }
+        ]
+      }
+    ],
+    "entities": [
+      {
+        "id": "entity_player_start",
+        "type": "player_start",
+        "layerId": "layer_ground",
+        "position": { "x": 400, "y": 80 }
+      },
+      {
+        "id": "entity_guardian_patrol",
+        "type": "npc",
+        "layerId": "layer_ground",
+        "position": { "x": 390, "y": 430 }
+      }
+    ]
+  }
+}

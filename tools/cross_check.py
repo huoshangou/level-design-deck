@@ -6,7 +6,7 @@ cross_check.py
 不引入外部依赖（标准库 only）。
 
 使用：
-  python3 tools/cross_check.py --level-id gangster_mansion
+  python3 tools/cross_check.py --level-id my_level
   python3 tools/cross_check.py --specs specs/lighting_req_X.spec.json specs/spatial_layout_X.spec.json
 """
 
@@ -152,7 +152,7 @@ def get_level_id(spec: dict, path: Path) -> str:
         return meta["level_id"].strip()
     spec_id = (meta.get("spec_id") or "").strip()
     if spec_id:
-        # spec_id 形如 lighting_req_gangster_mansion → 去掉 module 前缀
+        # spec_id 形如 lighting_req_my_level → 去掉 module 前缀
         for module in sorted(_known_modules(), key=len, reverse=True):
             prefix = module + "_"
             if spec_id.startswith(prefix):

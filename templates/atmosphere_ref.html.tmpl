@@ -72,7 +72,7 @@ p { margin-bottom:8px; }
 
   function renderRefs(refs, container) {
     if (!Array.isArray(refs) || refs.length === 0) {
-      container.innerHTML = '<div class="no-refs">暂无参考图（请上传到 assets/gangster_mansion/ 或贴 URL）</div>';
+      container.innerHTML = '<div class="no-refs">暂无参考图（请上传到 assets/<level_id>/ 或贴 URL）</div>';
       return;
     }
     var grid = document.createElement('div');

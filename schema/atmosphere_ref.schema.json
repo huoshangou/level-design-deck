@@ -69,7 +69,7 @@
                 "title": "图片地址",
                 "type": "string",
                 "minLength": 1,
-                "description": "URL 或相对路径（如 assets/gangster_mansion/foo.png）"
+                "description": "URL 或相对路径（如 assets/my_level/foo.png）"
               },
               "caption": {"title": "图注", "type": "string"},
               "tags": {
@@ -96,7 +96,7 @@
             "title": "区域名",
             "type": "string",
             "minLength": 1,
-            "description": "指代同 level 的 spatial_layout.shapes[].label（中文区域名，如「玄关」「礼佛堂」）。M3.10 起由 cross_check.py 校验：必须命中至少一个 shape 的 label。"
+            "description": "指代同 level 的 spatial_layout.shapes[].label（中文区域名，如「大厅」「储藏室」）。M3.10 起由 cross_check.py 校验：必须命中至少一个 shape 的 label。"
           },
           "description": {
             "title": "区域氛围描述",

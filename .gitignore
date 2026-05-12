@@ -2,6 +2,7 @@
 outputs/*.html
 outputs/.warnings.json
 outputs/.diff.json
+outputs/.cross_warnings*.json
 
 # macOS
 .DS_Store
@@ -19,3 +20,10 @@ __pycache__/
 # 临时
 *.tmp
 *.bak
+*.log
+/tmp/
+
+# 防御性
+node_modules/
+.env
+.env.*

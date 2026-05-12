@@ -1,0 +1,81 @@
+{
+  "meta": {
+    "spec_id": "bubble_diagram_test_warehouse",
+    "level_id": "test_warehouse",
+    "version": "0.1.0",
+    "owner": "level"
+  },
+  "context": {
+    "intent": "测试关卡主线：夜盗主角潜入废弃仓库，规避巡逻、抵达金库、撬开保险柜后撤退，验证 deck 流程图模块。",
+    "level_type": "poi"
+  },
+  "nodes": [
+    {
+      "id": "entry",
+      "type": "entry",
+      "label": "入库",
+      "notes": "夜盗从仓库后侧外墙翻入，低光环境，触发任务通讯",
+      "phase": "Phase I 潜入"
+    },
+    {
+      "id": "patrol_evasion",
+      "type": "scene",
+      "label": "巡逻规避",
+      "notes": "2-3 名守卫沿固定路线巡逻，玩家利用集装箱与货架掩体潜行通过",
+      "phase": "Phase I 潜入"
+    },
+    {
+      "id": "vault_room",
+      "type": "scene",
+      "label": "金库",
+      "notes": "进入仓库内核心金库区域，环境从开放货区切换为狭小重防区",
+      "phase": "Phase II 行窃"
+    },
+    {
+      "id": "safe_crack",
+      "type": "puzzle",
+      "label": "保险柜",
+      "notes": "撬开保险柜的小型解谜（撬锁/旋码盘），失败可重试，成功获取目标物",
+      "phase": "Phase II 行窃"
+    },
+    {
+      "id": "extraction",
+      "type": "exit",
+      "label": "撤退",
+      "notes": "携带目标物原路或备用路径撤回仓库外，达到撤离点视为通关",
+      "phase": "Phase III 撤离"
+    }
+  ],
+  "edges": [
+    {
+      "from": "entry",
+      "to": "patrol_evasion",
+      "type": "sequential",
+      "label": "翻入仓库后接触巡逻区"
+    },
+    {
+      "from": "patrol_evasion",
+      "to": "vault_room",
+      "type": "sequential",
+      "label": "潜行通过巡逻区抵达金库"
+    },
+    {
+      "from": "vault_room",
+      "to": "safe_crack",
+      "type": "sequential",
+      "label": "在金库内定位并接近保险柜"
+    },
+    {
+      "from": "safe_crack",
+      "to": "vault_room",
+      "type": "loop",
+      "label": "撬锁失败回退到金库巡视"
+    },
+    {
+      "from": "safe_crack",
+      "to": "extraction",
+      "type": "sequential",
+      "label": "撬锁成功，携带目标物撤离"
+    }
+  ]
+}

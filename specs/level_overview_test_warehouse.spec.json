@@ -1,0 +1,17 @@
+{
+  "meta": {
+    "spec_id": "level_overview_test_warehouse",
+    "level_id": "test_warehouse",
+    "version": "0.1.0",
+    "owner": "level"
+  },
+  "context": {
+    "intent": "测试用样例关卡：废弃仓库潜入，主角是夜盗，用于验证 design-deck 各 module 串联流程能跑通。",
+    "level_type": "poi"
+  },
+  "title": "废弃仓库（测试关）",
+  "positioning": "测试用样例关卡，仅用于验证 design-deck 流程链路，不入正式叙事线。",
+  "theme_tone": "夜色冷调 + 工业废墟 + 潜行紧张感",
+  "main_gameplay": "夜盗主角夜间侵入废弃仓库，以潜行避开巡逻、寻找目标物为主要节奏。",
+  "duration_estimate": "10-15 min（测试关）"
+}

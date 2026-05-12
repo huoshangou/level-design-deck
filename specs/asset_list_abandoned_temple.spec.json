@@ -1,0 +1,142 @@
+{
+  "meta": {
+    "spec_id": "asset_list_abandoned_temple",
+    "level_id": "abandoned_temple",
+    "version": "0.1.0",
+    "owner": "level"
+  },
+  "context": {
+    "intent": "废弃山寺资产对接清单——涵盖建筑模型、装饰纹理、特效、音频、动画、交互道具，所有 asset_id 由制作团队对接定名，PoC 阶段全部留 [待对接]。",
+    "level_type": "poi"
+  },
+  "assets": [
+    {
+      "name": "山门石柱组（带断裂损毁变体）",
+      "category": "model_3d",
+      "asset_id": "[待对接]",
+      "ref_zone_id": "山门",
+      "status": "pending",
+      "notes": "需要两种状态：完整态（参考正常寺庙山门比例）+ 断裂风化态（顶部横梁缺失，石柱表面龟裂），断裂态为实际使用版本"
+    },
+    {
+      "name": "前殿室内场景（地面/墙壁/天花板）",
+      "category": "model_3d",
+      "asset_id": "[待对接]",
+      "ref_zone_id": "前殿",
+      "status": "pending",
+      "notes": "木地板需要多种损毁程度的贴图变体（守护者频繁行走区域磨损更重）；墙壁需要潮湿水迹和手抄经文的 Decal 支持"
+    },
+    {
+      "name": "符文石碑（核心道具模型）",
+      "category": "model_3d",
+      "asset_id": "[待对接]",
+      "ref_zone_id": "地下密室",
+      "status": "pending",
+      "notes": "石碑表面符文需要支持自发光材质（冷蓝 #A0C8FF）和脉冲动画驱动的 Shader；符文具体图案由美术/叙事对接，PoC 期用占位几何纹"
+    },
+    {
+      "name": "铜钟（可交互道具）",
+      "category": "interactive_object",
+      "asset_id": "[待对接]",
+      "ref_zone_id": "钟楼",
+      "status": "pending",
+      "notes": "需要交互动画（玩家敲击 → 钟体摆动 → 声波扩散）；金属材质需要在月光下有明显高光反射；敲击触发点位需美术确认碰撞体范围"
+    },
+    {
+      "name": "藏经阁书架（高密度书册变体）",
+      "category": "model_3d",
+      "asset_id": "[待对接]",
+      "ref_zone_id": "藏经阁",
+      "status": "pending",
+      "notes": "书架单元模块化，高度约 280cm；书册贴图需要糟朽/潮湿/结块三种状态；失踪者背包藏匿的书架层需要单独设置交互触发区"
+    },
+    {
+      "name": "失踪者背包（关键道具）",
+      "category": "interactive_object",
+      "asset_id": "[待对接]",
+      "ref_zone_id": "藏经阁",
+      "status": "pending",
+      "notes": "背包内容物（钥匙+录音机）需要单独交互碰撞体；背包本体需要写实现代登山包风格（与寺庙环境形成时代错位感）"
+    },
+    {
+      "name": "失踪者钥匙组（3 把，样式各异）",
+      "category": "interactive_object",
+      "asset_id": "[待对接]",
+      "ref_zone_id": "主殿",
+      "status": "pending",
+      "notes": "三把钥匙外观需各异（便于玩家区分哪个对应哪个机关）；UI 上需要单独图标，制作组对接 UI 组时注意"
+    },
+    {
+      "name": "主殿祭坛机关（三处激活点）",
+      "category": "interactive_object",
+      "asset_id": "[待对接]",
+      "ref_zone_id": "主殿",
+      "status": "pending",
+      "notes": "每个激活点需要未激活/激活中/已激活三种视觉状态；激活时冷白光效果由 VFX 组负责，美术仅需做底座机关形态"
+    },
+    {
+      "name": "守护者角色模型 + 灯笼附件",
+      "category": "model_3d",
+      "asset_id": "[待对接]",
+      "ref_zone_id": "前殿",
+      "status": "pending",
+      "notes": "守护者为老年男性，穿着破旧僧袍；手持灯笼需要作为独立 Attachment 以支持动态光源；弱点暴露状态需要材质 Shader 支持蓝色边缘光驱动"
+    },
+    {
+      "name": "日式蜡烛台组（前殿/主殿共用）",
+      "category": "model_3d",
+      "asset_id": "[待对接]",
+      "ref_zone_id": "前殿",
+      "status": "pending",
+      "notes": "点光源动态蜡烛，需要支持扰动动画（守护者经过时触发）和熄灭/重燃状态切换；与 VFX 组的蜡烛火焰粒子系统对接"
+    },
+    {
+      "name": "山门/前殿/回廊区域地面石板贴图集",
+      "category": "texture",
+      "asset_id": "[待对接]",
+      "ref_zone_id": "山门",
+      "status": "pending",
+      "notes": "石板贴图需覆盖：干燥/潮湿/苔藓覆盖三种状态，均需要 PBR 套件（Albedo/Normal/Roughness/AO）；分辨率不低于 2K"
+    },
+    {
+      "name": "符文石碑冷蓝脉冲特效",
+      "category": "vfx",
+      "asset_id": "[待对接]",
+      "ref_zone_id": "地下密室",
+      "status": "pending",
+      "notes": "详见 vfx_req_abandoned_temple「石碑符文冷光脉冲」条目；VFX 组负责，与 lighting 组的密室冷光设定对齐"
+    },
+    {
+      "name": "铃铛共鸣冲击波特效",
+      "category": "vfx",
+      "asset_id": "[待对接]",
+      "ref_zone_id": "钟楼",
+      "status": "pending",
+      "notes": "详见 vfx_req_abandoned_temple「钟楼铃铛共鸣冲击波」条目；冲击波扩散半径 15m，需与音频组的钟鸣声做帧级同步"
+    },
+    {
+      "name": "守护者脚步 Foley 音效组",
+      "category": "audio",
+      "asset_id": "[待对接]",
+      "ref_zone_id": "前殿",
+      "status": "pending",
+      "notes": "木地板脚步（重 / 轻 / 拖沓三种）；石板脚步（回廊/主殿）；楼梯脚步（地下/钟楼）；每种至少 5 个随机变体防止机械重复"
+    },
+    {
+      "name": "铜钟敲击音效（主 + 余韵层）",
+      "category": "audio",
+      "asset_id": "[待对接]",
+      "ref_zone_id": "钟楼",
+      "status": "pending",
+      "notes": "需要至少两层：① 近场冲击（钟面撞击瞬间，全频宽频）；② 余韵/共鸣（80Hz 为主，衰减 3-5s）；两层单独输出便于 audio 组混音调配"
+    },
+    {
+      "name": "守护者巡逻动画组",
+      "category": "animation",
+      "asset_id": "[待对接]",
+      "ref_zone_id": "前殿",
+      "status": "pending",
+      "notes": "需要：常规巡逻走路 / 停步观察 / 祈祷模式（木鱼节奏）/ 警戒急步 / 发现玩家追击 / 受铃铛共鸣击中（停顿+身体抖动）共 6 类基础动画，细节由动画组定义"
+    }
+  ]
+}

@@ -1,7 +1,8 @@
 # Level Design Deck — spec 真源工作台
-<!-- version: 0.1.0 -->
+<!-- version: 0.2.0 -->
 
-> **Quick Start:** `/design-deck <action> [args]` · actions: `new` / `add` / `check` / `render` / `open` / `help`
+> **Quick Start:** `/design-deck [action] [args]`
+> 无参数 → 向导对话；actions: `new` / `add` / `check` / `render` / `open`
 
 把"AI 产 spec、Python 标问题、人定向改字段"做成一键流程。
 spec.json 是真源（git 管控的纯文本），HTML 是派生（render.py 出的）。
@@ -28,6 +29,35 @@ deck server 默认在 `http://127.0.0.1:8766`。每次 action 开始时 curl 检
 
 ## Actions
 
+### 无参数 → 向导对话（改动 3）
+[来源: Steve 直接指示（2026-05-12）+ 第一原理推导]
+
+**不带参数时执行向导，不输出 help 文字。**
+
+**步骤**：
+1. `ls $DECK_HOME/specs/*.spec.json 2>/dev/null` 扫现有 spec 文件
+2. **分支 A · 有 spec 存在**：
+   - 从文件名提取所有 level_id（规则：去掉 `<module>_` 前缀，取剩余部分；如 `level_overview_abandoned_factory.spec.json` → `abandoned_factory`）
+   - 去重后列出：
+     ```
+     已有关卡：
+       1. abandoned_factory  (3 个 module)
+       2. demo_warehouse     (1 个 module)
+     
+     继续哪个？（输入编号或 level_id）
+     还是新建？（描述新关卡）
+     ```
+   - 用户选已有关卡 → 直接走 `add <level_id>` 向导（改动 4）
+   - 用户描述新关卡 → 走分支 B 的命名确认流程
+3. **分支 B · 没有 spec**：
+   - 直接问："想新建什么关卡？请用一段话描述（POI 或玩法、主题、大致流程长度）"
+   - 用户描述后：
+     - 从描述提取关键词转 snake_case（如"废弃工厂" → `abandoned_factory`）
+     - **不自动猜**，向用户确认：「命名 `abandoned_factory` 是否合适？确认后开始生成」
+     - 用户确认 → 自动调用 `new <level_id> "<意图>"` 并继续
+
+---
+
 ### `new <level_id> <意图>`
 
 创建新关卡，从 level_overview 起步。
@@ -37,50 +67,104 @@ deck server 默认在 `http://127.0.0.1:8766`。每次 action 开始时 curl 检
 2. 跑 `cd $DECK_HOME && python3 tools/generate_spec.py --module level_overview --intent "<意图>"`
 3. 看 stdout 输出的 self-contained prompt → **按 prompt 内化执行** → 产 level_overview spec JSON
 4. 用 Write 工具写到 `$DECK_HOME/specs/level_overview_<level_id>.spec.json`
-5. 跑 `python3 tools/mechanical_check.py specs/<...> schema/level_overview.schema.json --quiet`
-6. 0 ERROR → 提示用户：
+5. 跑 `python3 tools/mechanical_check.py specs/level_overview_<level_id>.spec.json schema/level_overview.schema.json --quiet`
+6. 0 ERROR → **自动打开 editor**（改动 1）：
+   `open "http://127.0.0.1:8766/editor/editor.html?spec=level_overview_<level_id>"`
+7. 打开后 print：
    ```
-   ✓ level_overview 已生成。下一步：
+   ✓ level_overview_<level_id> 已生成，editor 已打开。
+   
+   下一步建议：/design-deck add <level_id>（自动推荐下一个 module）
+   或指定：
      /design-deck add <level_id> spatial_layout      # 用 LevelCraft 编辑布局后导入
-     /design-deck add <level_id> bubble_diagram <意图> # 流程图
-     /design-deck add <level_id> lighting_req <意图>   # 灯光
-     /design-deck add <level_id> atmosphere_ref <意图> # 氛围
-     /design-deck add <level_id> vfx_req <意图>        # 视觉特效
-     /design-deck add <level_id> audio_req <意图>      # 音频
-     /design-deck add <level_id> asset_list <意图>     # 资产
-     /design-deck open <level_id>                     # 浏览器看
-     /design-deck render <level_id>                   # 出完整文档
+     /design-deck add <level_id> bubble_diagram <意图>
+     /design-deck add <level_id> lighting_req <意图>
+     /design-deck add <level_id> atmosphere_ref <意图>
+     /design-deck add <level_id> vfx_req <意图>
+     /design-deck add <level_id> audio_req <意图>
+     /design-deck add <level_id> asset_list <意图>
    ```
+[来源: Steve 直接指示（2026-05-12）]
 
-### `add <level_id> <module> [意图]`
+---
+
+### `add <level_id> [module] [意图]`
 
 给现有关卡加一个 module 的 spec。
 
-**已支持 module**：`level_overview / lighting_req / bubble_diagram / atmosphere_ref / vfx_req / audio_req / asset_list`
+**已支持 module**：`level_overview / spatial_layout / bubble_diagram / atmosphere_ref / lighting_req / vfx_req / audio_req / asset_list`
+
+**module 推荐顺序（改动 4）**：
+[来源: 第一原理推导]
+```
+level_overview → spatial_layout → bubble_diagram → atmosphere_ref
+              → lighting_req → vfx_req → audio_req → asset_list
+```
+理由：spatial_layout 最先因为后面 5 个 module（lighting_req / atmosphere_ref / vfx_req / audio_req / asset_list）的 cross_check 都依赖它的 zone label；bubble_diagram 表达流程主线，优先于纯需求型 module。
+
+**不传 module 时 → 自动推下一个（改动 4）**：
+1. `ls $DECK_HOME/specs/<module>_<level_id>.spec.json` 检查每个 module 是否已做
+2. 按顺序找第一个未做的 module
+3. 给用户 1-2 句解释为什么推荐这个 module：
+   ```
+   推荐下一个：spatial_layout
+   理由：后续 5 个 module 的 cross_check 都要对照它的 zone label，优先建立空间骨架。
+   
+   [继续这个] [跳过，下一个] [指定其他 module]
+   ```
+4. 用户选 [继续这个] 或直接回车 → 走对应 module 流程
+5. 用户选 [跳过] → 推第二个未做的 module
+6. 用户选 [指定其他 module] → 提示输入 module 名
 
 **特例**：`spatial_layout` 不能 LLM 生成（数据来自 LevelCraft 2D 工具）。提示用户：
 1. 浏览器打开 `http://127.0.0.1:8766/tools/levelcraft/editor.html` 编辑布局
 2. 编辑完导出 JSON
-3. 手动包装成 spec（meta + context + layout）写到 `specs/spatial_layout_<level_id>.spec.json`
-4. 或者通过 `/design-deck open <level_id>` 后在 editor 用 [📥 Import JSON] 按钮闭环
+3. 通过 `/design-deck open <level_id>` 后在 editor 用 [📥 Import JSON] 按钮闭环
 
-**步骤**：
+**生成步骤（非 spatial_layout）**：
 1. 检查目标 spec 不存在（如已存在，建议用 editor 改字段或调 `regenerate_field.py`）
 2. 跑 `cd $DECK_HOME && python3 tools/generate_spec.py --module <module> --intent "<意图>"`
-3. 内化执行 prompt → 产 spec → Write → mechanical_check
-4. **如果该 module 有 zone ref**（lighting_req / atmosphere_ref / vfx_req / audio_req / asset_list）：
-   - 跑 `python3 tools/cross_check.py --level-id <level_id>` 看 cross_ref_integrity
-   - 如果 ERROR：提示用户改 zone_id 字段命中真实 spatial label
+3. 内化执行 prompt → 产 spec → Write 到 `$DECK_HOME/specs/<module>_<level_id>.spec.json`
+4. 跑 `python3 tools/mechanical_check.py specs/<module>_<level_id>.spec.json schema/<module>.schema.json --quiet`
+5. **如果该 module 有 zone ref**（lighting_req / atmosphere_ref / vfx_req / audio_req / asset_list）：
+   - 跑 `python3 tools/cross_check.py --level-id <level_id>`
+   - **有 ERROR**（改动 2）：
+     - Print 错误信息
+     - **自动打开 editor 跳到出错 spec**：
+       `open "http://127.0.0.1:8766/editor/editor.html?spec=<module>_<level_id>"`
+     - Print：「⚠️ cross_check ERROR：<错误信息>。editor 已打开，请在 zone_id 字段改成 spatial label 里有的值。」
+   - **0 ERROR**：按下方正常完成流程走（改动 1 + 2）：
+     `open "http://127.0.0.1:8766/editor/editor.html?spec=<module>_<level_id>"`
+6. Print 完成引导（改动 5）：按 module 查 lookup 表（见下方）
+[来源: Steve 直接指示（2026-05-12）]
+
+**完成引导 lookup 表（改动 5）**：
+[来源: 第一原理推导]
+
+| module | 完成后 print |
+|---|---|
+| `level_overview` | 看 `intent` 是否一句话说清主题 / 看 `level_type` 是否准确选了 POI 或玩法 |
+| `spatial_layout` | 看 layer/shape 数是否合理 / 看 label coverage 是否覆盖关键区域（editor 左栏告警会标 label_missing） |
+| `bubble_diagram` | 看 Mermaid 节点连线是否合理 / Phase 分组是否到位 / 入口出口是否各一 |
+| `atmosphere_ref` | 看 `image_url` 是否填了真图（PoC 期可暂留 [待对接]）/ 看 zones 是否覆盖关键区域 |
+| `lighting_req` | 看 `ambience_refs` 的 `region_id` 是否对应 spatial label / 看 `description` 语气是否到位（不是列参数，是设计意图） |
+| `vfx_req` | 看效果描述是否专业到能给制作组用 / 看 `zone_id` 是否命中 spatial label |
+| `audio_req` | 看效果描述是否专业到能给制作组用 / 看 `zone_id` 是否命中 spatial label |
+| `asset_list` | asset_id 是否都是 `[待对接]`——绝对禁止编伪接口名（如 model_xxx_001） |
+
+---
 
 ### `check <level_id>`
 
 跑全套校验。
 
 **步骤**：
-1. ls `$DECK_HOME/specs/` 找该 level_id 所有 spec
-2. 对每个 spec 跑 mechanical_check
-3. 跑 cross_check --level-id <level_id>
+1. `ls $DECK_HOME/specs/` 找该 level_id 所有 spec（匹配 `*_<level_id>.spec.json`）
+2. 对每个 spec 跑 `python3 tools/mechanical_check.py specs/<...> schema/<module>.schema.json`
+3. 跑 `python3 tools/cross_check.py --level-id <level_id>`
 4. 汇总：errors / reviews 数 + 详细列表
+
+---
 
 ### `render <level_id>`
 
@@ -88,31 +172,26 @@ deck server 默认在 `http://127.0.0.1:8766`。每次 action 开始时 curl 检
 
 **步骤**：
 1. 跑 `cd $DECK_HOME && python3 tools/render_level.py --level-id <level_id> --render-missing`
-2. 给用户 URL：`http://127.0.0.1:8766/outputs/level_<level_id>__full.html`
+2. 自动打开：`open "http://127.0.0.1:8766/outputs/level_<level_id>__full.html"`
+3. Print URL 方便用户复制
+
+---
 
 ### `open <level_id> [module]`
 
 浏览器打开 editor。
 
 **步骤**：
-1. 不传 module：默认开 `level_overview_<level_id>`（如不存在则任选一个 spec）
-2. 用 `open` 命令打开 `http://127.0.0.1:8766/editor/editor.html?spec=<spec_id>`
-
-### `help`
-
-列出 deck 当前所有 module + 已存在 spec 的概览。
-
-```bash
-python3 $DECK_HOME/tools/generate_spec.py --list-modules
-ls $DECK_HOME/specs/
-```
+1. 不传 module：默认开 `level_overview_<level_id>`（如不存在则 ls 任选一个该 level 的 spec）
+2. 传 module：拼出 `<module>_<level_id>`
+3. 用 `open` 命令打开 `http://127.0.0.1:8766/editor/editor.html?spec=<spec_id>`
 
 ---
 
 ## 反污染（来自 deck CLAUDE.md）
 
 执行任何 action 时**禁止**：
-- 引用 pipeline 路径 / 旧 module 名（vfx_req 字段名按 deck schema，不抄 pipeline）
+- 引用 pipeline 路径 / 旧 module 名（字段按 deck schema，不抄 pipeline）
 - 套用 manifest / scorer / HITL 三段术语
 - 凭空臆造 schema 没声明的字段
 - 给对方资产编伪接口名（asset_id 一律 `[待对接]`）
@@ -123,8 +202,6 @@ ls $DECK_HOME/specs/
 ---
 
 ## 安装
-
-复制此文件到 cc 用户级 commands 目录：
 
 ```bash
 mkdir -p ~/.claude/commands
@@ -144,33 +221,36 @@ export LEVEL_DESIGN_DECK_HOME=/path/to/your/level-design-deck
 ## 流程示例（同事完整使用）
 
 ```
-> /design-deck new gangster_mansion 黑帮大宅潜入POI，主角夜间营救记者，避免正面交战
+> /design-deck
+  没有已有关卡。
+  想新建什么关卡？请用一段话描述（POI 或玩法、主题、大致流程长度）
 
-  ✓ level_overview_gangster_mansion 已生成 (0 ERROR)
+> 山中废弃工厂潜入 POI，主角夜间寻找线索，避免正面交战
+  命名 `abandoned_factory` 是否合适？
 
-> /design-deck add gangster_mansion bubble_diagram 主动线5节点，潜入→对峙→营救→撤退
+> 是
+  → 自动执行 new abandoned_factory "山中废弃工厂潜入..."
+  ✓ level_overview_abandoned_factory 已生成，editor 已打开。
 
-  ✓ bubble_diagram_gangster_mansion 已生成 (0 ERROR)
-    cross_check 跳过（无 spatial_layout 引用）
+> /design-deck add abandoned_factory
+  推荐下一个：spatial_layout
+  理由：后续 5 个 module 的 cross_check 都依赖它的 zone label，优先建立空间骨架。
+  [继续这个] [跳过，下一个] [指定其他 module]
 
-> /design-deck add gangster_mansion spatial_layout
+> 继续这个
+  ⚠️ spatial_layout 不支持 LLM 生成。请用 LevelCraft 编辑布局后导入。
 
-  ⚠️ spatial_layout 不支持 LLM 生成。请：
-     1. 浏览器开 http://127.0.0.1:8766/tools/levelcraft/editor.html 编辑布局
-     2. /design-deck open gangster_mansion 后用 [📥 Import JSON] 按钮闭环
+> /design-deck add abandoned_factory bubble_diagram 主动线5节点，潜入→对峙→取证→撤退
+  ✓ bubble_diagram_abandoned_factory 已生成 (0 ERROR)，editor 已打开。
+  → 看 Mermaid 节点连线是否合理 / Phase 分组是否到位
 
-> /design-deck add gangster_mansion lighting_req 夜间冷月光为主...
+> /design-deck add abandoned_factory lighting_req 夜间冷白光为主...
+  ⚠️ cross_check ERROR: ambience_refs[2].region_id "控制室" 不在 spatial labels 里
+  editor 已打开，请在 region_id 字段改成正确的 spatial label。
 
-  ✓ lighting_req_gangster_mansion 已生成
-    ⚠️ cross_check ERROR: ambience_refs[2].region_id "鬼屋" 不在 spatial labels 里
-    建议：改成 "玄关" / "礼佛堂" / etc，或在 editor 中编辑
-
-> /design-deck open gangster_mansion lighting_req
-  → 浏览器开 editor，改 region_id
-
-> /design-deck check gangster_mansion
+> /design-deck check abandoned_factory
   ✓ 8 specs · 0 ERROR · 3 REVIEW (label_missing 预期)
 
-> /design-deck render gangster_mansion
-  ✓ 完整文档：http://127.0.0.1:8766/outputs/level_gangster_mansion__full.html
+> /design-deck render abandoned_factory
+  ✓ 完整文档已打开：http://127.0.0.1:8766/outputs/level_abandoned_factory__full.html
 ```

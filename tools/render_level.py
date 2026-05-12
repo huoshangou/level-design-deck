@@ -6,8 +6,8 @@ render_level.py
 用 iframe 嵌入每个 module 的独立 HTML（避免 CSS 冲突），顶部 sticky 导航。
 
 使用：
-  python3 tools/render_level.py --level-id gangster_mansion
-  python3 tools/render_level.py --level-id gangster_mansion --render-missing
+  python3 tools/render_level.py --level-id my_level
+  python3 tools/render_level.py --level-id my_level --render-missing
   → outputs/level_<level_id>__full.html
 """
 
