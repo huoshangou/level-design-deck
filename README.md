@@ -44,7 +44,7 @@
 
 ## Quickstart
 
-**系统要求**：Python 3.8+，macOS 优先（Linux 应该也能跑），不需要 npm/pip install
+**系统要求**：Python 3.8+，macOS / Windows / Linux，不需要 npm/pip install
 
 ```bash
 git clone https://github.com/huoshangou/level-design-deck.git
@@ -53,7 +53,11 @@ cd level-design-deck
 
 **启动编辑器**：
 
-macOS 双击 `start.command`（自动启 server + 打开浏览器），或手动跑：
+**macOS**：双击 `start.command`（自动启 server + 打开浏览器）
+
+**Windows**：双击 `start.bat`（同样自动启 server + 打开浏览器）
+
+或手动跑（任意系统）：
 
 ```bash
 python3 tools/serve_editor.py --port 8766

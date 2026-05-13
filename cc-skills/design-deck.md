@@ -11,6 +11,11 @@ spec.json 是真源（git 管控的纯文本），HTML 是派生（render.py 出
 
 $ARGUMENTS
 
+## Windows 用户
+
+双击 `start.bat` 启动服务器（不是 start.command）。
+cc skill 用 `python3` 调用工具，请确认 Python 已加入系统 PATH。
+
 ## DECK_HOME 解析
 
 按优先级：
@@ -69,7 +74,7 @@ deck server 默认在 `http://127.0.0.1:8766`。每次 action 开始时 curl 检
 4. 用 Write 工具写到 `$DECK_HOME/specs/level_overview_<level_id>.spec.json`
 5. 跑 `python3 tools/mechanical_check.py specs/level_overview_<level_id>.spec.json schema/level_overview.schema.json --quiet`
 6. 0 ERROR → **自动打开 editor**（改动 1）：
-   `open "http://127.0.0.1:8766/editor/editor.html?spec=level_overview_<level_id>"`
+   `python3 -c "import webbrowser; webbrowser.open('http://127.0.0.1:8766/editor/editor.html?spec=level_overview_<level_id>')"`
 7. 打开后 print：
    ```
    ✓ level_overview_<level_id> 已生成，editor 已打开。
@@ -131,10 +136,10 @@ level_overview → spatial_layout → bubble_diagram → atmosphere_ref
    - **有 ERROR**（改动 2）：
      - Print 错误信息
      - **自动打开 editor 跳到出错 spec**：
-       `open "http://127.0.0.1:8766/editor/editor.html?spec=<module>_<level_id>"`
+       `python3 -c "import webbrowser; webbrowser.open('http://127.0.0.1:8766/editor/editor.html?spec=<module>_<level_id>')"`
      - Print：「⚠️ cross_check ERROR：<错误信息>。editor 已打开，请在 zone_id 字段改成 spatial label 里有的值。」
    - **0 ERROR**：按下方正常完成流程走（改动 1 + 2）：
-     `open "http://127.0.0.1:8766/editor/editor.html?spec=<module>_<level_id>"`
+     `python3 -c "import webbrowser; webbrowser.open('http://127.0.0.1:8766/editor/editor.html?spec=<module>_<level_id>')"`
 6. Print 完成引导（改动 5）：按 module 查 lookup 表（见下方）
 [来源: Steve 直接指示（2026-05-12）]
 
@@ -172,7 +177,7 @@ level_overview → spatial_layout → bubble_diagram → atmosphere_ref
 
 **步骤**：
 1. 跑 `cd $DECK_HOME && python3 tools/render_level.py --level-id <level_id> --render-missing`
-2. 自动打开：`open "http://127.0.0.1:8766/outputs/level_<level_id>__full.html"`
+2. 自动打开：`python3 -c "import webbrowser; webbrowser.open('http://127.0.0.1:8766/outputs/level_<level_id>__full.html')"`
 3. Print URL 方便用户复制
 4. Print 快捷提示：
    ```
@@ -193,7 +198,7 @@ level_overview → spatial_layout → bubble_diagram → atmosphere_ref
 **步骤**：
 1. Server 检测（同其他 action）
 2. 跑 `cd $DECK_HOME && python3 tools/render_deck.py --level-id <level_id>`
-3. 自动打开：`open "http://127.0.0.1:8766/outputs/level_<level_id>__deck.html"`
+3. 自动打开：`python3 -c "import webbrowser; webbrowser.open('http://127.0.0.1:8766/outputs/level_<level_id>__deck.html')"`
 4. Print：
    ```
    ✓ Slide Deck 已打开（<N> 张 slide）
@@ -214,7 +219,7 @@ Print 警告：「⚠️ 以下 module 暂无渲染产物，slide 中已跳过�
 **步骤**：
 1. 不传 module：默认开 `level_overview_<level_id>`（如不存在则 ls 任选一个该 level 的 spec）
 2. 传 module：拼出 `<module>_<level_id>`
-3. 用 `open` 命令打开 `http://127.0.0.1:8766/editor/editor.html?spec=<spec_id>`
+3. `python3 -c "import webbrowser; webbrowser.open('http://127.0.0.1:8766/editor/editor.html?spec=<spec_id>')"`
 
 ---
 

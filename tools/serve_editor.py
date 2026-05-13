@@ -81,6 +81,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         # GET /api/specs           → 返回 specs/*.spec.json 列表
         # GET /api/paths?spec=<id> → 返回该 spec 的 spec/schema/template 路径
         parsed = urlparse(self.path)
+        if parsed.path == "/health":
+            self._json_ok({"status": "ok"})
+            return
         if parsed.path == "/api/specs":
             self._json_ok({"specs": list_specs()})
             return
