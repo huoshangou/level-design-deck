@@ -1,8 +1,8 @@
 # Level Design Deck — spec 真源工作台
-<!-- version: 0.3.0 -->
+<!-- version: 0.4.0 -->
 
 > **Quick Start:** `/design-deck [action] [args]`
-> 无参数 → 向导对话；actions: `new` / `add` / `check` / `render` / `deck` / `open`
+> 无参数 → 向导对话；actions: `new` / `add` / `check` / `render` / `deck` / `open` / `draft`
 
 把"AI 产 spec、Python 标问题、人定向改字段"做成一键流程。
 spec.json 是真源（git 管控的纯文本），HTML 是派生（render.py 出的）。
@@ -184,6 +184,90 @@ level_overview → spatial_layout → bubble_diagram → atmosphere_ref
    ✓ 完整文档已打开。
    快捷操作：/design-deck deck <level_id>  # 生成汇报用横向翻页 Slide Deck
    ```
+
+---
+
+### `draft <level_id> [设计文字]`
+
+从设计对话产出完整关卡 spec 雏形。支持两种模式自动切换。
+[来源: Steve 直接指示（2026-05-13）]
+
+**模式检测**：
+- 只传 `level_id` → **引导式（B 模式）**：逐步提问 7 个关卡设计核心维度
+- 同时传入大段文字（> 200 字）→ **倾倒式（A 模式）**：从文字中提取设计信息
+
+**前置检查**：
+- 若 `specs/level_overview_<level_id>.spec.json` 已存在 → 提示已有关卡，确认是否覆盖
+- Server 检测（同其他 action）
+
+---
+
+#### B 模式 · 引导式（7 步对话）
+
+**每次只问一个问题，等用户回答后再问下一个。不要一次性抛出所有问题。**
+
+| # | 问题 | 映射目标 |
+|---|---|---|
+| 1 | 「这个关卡给玩家的**核心体验**是什么？一句话（玩家要做什么、感受什么）」 | level_overview · intent |
+| 2 | 「关卡的**主要矛盾或挑战**是什么？玩家需要克服的核心障碍？」 | level_overview · main_gameplay |
+| 3 | 「有哪几个**关键区域**？空间关系是线性 / HUB / 开放？（列区域名，不用精确）」 | atmosphere_ref.zones · lighting_req 区域骨架 |
+| 4 | 「大致分**几个阶段**？关键转折点是什么？（如：侦查→接触→Boss→撤退）」 | bubble_diagram 节点骨架 |
+| 5 | 「**时间段 / 天气 / 氛围关键词**？（3-5 个，如：夜间、冷月光、压抑、高反差剪影）」 | atmosphere_ref · lighting_req |
+| 6 | 「有哪些**关键 NPC 或道具机制**？」 | level_overview · key_npcs / key_items |
+| 7 | 「有什么**设计约束或重点资产**需要注意？」 | level_overview · asset_list 雏形 |
+
+全部回答后，打印摘要请用户确认，再生成。
+
+---
+
+#### A 模式 · 倾倒式（文字提取）
+
+用户提供的文字可能是：与 cc 的对话摘要、白盒设计草稿、设计意图段落等。
+
+1. 从文字中提取上表 7 个维度信息（信息不足时用 `[待补充]` 占位）
+2. 列出提取结果，让用户确认或修正
+3. 用户确认后走「生成 spec 雏形」步骤
+
+---
+
+#### 生成 spec 雏形（B / A 共用出口）
+
+读 `$DECK_HOME/schema/` 各模块的 schema.json，按收集到的设计信息生成：
+
+| Spec | 完整度 | 生成策略 |
+|---|---|---|
+| `level_overview` | 🟢 较完整 | 从问题 1/2/5/6/7 填充全部字段 |
+| `bubble_diagram` | 🟡 骨架 | 从问题 4 提取 phase + 主要节点，边用 sequential |
+| `atmosphere_ref` | 🟡 骨架 | overall 从问题 5 填，zones 从问题 3 生成空壳 |
+| `lighting_req` | 🔴 stub | meta + context，ambience_refs 按区域列表建空壳 |
+| `vfx_req` | 🔴 stub | meta + context |
+| `audio_req` | 🔴 stub | meta + context |
+| `asset_list` | 🔴 stub | meta + context，从问题 6/7 提取关键资产（asset_id 全部 `[待对接]`） |
+
+`spatial_layout` 跳过（必须用 LevelCraft 工具导入）。
+
+**生成后**：
+1. Write 工具写入 `$DECK_HOME/specs/`
+2. 对每个 spec 跑 `mechanical_check.py`
+3. 打印汇总：
+   ```
+   ✓ 已生成 7 个 spec 雏形（spatial_layout 待手动导入）
+
+     level_overview  🟢  0 ERROR · 0 REVIEW
+     bubble_diagram  🟡  0 ERROR · N REVIEW（预期）
+     atmosphere_ref  🟡  0 ERROR · N REVIEW
+     lighting_req    🔴  待填（stub）
+     vfx_req         🔴  待填（stub）
+     audio_req       🔴  待填（stub）
+     asset_list      🔴  待填（stub）
+
+   下一步：
+     /design-deck open <level_id>              # editor 里补字段
+     /design-deck add <level_id> spatial_layout # LevelCraft 建空间骨架
+     /design-deck check <level_id>              # 全量校验
+     /design-deck deck <level_id>               # 汇报 Slide Deck
+   ```
+[来源: Steve 直接指示（2026-05-13）+ work_docs_extract.json + 第一原理推导]
 
 ---
 
