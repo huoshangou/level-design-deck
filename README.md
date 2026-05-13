@@ -71,7 +71,35 @@ mkdir -p ~/.claude/commands
 cp cc-skills/design-deck.md ~/.claude/commands/
 ```
 
-安装后可在 Claude Code 里用 `/design-deck new <level_id> <意图>` 一键创建关卡 spec。
+---
+
+## 典型工作流
+
+### 从零开始设计一个关卡
+
+```
+/design-deck draft my_poi
+```
+
+skill 会逐步提问 7 个关卡设计核心维度（核心体验 → 主要矛盾 → 空间区域 → 流程节拍 → 氛围 → 关键角色 → 设计约束），**任意时刻都可以直接贴入大段设计草稿**，skill 自动提取并合并。
+
+回答完成后，一次性产出 7 个 spec 雏形（`level_overview` 较完整，`bubble_diagram` / `atmosphere_ref` 骨架，其余 stub），并跑机械校验标出缺口。
+
+```
+/design-deck add my_poi spatial_layout   # 用 LevelCraft 2D 工具建空间骨架
+/design-deck open my_poi                 # 在 editor 里补字段、审阅告警
+/design-deck check my_poi               # 全量校验（7 条 cross_check 规则）
+/design-deck render my_poi              # 生成完整关卡长文档
+/design-deck deck my_poi                # 生成汇报用横向翻页 Slide Deck
+```
+
+### 已有设计思路，直接倒入
+
+```
+/design-deck draft my_poi 这是一个夜间潜入任务，主角需要... (大段文字)
+```
+
+skill 检测到长文本，spawn subagent 提取设计维度，跳过对应问题，直接生成。
 
 ---
 
