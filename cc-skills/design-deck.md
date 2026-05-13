@@ -196,6 +196,14 @@ level_overview → spatial_layout → bubble_diagram → atmosphere_ref
 - 只传 `level_id` → **引导式（B 模式）**：逐步提问 7 个关卡设计核心维度
 - 同时传入大段文字（> 200 字）→ **倾倒式（A 模式）**：从文字中提取设计信息
 
+**随时可以倾倒信息（B 模式中也适用）**：
+在引导式问答的任意环节，用户都可以贴入大段文字（白盒草稿、cc 对话摘要、设计意图段落等）。
+检测到 > 200 字的输入时：
+1. spawn 一个 subagent（Sonnet 或 Haiku）专门处理这段文字，提取 7 个维度的设计信息
+2. 将提取结果合并进已有回答
+3. 对尚未覆盖的维度补问（不重复已答维度）
+4. 继续走生成流程
+
 **前置检查**：
 - 若 `specs/level_overview_<level_id>.spec.json` 已存在 → 提示已有关卡，确认是否覆盖
 - Server 检测（同其他 action）
