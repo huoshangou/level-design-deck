@@ -75,55 +75,32 @@ def _check_zone_field(v, spatial_labels, items, field_path_prefix, id_key):
             )
 
 
-@register_cross_check("lighting_req.ambience_refs[].region_id ∈ spatial_layout.shapes[].label")
-def check_lighting_zone_refs(specs_by_module, v):
-    lighting = specs_by_module.get("lighting_req")
-    spatial = specs_by_module.get("spatial_layout")
-    if not lighting or not spatial:
-        return
-    _check_zone_field(v, _get_spatial_labels(spatial),
-                      lighting.get("ambience_refs", []),
-                      "lighting_req.ambience_refs", "region_id")
+_ZONE_REF_RULES = [
+    ("lighting_req.ambience_refs[].region_id ∈ spatial_layout.shapes[].label",
+     "lighting_req", "ambience_refs", "region_id"),
+    ("vfx_req.effects[].zone_id ∈ spatial_layout.shapes[].label",
+     "vfx_req", "effects", "zone_id"),
+    ("audio_req.ambient_sounds[].region_id ∈ spatial_layout.shapes[].label",
+     "audio_req", "ambient_sounds", "region_id"),
+    ("atmosphere_ref.zones[].zone_id ∈ spatial_layout.shapes[].label",
+     "atmosphere_ref", "zones", "zone_id"),
+    ("asset_list.assets[].ref_zone_id ∈ spatial_layout.shapes[].label",
+     "asset_list", "assets", "ref_zone_id"),
+]
 
-@register_cross_check("vfx_req.effects[].zone_id ∈ spatial_layout.shapes[].label")
-def check_vfx_zone_refs(specs_by_module, v):
-    vfx = specs_by_module.get("vfx_req")
-    spatial = specs_by_module.get("spatial_layout")
-    if not vfx or not spatial:
-        return
-    _check_zone_field(v, _get_spatial_labels(spatial),
-                      vfx.get("effects", []),
-                      "vfx_req.effects", "zone_id")
+def _make_zone_ref_check(module, collection, id_key):
+    def fn(specs_by_module, v):
+        spec = specs_by_module.get(module)
+        spatial = specs_by_module.get("spatial_layout")
+        if not spec or not spatial:
+            return
+        _check_zone_field(v, _get_spatial_labels(spatial),
+                          spec.get(collection, []),
+                          f"{module}.{collection}", id_key)
+    return fn
 
-@register_cross_check("audio_req.ambient_sounds[].region_id ∈ spatial_layout.shapes[].label")
-def check_audio_zone_refs(specs_by_module, v):
-    audio = specs_by_module.get("audio_req")
-    spatial = specs_by_module.get("spatial_layout")
-    if not audio or not spatial:
-        return
-    _check_zone_field(v, _get_spatial_labels(spatial),
-                      audio.get("ambient_sounds", []),
-                      "audio_req.ambient_sounds", "region_id")
-
-@register_cross_check("atmosphere_ref.zones[].zone_id ∈ spatial_layout.shapes[].label")
-def check_atmosphere_zone_refs(specs_by_module, v):
-    atmos = specs_by_module.get("atmosphere_ref")
-    spatial = specs_by_module.get("spatial_layout")
-    if not atmos or not spatial:
-        return
-    _check_zone_field(v, _get_spatial_labels(spatial),
-                      atmos.get("zones", []),
-                      "atmosphere_ref.zones", "zone_id")
-
-@register_cross_check("asset_list.assets[].ref_zone_id ∈ spatial_layout.shapes[].label")
-def check_asset_zone_refs(specs_by_module, v):
-    asset = specs_by_module.get("asset_list")
-    spatial = specs_by_module.get("spatial_layout")
-    if not asset or not spatial:
-        return
-    _check_zone_field(v, _get_spatial_labels(spatial),
-                      asset.get("assets", []),
-                      "asset_list.assets", "ref_zone_id")
+for _desc, _mod, _col, _key in _ZONE_REF_RULES:
+    register_cross_check(_desc)(_make_zone_ref_check(_mod, _col, _key))
 
 @register_cross_check("bubble_diagram phase 命名汇总（REVIEW）")
 def bubble_phase_summary(specs_by_module, v):
@@ -134,6 +111,16 @@ def bubble_phase_summary(specs_by_module, v):
     if phases:
         v.add_review("bubble_diagram.nodes[].phase", "bubble_phase_summary",
                      f"bubble_diagram phase 命名集合：{sorted(phases)}。请确认 phase 命名在整个 level 文档中一致。")
+
+@register_cross_check("bubble_diagram nodes[].zone_id ∈ spatial_layout.shapes[].label")
+def check_bubble_zone_ref(specs_by_module, v):
+    bubble = specs_by_module.get("bubble_diagram")
+    spatial = specs_by_module.get("spatial_layout")
+    if not bubble or not spatial:
+        return
+    _check_zone_field(v, _get_spatial_labels(spatial),
+                      bubble.get("nodes", []),
+                      "bubble_diagram.nodes", "zone_id")
 
 # ---------------------------------------------------------------------------
 # Spec loading helpers

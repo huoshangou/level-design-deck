@@ -2,8 +2,8 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "level-design-deck/schema/bubble_diagram.schema.json",
   "title": "bubble_diagram spec",
-  "description": "关卡流程气泡图 spec schema。节点级真源（spec.nodes[] / spec.edges[]）。schema 字段从第一原理推导，不参考 pipeline 旧 /bubble-diagram 实现（已废弃）。图级语义断言（id 唯一、edge 端点引用完整、入口/出口、孤立节点、requires 引用合法性、phase 混用）由 mechanical_check 语义层执行。M3.2 v0.1.0；M3.5 v0.2.0 加 edges[].requires 表达合取前置依赖；M3.6 v0.3.0 加 nodes[].phase 标 Phase 归属（Mermaid subgraph 分组渲染）。",
-  "version": "0.3.0",
+  "description": "关卡流程气泡图 spec schema。节点级真源（spec.nodes[] / spec.edges[]）。schema 字段从第一原理推导，不参考 pipeline 旧 /bubble-diagram 实现（已废弃）。图级语义断言（id 唯一、edge 端点引用完整、入口/出口、孤立节点、requires 引用合法性、phase 混用）由 mechanical_check 语义层执行。M3.2 v0.1.0；M3.5 v0.2.0 加 edges[].requires 表达合取前置依赖；M3.6 v0.3.0 加 nodes[].phase 标 Phase 归属（Mermaid subgraph 分组渲染）；M3.8 v0.4.0 加 nodes[].zone_id 标注节点所在 spatial zone（cross_check 规则 7 验引用合法性）。",
+  "version": "0.4.0",
   "applies_to": [
     "POI",
     "gameplay",
@@ -135,6 +135,11 @@
             "type": "string",
             "minLength": 1,
             "description": "可选：节点所属 Phase / Act 标签（自由字符串，如 'Phase I' / 'Act 1' / 'Tutorial'）。同 phase 节点会在 Mermaid 渲染中分组到同名 subgraph。混用（部分节点有部分没有）触发 mechanical_check REVIEW [来源: M3.4 暴露案例]"
+          },
+          "zone_id": {
+            "type": "string",
+            "title": "空间区域",
+            "description": "该节点发生的 spatial_layout zone（对应 spatial_layout.shapes[].label）。可选，填了会被 cross_check 校验引用合法性。"
           }
         }
       }

@@ -622,6 +622,8 @@ function renderNodeCard(node, idx, edges) {
         </select>
         <label>phase</label>
         <input type="text" data-bind="${path}.phase" value="${escapeHtml(node.phase || '')}" placeholder="可选 (如 Phase I / Act 1)" list="phase-suggestions">
+        <label>空间区域 <span style="color:#aaa;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:400">zone_id</span></label>
+        <input type="text" data-bind="${path}.zone_id" value="${escapeHtml(node.zone_id || '')}" placeholder="留空或填 spatial zone 名" onchange="saveSpec();refreshMermaid()">
         <label>label</label>
         <input type="text" data-bind="${path}.label" value="${escapeHtml(node.label || '')}" placeholder="中文短描述">
         <label>notes</label>
