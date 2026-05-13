@@ -3,7 +3,7 @@
   "$id": "level-design-deck/schema/lighting_req.schema.json",
   "title": "lighting_req spec",
   "description": "POI 灯光需求 spec schema。字段来源 work_docs_extract.json poi_lighting_fields。M1 v0.1.0；M3.8 v0.2.0：ambience_refs[].region_id 语义改为指代同 level 的 spatial_layout.shapes[].label，由 cross_check.py 跨 spec 校验。",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "applies_to": ["POI"],
   "type": "object",
   "required": ["meta", "map_constraint", "level_constraint", "mission_constraint", "concept_art"],
@@ -12,7 +12,7 @@
     "meta": {
       "title": "元信息",
       "type": "object",
-      "required": ["spec_id", "poi_id", "level_id", "version"],
+      "required": ["spec_id", "level_id", "version"],
       "additionalProperties": false,
       "properties": {
         "spec_id": {
@@ -25,7 +25,7 @@
           "title": "POI ID",
           "type": "string",
           "minLength": 1,
-          "description": "对应的 POI ID（公司内部命名待对接）"
+          "description": "对应的 POI ID（公司内部命名待对接）（已废弃，向后兼容保留；请用 level_id 作为模块关联键）"
         },
         "level_id": {
           "title": "关卡 ID",

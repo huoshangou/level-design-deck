@@ -304,6 +304,10 @@ level-design-deck/
 | 2026-05-12 | M3.15 关键决策 · skill 命名 `/design-deck` | 跟项目名 `level-design-deck` 对应；与 Steve 已有 `/design-level`（pipeline）不冲突。actions = new / add / check / render / open / help（覆盖创建/扩展/校验/渲染/打开闭环）。`[来源: 第一原理推导 + 命名一致性]` |
 | 2026-05-12 | M3.15 关键决策 · DECK_HOME 用 env var 覆盖默认 | 默认 `~/Desktop/level-design-deck`（Steve 习惯路径），可用 env var `LEVEL_DESIGN_DECK_HOME` 覆盖。同事装路径不同时不需要改 skill，只需 export 环境变量。`[来源: 工程惯例]` |
 | 2026-05-12 | M3.15 ✅ 完成 PoC 版 | cc-skills/design-deck.md 新建（176 行）+ cc-skills/README.md（32 行）+ start.command 加 skill 安装提示。**未做端到端测试**（Steve 装到自己 cc 后实测）。下一步候选：(1) Steve 测一遍 skill 实际跑通（用真实新关卡走一轮）；(2) 跑通后看暴露的问题，调 skill；(3) 反馈稳定后做 MCP server 升级到产品形态。`[来源: Steve 直接指示（2026-05-12）+ 第一原理推导]` |
+| 2026-05-13 | **v0.1.0 GitHub 公开发布** | 脱敏（git filter-repo 清 21 个 gangster_mansion 文件历史）+ 虚构完整案例 abandoned_temple（8 module 全过）+ README 嵌入教学视频（hyperframes 61s，GitHub Release v0.1.0 托管）+ LevelCraft 许可确认（B 站评论区获作者同意）。`[来源: Steve 直接指示（2026-05-13）]` |
+| 2026-05-13 | **skill 升级 v0.2.0→v0.3.0** | 4 项改进：(1) 不带参数走向导对话；(2) `add` 不传 module 自动推荐下一个；(3) cross_check ERROR 自动弹 editor；(4) 新增 `deck` action（生成并打开 Slide Deck）。`render` 完成后 print 快捷提示引导 deck。`[来源: Steve 直接指示（2026-05-13）+ 第一原理推导]` |
+| 2026-05-13 | lighting_req schema v0.2.0 → v0.3.0 · poi_id 退出 required | `poi_id` 从 required 移出（降为 optional deprecated），`level_id` 成唯一必填链接键。generate_spec.py 注释同步。3 个现有 spec 向后兼容不改（含 poi_id 字段仍合法）。cross_check 加第 6 条规则 `bubble_phase_summary`（REVIEW 级，汇总 bubble_diagram nodes 的 phase 命名集合）。cross_check.py 299 行 < 300 严守。`[来源: 第一原理推导 + M3.8 暴露命名不一致]` |
+| 2026-05-13 | **汇报 Deck 视图**（`render_deck.py` + 沙丘 WebGL）| 新建 `tools/render_deck.py`（246 行）；生成 Cover + 8 module slide（iframe light）+ Coda 共 10 张。沙丘主题（`--ink:#1f1a14 / --paper:#f0e6d2`）+ WebGL 双背景（深色全息色散 / 浅色银色珍珠）+ Playfair/Noto Serif SC/IBM Plex Mono 字体。serve_editor 加 `/api/render-deck` 端点；editor 加 🎞 按钮。**视觉参考来源**：一次性读取 LSP deck template.html（Steve 2026-05-13 显式解锁，用后即止，不入 CLAUDE.md 永久许可）。`[来源: Steve 直接指示（2026-05-13）+ 第一原理推导]` |
 
 ---
 

@@ -195,7 +195,7 @@ def section_intent_and_contract(module_name, cfg, intent):
         # 输出契约
 
         - **spec_id 命名**：`{cfg['spec_id_pattern']}`，poi_short_name 从 intent 推断（小写 + 下划线）
-        - **poi_id 命名**：按 intent 推断同样的 short_name，并在描述里注明"公司命名待对接"
+        - **level_id 命名**：与 intent 推断的 short_name 一致，作为跨模块关联键
         - **version**：起步用 `0.1.0`
         - **owner**：默认 `level`（POI 灯光归关卡组，来自 PDF 第六节）
         - **输出格式**：单个 JSON code block，**不要附加** "我已生成"、"如有问题请告知" 之类话术

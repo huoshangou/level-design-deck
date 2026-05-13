@@ -19,7 +19,6 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_OUTPUT = PROJECT_ROOT / "outputs" / ".cross_warnings.json"
 
-
 # ---------------------------------------------------------------------------
 # Validator
 # ---------------------------------------------------------------------------
@@ -35,20 +34,17 @@ class CrossValidator:
     def add_review(self, path, rule, msg):
         self.reviews.append({"level": "REVIEW", "field_path": path, "rule": rule, "msg": msg})
 
-
 # ---------------------------------------------------------------------------
 # Cross-check registry
 # ---------------------------------------------------------------------------
 
 CROSS_CHECKS = []
 
-
 def register_cross_check(desc):
     def deco(f):
         CROSS_CHECKS.append((desc, f))
         return f
     return deco
-
 
 def _get_spatial_labels(spatial: dict) -> set:
     """从 spatial_layout spec 提取所有非空 shape label 集合。"""
@@ -59,7 +55,6 @@ def _get_spatial_labels(spatial: dict) -> set:
             if label:
                 labels.add(label)
     return labels
-
 
 def _check_zone_field(v, spatial_labels, items, field_path_prefix, id_key):
     """通用 zone ref 校验：遍历 items，取 id_key，不在 spatial_labels 则报 ERROR。"""
@@ -90,7 +85,6 @@ def check_lighting_zone_refs(specs_by_module, v):
                       lighting.get("ambience_refs", []),
                       "lighting_req.ambience_refs", "region_id")
 
-
 @register_cross_check("vfx_req.effects[].zone_id ∈ spatial_layout.shapes[].label")
 def check_vfx_zone_refs(specs_by_module, v):
     vfx = specs_by_module.get("vfx_req")
@@ -101,7 +95,6 @@ def check_vfx_zone_refs(specs_by_module, v):
                       vfx.get("effects", []),
                       "vfx_req.effects", "zone_id")
 
-
 @register_cross_check("audio_req.ambient_sounds[].region_id ∈ spatial_layout.shapes[].label")
 def check_audio_zone_refs(specs_by_module, v):
     audio = specs_by_module.get("audio_req")
@@ -111,7 +104,6 @@ def check_audio_zone_refs(specs_by_module, v):
     _check_zone_field(v, _get_spatial_labels(spatial),
                       audio.get("ambient_sounds", []),
                       "audio_req.ambient_sounds", "region_id")
-
 
 @register_cross_check("atmosphere_ref.zones[].zone_id ∈ spatial_layout.shapes[].label")
 def check_atmosphere_zone_refs(specs_by_module, v):
@@ -132,6 +124,16 @@ def check_asset_zone_refs(specs_by_module, v):
     _check_zone_field(v, _get_spatial_labels(spatial),
                       asset.get("assets", []),
                       "asset_list.assets", "ref_zone_id")
+
+@register_cross_check("bubble_diagram phase 命名汇总（REVIEW）")
+def bubble_phase_summary(specs_by_module, v):
+    bubble = specs_by_module.get("bubble_diagram")
+    if not bubble:
+        return
+    phases = {n["phase"] for n in bubble.get("nodes", []) if isinstance(n, dict) and n.get("phase")}
+    if phases:
+        v.add_review("bubble_diagram.nodes[].phase", "bubble_phase_summary",
+                     f"bubble_diagram phase 命名集合：{sorted(phases)}。请确认 phase 命名在整个 level 文档中一致。")
 
 # ---------------------------------------------------------------------------
 # Spec loading helpers
@@ -217,7 +219,6 @@ def run_cross_checks(spec_paths: list[Path], level_id: str) -> dict:
     }
     return result, v
 
-
 def collect_specs_by_level(level_id: str) -> list[Path]:
     specs_dir = PROJECT_ROOT / "specs"
     matched = []
@@ -227,7 +228,6 @@ def collect_specs_by_level(level_id: str) -> list[Path]:
         if lid == level_id:
             matched.append(p)
     return matched
-
 
 def print_result(result: dict, v: CrossValidator):
     modules_str = ",".join(result["modules"])

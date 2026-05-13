@@ -1,7 +1,7 @@
 # HANDOVER · level-design-deck
 
 > **创建**：2026-04-30
-> **最近更新**：2026-05-07（M3.5 完成）
+> **最近更新**：2026-05-13（v0.1.0 发布 + deck 视图 + skill v0.3.0）
 > **目标读者**：未来的 Steve + 新 session 的 Claude
 
 ---
@@ -9,8 +9,8 @@
 ## TL;DR（30 秒看完）
 
 - **项目**：`level-design-deck`，spec 真源 + schema-driven 编辑 + 机械校验工作台
-- **状态**：**M0 / M1 / M2 全部 ✅**；**M3.1 真实 POI 案例（gangster_mansion）端到端 ✅**；**M3.2 第二个 module（bubble_diagram，图状数据 + Mermaid 渲染）端到端 ✅**；**M3.3 bubble_diagram editor 图状专用视图 ✅**（嵌 Mermaid 实时预览 + 双向高亮 + 4 种图操作 popover）；**M3.4 HUB 结构第二真实关卡案例（gangster_mansion_boss，13 节点 / 14 边）✅**；**M3.5 bubble_diagram schema bump 0.2.0 加 `edges[].requires` 表达合取前置依赖 ✅**
-- **下一步**：M3.x 剩余候选（schema 补字段剩 3 项：phase / est_minutes / tbd / 第三个 module / 批量优化美学）
+- **状态**：**A 阶段完结 ✅**（8 Module + 5 cross_check 规则）；**v0.1.0 已发布 GitHub** (`huoshangou/level-design-deck`)；**汇报 Deck 视图 ✅**（沙丘 WebGL + 10 slides）；**cc skill v0.3.0 ✅**（向导 + 推荐 module + ERROR 弹 editor + deck action）
+- **下一步（当前工作）**：P1 poi_id/level_id 命名统一 → P1 cross_check phase 一致性 → P2 Three.js 本地化 → P2 bubble_diagram nodes→zone cross_check
 
 ---
 
@@ -62,43 +62,41 @@ python3 tools/render.py specs/<id>.spec.json templates/lighting_req.html.tmpl ou
 | **M3.3** | ✅ 完成 | bubble_diagram editor 图状专用视图：嵌 Mermaid 实时预览 + 节点 type 上色卡片 + 双向高亮 + 4 种图操作 popover（在此后插入 / 分叉 / 编辑边 / 删除节点 / 添加孤立） | editor.html 318 → 820 行（< 900 bumped，下次再超强制拆 .js）；module 分发让 lighting_req 通用 form 路径完全不变（回归 ✓）|
 | **M3.4** | ✅ 完成 | 第二个真实关卡 bubble_diagram 案例（HUB 结构）= `bubble_diagram_gangster_mansion_boss`（13 节点 / 14 边，Phase I/II/III）| mechanical_check 0/0 ✓；template_diff skipped ✓；render Mermaid 出图 ✓；HUB 中央节点（4 出 3 入）+ loop 回流边表达成立。schema 暴露 4 项缺字段（前置依赖合取条件 / 物件依赖 / Phase 归属 / 估时 / TBD 标记）记入候选表。详见 M3.4 经验节 |
 | **M3.5** | ✅ 完成 | bubble_diagram schema v0.1.0 → v0.2.0：加 `edges[].requires:[node_id]` 表达合取前置依赖。同步 mechanical_check 加第 5 项断言 / render Mermaid label 加 `[需 X+Y] ` 前缀 / editor edge popover 加 multi-select | spec 0/0 ✓ + 故意破坏 ERROR ref_integrity ✓ + Mermaid 前缀对位 ✓ + Part 1/demo/lighting_req 3 项回归全过 ✓。editor 820→835 / mechanical_check 257→270 / render 156→158 行均 < 硬上限 |
-| **M3.6** | ✅ 完成 | bubble_diagram schema v0.2.0 → v0.3.0：加 `nodes[].phase:string`（free string）+ Mermaid `subgraph` 分组渲染。同步 mechanical_check 加第 6 项 `phase_mixed` REVIEW / render `spec_to_mermaid` + editor `specToMermaid` 双端 subgraph 分组（任一节点有 phase 即启用） / 节点卡片加 phase input + datalist autocomplete | spec 0/0 ✓ + 故意混用 → REVIEW phase_mixed ✓ + Mermaid 渲出 3 subgraph (Phase I/II/III) ✓ + Part 1 无 phase → 0 subgraph 回归 ✓ + demo/lighting_req 回归全过 ✓ + M3.5 requires 仍生效 ✓。editor 835→867 / mechanical_check 270→279 / render 158→190 均 < 硬上限 |
-| **M3.x** | 🔮 候选 | 见末尾候选表 | — |
+| **M3.6** | ✅ 完成 | bubble_diagram schema v0.2.0 → v0.3.0：加 `nodes[].phase:string`（free string）+ Mermaid `subgraph` 分组渲染 | spec 0/0 ✓ + 3 subgraph 渲出 ✓ + 回归全过 ✓。editor 835→867 / mechanical_check 270→279 / render 158→190 均 < 硬上限 |
+| **M3.7** | ✅ 完成 | 第三个 module = `spatial_layout`（LevelCraft 2D 导出 JSON → 2D SVG + 3D Three.js）；LevelCraft bundle 复制进 deck；editor 拆 `editor/views/spatial_layout.js` | spec 0 ERROR / 3 REVIEW(label_missing 预期) ✓；editor.html 880<900 ✓；Import JSON 完整闭环跑通 ✓ |
+| **M3.8** | ✅ 完成 | **B 阶段**：跨 module 联动校验 PoC；新建 `cross_check.py`（241 行）；lighting_req schema v0.1→v0.2（加 level_id + region_id 语义改为 spatial label）；serve_editor 集成；editor alerts 加 [cross] 前缀 | cross_check 0 ERROR / 故意破坏 ERROR ✓ / 5 module 回归 ✓ |
+| **M3.8.1** | ✅ 完成 | UX P1：3 个 schema 加 98 个 `title` 字段；editor 双显示（人话主 + path 灰小字辅） | editor 877→893 < 900 ✓ |
+| **M3.9** | ✅ 完成 | A 阶段第 1 个 module = `level_overview`（hub spec，level_id 真源） | 0 ERROR / cross_check 4 modules 全过 ✓ |
+| **M3.10** | ✅ 完成 | A 阶段第 2 个 = `atmosphere_ref` + cross_check 第 2 条规则（zone_id ∈ spatial label） | 0 ERROR ✓；cross_check helper 重构 271 行 |
+| **M3.11+M3.12** | ✅ 完成 | A 阶段第 3+4 个 = `vfx_req` + `audio_req`（克隆型双发）；cross_check 第 3+4 条规则；helper 二次重构 | 2 spec 真实数据 0 ERROR；7 modules 4 rules 全过 ✓ |
+| **M3.12.1** | ✅ 完成 | cross_check `--specs` 模式 isolation 修复（避免测试污染正式输出） | -- |
+| **M3.13** | ✅ 完成 | A 阶段收尾 = `asset_list` + cross_check 第 5 条规则；全部 11 个 asset_id = `[待对接]`，0 伪接口 | cross_check 299 行 < 300 严守 ✓ |
+| **M3.13.1** | ✅ 完成 | 完整关卡文档渲染：`render_level.py` + `/api/render-level` + 📚 按钮 | 8 module HTML 拼接 iframe + sticky nav ✓ |
+| **M3.14** | ✅ 完成 | 壳前基础设施：Mermaid 本地化（lib/mermaid.min.js 3.2MB）+ `start.command` 一键启动 | 0 外网 CDN（Three.js 留 TODO）；双击即用 ✓ |
+| **M3.15** | ✅ 完成 PoC | cc skill `/design-deck` v0.1.0 | 6 actions；未实测 |
+| **v0.1.0 发布** | ✅ 完成 | GitHub public release；脱敏（filter-repo 清 gangster_mansion spec 历史）；abandoned_temple 虚构完整案例（8 module）；hyperframes 教学视频（61s）嵌 README | `huoshangou/level-design-deck` ✓ |
+| **skill v0.3.0** | ✅ 完成 | 向导对话 + 推荐下一步 module + cross_check ERROR 自动弹 editor + `deck` action | 实测通过 ✓ |
+| **deck 视图** | ✅ 完成 | `render_deck.py`（246 行）；沙丘主题 WebGL 双背景；Cover + 8 module slide + Coda（10 张）；serve_editor 加端点；editor 加🎞按钮 | abandoned_temple 10 slides 全出 ✓ |
+| **进行中** | 🔧 | P1: poi_id 统一；P1: cross_check phase 一致性；P2: Three.js 本地化；P2: bubble→zone cross_check | 见候选表 |
 
 ---
 
-## M3 候选范围（启动时由 Steve 选）
+## 当前候选优先级（2026-05-13 更新）
 
-按"暴露问题最快"排序：
+> A 阶段 8 module + B 阶段 cross_check + v0.1.0 发布均已完结。进入产品打磨阶段。
 
-| 候选 | 选它的理由 | 风险 |
+| 优先级 | 候选 | 说明 |
 |---|---|---|
-| ~~**真实 POI 案例端到端**~~ | ~~M2 验证用的是虚构案例，只证"工具能跑通"；真实案例才证"工具产出能用"~~ | ~~已完成 2026-05-06 (M3.1)，案例改用 `~/LevelAgent/test_cases/case_05_gangster_mansion/extracted_design.md`（Steve 确认是输入素材原料而非 pipeline 产物）；详见 M3.1 经验节~~ |
-| ~~**铺第二个 module**（如 vfx_req / audio_req / spatial_layout）~~ | ~~暴露 schema-driven 范式在不同字段形态下的问题（数组、嵌套对象）；M2 dot path 在 array 索引就要拓展~~ | ~~已完成 2026-05-06 (M3.2)，选了 bubble_diagram（图状数据，比克隆型暴露问题更多）；详见 M3.2 经验节~~ |
-| ~~**真实关卡 bubble_diagram 案例**~~ | ~~验证 schema-driven 对图在真实关卡复杂度下成立；Mermaid 自动布局是否够用要真实节点数才知道~~ | ~~已完成 2026-05-06（M3.2 同日补做），跑了 case_05 黑帮大宅 Part 1 主动线 11 节点 / 10 边~~ |
-| ~~**第二个真实关卡 bubble_diagram 案例（HUB 结构）**~~ | ~~case_05 Part 2 = 稻泽薰 40 体 boss = HUB 分支循环结构~~ | ~~已完成 2026-05-07 (M3.4)，详见 M3.4 经验节~~ |
-| **第三个 module**（如 vfx_req / spatial_layout / audio_req） | 看是否暴露第三种维度（如 spatial_layout 的几何/坐标） | 重复 M3.2 同款流程，但 vfx_req 等近似克隆，价值递减 |
-| ~~**bubble_diagram schema 补字段第 1 项 = `edges[].requires`**~~ | ~~M3.4 暴露最刚需~~ | ~~已完成 2026-05-07 (M3.5)，详见 M3.5 经验节~~ |
-| ~~**bubble_diagram schema 补字段第 2 项 = `nodes[].phase`**~~ | ~~Mermaid subgraph 分组对 HUB 类多阶段图视觉收益直接~~ | ~~已完成 2026-05-09 (M3.6)，详见 M3.6 经验节~~ |
-| **bubble_diagram schema 补字段剩 2 项**（估时 / TBD） | (a) nodes[] 的 `est_minutes:[min,max]`（不影响图结构，仅文档侧 badge） (b) nodes[] 的 `tbd:bool` + `tbd_reason`（机械层加 REVIEW） | 单字段改 4 处（schema/check/render/editor），按真实需求驱动单独加；目前无强 case 驱动 |
-| **`edges[].requires` 祖先可达性校验**（M3.5 留尾） | M3.5 只做语法层 ref_integrity（命中 nodes[].id），祖先可达性留作此项。需要在 HUB+loop 下处理环 / 多入口 | 算法非平凡（带环图的可达性 + 多入口），且 PoC 期 designer 心智可承担；价值未必高 |
-| ~~**bubble_diagram editor 图状专用视图**~~ | ~~M3.2 暴露通用 schema-driven form 对图状数据功能性不可用~~ | ~~已完成 2026-05-07 (M3.3)，详见 M3.3 经验节~~ |
-| **批量优化美学+交互** | 兑现 M1 后"延后到批量做"的承诺；schema-driven UI 改一次所有 module 受益（注意：bubble_diagram 已走专用视图，批量美学只惠及 lighting_req 类通用 form） | 美学优化的"完成定义"模糊，容易超出 PoC 范围 |
-| ~~**给项目加 git**~~ | ~~已完成 2026-05-06，commit `03580f0`~~ | — |
-| **小范围团队试用** | 验证非 Steve 的策划能不能用 schema-driven 工作流 | 还没准备好（无文档、无操作引导）；M3 早 |
-| **优化 prompt 模板**（按 token 量化、加 system role） | M2 的 prompt 是 V1，可能过长；regen 1.7k 已 OK 但 generate 4k 可优化 | 优化方向待 M2 实跑出问题反馈再说，现在动是过早优化 |
-
-我（AI）的判断：**先跑真实 POI 案例**（验证工具产出能用 > 虚构案例只证能跑通）→ 再决定是铺第二个 module 还是批量优化。但 Steve 自己定。
-
-> **2026-05-06 update**：候选 #1 已完成（M3.1）；候选 #2 已完成（M3.2，选 bubble_diagram）；新增候选"真实关卡 bubble_diagram 案例"和"第三个 module"，批量美学/团队试用/prompt 优化仍开放。
->
-> **2026-05-07 update**：bubble_diagram editor 图状专用视图已完成（M3.3）。剩余优先级建议：HUB 案例 > 第三个 module > 批量美学。
->
-> **2026-05-07 update 2**：HUB 案例已完成（M3.4，bubble_diagram_gangster_mansion_boss）。剩余优先级建议：bubble_diagram schema 补字段（驱动力强：M3.4 暴露 4 项实际缺字段，1 项已用 notes 文字 fallback）> 第三个 module > 批量美学。
->
-> **2026-05-07 update 3**：M3.4 暴露 4 项 schema 缺字段第 1 项 `edges[].requires` 已完成（M3.5）。剩 3 项（phase / est_minutes / tbd）按真实需求驱动单独加。剩余优先级建议：第三个 module（spatial_layout 等暴露第三种维度）> schema 补剩 3 项（无强 case 驱动暂缓）> 批量美学。
->
-> **2026-05-09 update 4**：M3.4 缺字段第 2 项 `nodes[].phase` 已完成（M3.6，加 Mermaid subgraph 分组）。剩 2 项（est_minutes / tbd）暂无强 case 驱动。剩余优先级建议：第三个 module（spatial_layout 等暴露第三种维度）> 批量美学 > schema 补剩 2 项。
+| **P1 🔧进行中** | **poi_id / level_id 命名统一** | `lighting_req` 遗留 `poi_id`，其他 module 全用 `level_id`。方案：`lighting_req.schema.json` 将 `poi_id` 移出 required、降为 optional deprecated，`level_id` 成唯一必填链接键。需 schema v0.2→v0.3 + generate_spec.py 更新。影响范围：schema 1 文件 + 3 spec + 1 工具注释 |
+| **P1 🔧进行中** | **cross_check phase 一致性规则** | 同 level 不同 module（如 bubble_diagram 的 phase 命名 vs lighting_req 的描述）phase 字符串不对齐时应 REVIEW 提示。现有装饰器注册框架直接加 1 条规则即可 |
+| **P2** | **Three.js 本地化** | M3.14 留 TODO：spatial_layout template 仍用 CDN Three.js，是目前唯一外网依赖。importmap addons 目录复杂，需单独处理 |
+| **P2** | **bubble_diagram 节点 → spatial zone 引用** | 设计意图：beat 节点可标注所在 spatial zone（"打斗发生在礼佛堂"），加 `nodes[].zone_id` 可选字段 + cross_check 第 6 条规则 |
+| **P3** | **bubble_diagram schema 补 est_minutes / tbd** | `nodes[].est_minutes:[min,max]` 估时 + `nodes[].tbd:bool` 待定标记。无强 case 驱动，按需加 |
+| **搁置** | **alerts 人话化（P2 UX）** | 机械检测输出仍是英文 field path。成本中等，影响不紧迫 |
+| **搁置** | **edges.requires 祖先可达性校验** | 算法非平凡（带环图 + 多入口），PoC 期 designer 心智可承担，不加 |
+| **搁置** | **第二个真实关卡案例** | abandoned_temple 是虚构的；等有真实关卡素材时自然驱动 |
+| **未来** | **MCP server** | skill 稳定后升级，让不装 cc 的人也能用 |
+| **未来** | **app 壳**（Tauri / Electron / 内网） | 终极目标，no-Python 问题的根本解 |
 
 ---
 
