@@ -135,8 +135,8 @@
         </div>
         <div id="view-3d">
             <div class="view-3d-fallback" id="view-3d-fallback" style="display:none;">
-                <span>3D 预览需要网络连接加载 Three.js</span>
-                <span style="font-size:11px;">请确认可访问 cdn.jsdelivr.net</span>
+                <span>3D 预览加载失败</span>
+                <span style="font-size:11px;">请确认 lib/three.module.js 存在且 serve_editor 正在运行</span>
             </div>
             <div class="poi-hint" id="poi-hint" style="display:none;">点击圆点查看区域参考图</div>
         </div>
@@ -494,12 +494,12 @@ function loadThreeJS() {
     const fallback = document.getElementById('view-3d-fallback');
 
     // Three.js r160+ requires ES modules. Use importmap + dynamic import.
+    // lib/three.module.js 本地化（M3.14 TODO 兑现）——渲染产物在 outputs/，相对路径 ../lib/
     const importMap = document.createElement('script');
     importMap.type = 'importmap';
     importMap.textContent = JSON.stringify({
         imports: {
-            "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+            "three": "../lib/three.module.js"
         }
     });
     document.head.appendChild(importMap);
