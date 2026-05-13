@@ -148,6 +148,8 @@ spec 只走一个方向：对话 → JSON → HTML。HTML 永远不反向影响 
 
 **Mermaid**：`lib/mermaid.min.js` 使用 [Mermaid](https://github.com/mermaid-js/mermaid)，MIT License。
 
+**Slide Deck 视觉系统**：`tools/render_deck.py` 生成的汇报 Slide Deck，视觉风格参考自 [guizang-ppt-skill](https://github.com/op7418/guizang-ppt-skill)（op7418），包括 WebGL 双背景着色器、沙丘配色方案（`--ink:#1f1a14 / --paper:#f0e6d2`）及 Playfair Display + Noto Serif SC + IBM Plex Mono 字体系统。
+
 ---
 
 ## 路线图
