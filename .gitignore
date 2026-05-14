@@ -1,5 +1,6 @@
 # Render / check 派生物（spec 才是真源）
 outputs/*.html
+!outputs/tutorial-video.html
 outputs/.warnings.json
 outputs/.diff.json
 outputs/.cross_warnings*.json
