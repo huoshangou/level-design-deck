@@ -8,9 +8,9 @@
 
 ## 演示视频
 
-<video src="https://github.com/huoshangou/level-design-deck/releases/download/v0.1.0/level-design-deck-tutorial.mp4" controls width="100%"></video>
+<video src="https://github.com/huoshangou/level-design-deck/raw/main/outputs/tutorial-video.mp4" controls width="100%"></video>
 
-> 无法内嵌播放？[点此直接下载 MP4](https://github.com/huoshangou/level-design-deck/releases/download/v0.1.0/level-design-deck-tutorial.mp4)（4.3 MB，61 秒）
+> 无法内嵌播放？[点此直接下载 MP4](https://github.com/huoshangou/level-design-deck/raw/main/outputs/tutorial-video.mp4)（10 MB，168 秒）
 
 ---
 
