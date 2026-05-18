@@ -1,0 +1,183 @@
+"""LocalCcRunner: subprocess + `claude` CLI stream-json bidirectional。
+
+为什么不用 claude-agent-sdk：实测 SDK 0.2.82 与当前 cc CLI 2.1.122 协议不兼容
+（SDK 期望 0.2.120 未发布），直接走 CLI 子进程更稳。
+
+每次 send_message spawn 一个 cc 进程；用 --resume <cc_session_id> 保持上下文。
+"""
+
+from __future__ import annotations
+import asyncio
+import json
+import os
+import time
+from pathlib import Path
+from typing import AsyncIterator
+
+from backend.agent.base import AgentRunner
+from backend.agent.events import (
+    AgentError, AgentEvent, CcMessageComplete, CcOutputDelta, CcThinking,
+    SessionStarted, ToolUseStart,
+)
+
+DEFAULT_MODEL = "claude-haiku-4-5"
+# v1 收紧：只允许 Read。Phase 3 加 PreToolUse hook 后再放开 Write/Bash，
+# 防止 cc 像 Phase 2 测试时那样自动往用户 ~/.claude/ 写 memory artifact。
+# 生成 spec 时 cc 让用户/前端通过 PUT /api/specs 写，不直接调 Write tool。
+ALLOWED_TOOLS = "Read"
+
+
+class LocalCcRunner(AgentRunner):
+    def __init__(
+        self,
+        project_root: Path,
+        default_model: str = DEFAULT_MODEL,
+        add_dirs: tuple[Path, ...] = (),
+    ):
+        self.project_root = Path(project_root)
+        self.default_model = default_model
+        self.add_dirs = add_dirs
+        self._sessions: dict[str, dict] = {}
+
+    def start_session(self, client_id: str, namespace: str = "default") -> dict:
+        if client_id in self._sessions:
+            raise ValueError(f"session already exists: {client_id}")
+        meta = {
+            "client_id": client_id,
+            "namespace": namespace,
+            "cc_session_id": None,
+            "started_at": time.time(),
+            "last_active": None,
+            "turn_count": 0,
+        }
+        self._sessions[client_id] = meta
+        return dict(meta)
+
+    def has_session(self, client_id: str) -> bool:
+        return client_id in self._sessions
+
+    def get_session(self, client_id: str) -> dict | None:
+        m = self._sessions.get(client_id)
+        return dict(m) if m else None
+
+    def list_sessions(self) -> list[dict]:
+        return [dict(m) for m in self._sessions.values()]
+
+    def end_session(self, client_id: str) -> None:
+        self._sessions.pop(client_id, None)
+
+    async def send_message(self, client_id: str, text: str) -> AsyncIterator[AgentEvent]:
+        if client_id not in self._sessions:
+            yield AgentError(code="session_not_found", message=f"client_id={client_id}", recoverable=False)
+            return
+
+        meta = self._sessions[client_id]
+        cc_sid = meta.get("cc_session_id")
+        is_first_turn = cc_sid is None
+
+        cmd = [
+            "claude", "--print",
+            "--output-format=stream-json",
+            "--input-format=stream-json",
+            "--verbose",
+            "--model", self.default_model,
+            "--allowed-tools", ALLOWED_TOOLS,
+        ]
+        for d in self.add_dirs:
+            cmd.extend(["--add-dir", str(d)])
+        if cc_sid:
+            cmd.extend(["--resume", cc_sid])
+
+        env = os.environ.copy()
+        env.pop("CLAUDE_CODE_ENTRYPOINT", None)
+
+        try:
+            # limit=10MB: cc 的 tool_result 含读到的整个文件，PROJECT.md 这种 50KB+ 文档
+            # 会超 asyncio 默认 64KB readline buffer 抛 LimitOverrunError → 直接吞掉后续事件。
+            proc = await asyncio.create_subprocess_exec(
+                *cmd, cwd=str(self.project_root),
+                stdin=asyncio.subprocess.PIPE,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+                env=env,
+                limit=10 * 1024 * 1024,
+            )
+        except FileNotFoundError:
+            yield AgentError(code="claude_cli_missing", message="`claude` CLI not in PATH", recoverable=False)
+            return
+
+        user_msg = {
+            "type": "user",
+            "message": {"role": "user", "content": [{"type": "text", "text": text}]},
+        }
+        try:
+            assert proc.stdin is not None
+            proc.stdin.write((json.dumps(user_msg, ensure_ascii=False) + "\n").encode("utf-8"))
+            await proc.stdin.drain()
+            proc.stdin.close()
+        except (BrokenPipeError, ConnectionResetError) as e:
+            yield AgentError(code="stdin_closed", message=str(e))
+            return
+
+        try:
+            assert proc.stdout is not None
+            while True:
+                try:
+                    line = await proc.stdout.readline()
+                except (asyncio.LimitOverrunError, ValueError) as e:
+                    yield AgentError(code="cc_stream_overflow", message=str(e)[:200])
+                    break
+                if not line:
+                    break
+                try:
+                    msg = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+
+                t = msg.get("type")
+                if t == "system" and msg.get("subtype") == "init":
+                    new_sid = msg.get("session_id")
+                    if new_sid:
+                        meta["cc_session_id"] = new_sid
+                        if is_first_turn:
+                            yield SessionStarted(client_id=client_id, cc_session_id=new_sid)
+                elif t == "assistant":
+                    for block in msg.get("message", {}).get("content", []) or []:
+                        bt = block.get("type")
+                        if bt == "text":
+                            yield CcOutputDelta(
+                                text=block.get("text", ""),
+                                message_id=msg.get("message", {}).get("id"),
+                            )
+                        elif bt == "thinking":
+                            yield CcThinking(text=block.get("thinking", ""))
+                        elif bt == "tool_use":
+                            yield ToolUseStart(
+                                tool=block.get("name", "?"),
+                                args=block.get("input", {}),
+                                tool_use_id=block.get("id", ""),
+                            )
+                elif t == "result":
+                    if msg.get("is_error"):
+                        yield AgentError(
+                            code="cc_result_error",
+                            message=str(msg.get("result", "unknown"))[:300],
+                        )
+                    else:
+                        yield CcMessageComplete(
+                            text=msg.get("result", ""),
+                            cost_usd=msg.get("total_cost_usd"),
+                            duration_ms=msg.get("duration_ms"),
+                            cc_session_id=msg.get("session_id"),
+                        )
+        finally:
+            rc = await proc.wait()
+            meta["last_active"] = time.time()
+            meta["turn_count"] += 1
+            if rc != 0:
+                assert proc.stderr is not None
+                stderr_bytes = await proc.stderr.read()
+                yield AgentError(
+                    code="cc_exit_nonzero",
+                    message=f"exit={rc} stderr={stderr_bytes.decode('utf-8', 'replace')[:200]}",
+                )

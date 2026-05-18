@@ -1,0 +1,22 @@
+# Secrets — 绝不进 git
+.env
+.env.local
+
+# Python venv (装回 wheels/ 即可重建)
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# pytest
+.pytest_cache/
+
+# Vite / Node
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# 编辑器
+.vscode/
+.idea/
+.DS_Store

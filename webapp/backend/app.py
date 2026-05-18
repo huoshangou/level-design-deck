@@ -1,0 +1,80 @@
+"""FastAPI factory + lifespan + static mount。
+
+dev：Vite 跑 :5173 走 proxy 调本 server；prod：本 server 挂 frontend/dist。
+"""
+
+from __future__ import annotations
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+
+from backend.api import check, chat, files, modules, render, sessions, specs
+from backend.deps import get_settings
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    # Phase 2 会在这起 AgentRunner / Watcher；Phase 1 留空
+    yield
+
+
+def create_app() -> FastAPI:
+    s = get_settings()
+    app = FastAPI(
+        title="level-design-deck webapp",
+        version="0.1.0",
+        lifespan=lifespan,
+    )
+
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=[s.cors_allow_dev_origin],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+    app.include_router(specs.router)
+    app.include_router(modules.router)
+    app.include_router(check.router)
+    app.include_router(render.router)
+    app.include_router(sessions.router)
+    app.include_router(chat.router)
+    app.include_router(files.router)
+
+    @app.get("/api/health")
+    def health():
+        return {
+            "status": "ok",
+            "agent_backend": s.agent_backend,
+            "namespace_default": s.namespace_default,
+            "project_root": str(s.project_root),
+        }
+
+    # 老 editor.html 兜底（plan: /legacy/editor.html 过渡期可用）
+    legacy_dir = s.project_root / "editor"
+    if legacy_dir.exists():
+        app.mount("/legacy", StaticFiles(directory=str(legacy_dir), html=True), name="legacy")
+
+    # 静态资产（spec render 出的 HTML、lib/、tools/levelcraft/）
+    outputs_dir = s.project_root / "outputs"
+    if outputs_dir.exists():
+        app.mount("/outputs", StaticFiles(directory=str(outputs_dir)), name="outputs")
+    lib_dir = s.project_root / "lib"
+    if lib_dir.exists():
+        app.mount("/lib", StaticFiles(directory=str(lib_dir)), name="lib")
+    lc_dir = s.project_root / "tools" / "levelcraft"
+    if lc_dir.exists():
+        app.mount("/tools/levelcraft", StaticFiles(directory=str(lc_dir), html=True), name="levelcraft")
+
+    # frontend build 产物（Phase 1 后期写完前端会有；现在缺也无所谓）
+    dist_dir = s.project_root / "webapp" / "frontend" / "dist"
+    if dist_dir.exists():
+        app.mount("/", StaticFiles(directory=str(dist_dir), html=True), name="frontend")
+
+    return app
+
+
+app = create_app()

@@ -71,6 +71,8 @@ mkdir -p ~/.claude/commands
 cp cc-skills/design-deck.md ~/.claude/commands/
 ```
 
+**（M4 进阶）Web UI + Daemon**：在原 editor 之上新增一层 FastAPI 后端 + React/Vite 前端 + 浏览器内对话生成 spec（可拖文件给 cc 当参考资料）。详见 [webapp/README.md](webapp/README.md)。原 editor 仍可用 — webapp 起来后访问 `http://127.0.0.1:8766/legacy/editor.html`。
+
 ---
 
 ## 典型工作流

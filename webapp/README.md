@@ -1,0 +1,134 @@
+# webapp · level-design-deck Web UI + Daemon
+
+> M4 阶段（B 阶段，分发期）的产物。在原 `editor.html` 单文件之上**新增一层** Web 应用 + 本地 daemon，
+> 让 cc 在后台跑、用户在浏览器选模板 + 对话生成 spec。未来由工具组接管后端 / 局域网部署。
+
+**当前进度（2026-05-18）：** Phase 0、1、2、2.5 完成 · Phase 3 / 4 待做（见底部路线图）
+
+---
+
+## 是什么
+
+`level-design-deck` 主项目把"AI 产文档 / 人通读改"换成"AI 产 spec.json / Python 标问题 / 人定向改字段"。
+原 `editor.html` 是单文件无 build step 的设计工作台，**够用但不够顺手**：
+
+- 想用对话生成新 spec，得手动跑 `tools/generate_spec.py` → 拷贝 prompt 给 cc → 拷回结果用 Write 落盘
+- cc 给的参考资料只能粘文本，不能拖文件
+- 多人协作 / 局域网部署完全没有
+
+webapp 解决这三件事。架构上**与原 editor 并存**，根目录 `start.command` 跑老 editor (8766)，
+webapp `start-webapp.command` 跑新 daemon（占用同 8766，自动接管）；老 editor 通过
+`http://127.0.0.1:8766/legacy/editor.html` 仍可用。
+
+---
+
+## Quickstart
+
+**前置：** Python 3.13 + Node 24 / npm 11+ + macOS arm64（其他平台未测）
+
+```bash
+# 1. 装 backend（一次性，wheels 已进 git 不需要联网）
+cd webapp
+python3 -m venv .venv
+.venv/bin/pip install --no-index --find-links wheels/ fastapi 'uvicorn[standard]' pydantic python-multipart watchfiles pytest httpx claude-agent-sdk
+
+# 2. 配 cc API 凭证（webapp/.env，不进 git）
+cp .env.example .env
+# 编辑 .env：把 ANTHROPIC_BASE_URL / ANTHROPIC_API_KEY / ANTHROPIC_CUSTOM_HEADERS 改成你的 cc gateway / token
+
+# 3. 装 frontend
+cd frontend && npm install && cd ..
+
+# 4. 启动（两条命令，两个进程）
+./start-webapp.command                 # backend :8766 (nohup)
+cd frontend && npm run dev             # frontend :5173 (前台)
+
+# 5. 浏览器开
+open http://127.0.0.1:5173/
+```
+
+也可以只跑 backend 不开前端 — `http://127.0.0.1:8766/legacy/editor.html` 是老 editor 兜底。
+
+---
+
+## 架构
+
+```
+浏览器
+  │  HTTP + WebSocket
+  ▼
+Vite dev server (:5173)  ──proxy──►  FastAPI (:8766)
+                                       │
+                  ┌────────────────────┼─────────────────┐
+                  ▼                    ▼                 ▼
+            SpecStore ABC        AgentRunner ABC      Services
+            (FileSpecStore       (LocalCcRunner       (复用 tools/*.py
+             读写 specs/)         spawn claude         不走 subprocess)
+                                  CLI stream-json)
+                                       │
+                                       ▼
+                              cc 子进程（per turn）
+                              cwd=PROJECT_ROOT
+                              --resume <session_id>
+                              --add-dir ~/Desktop
+                              --allowed-tools Read
+```
+
+- **AgentRunner / SpecStore 抽象** — Phase 4 工具组接管时只换实现，业务层不动
+- **subprocess + claude CLI**（不用 claude-agent-sdk 因协议不兼容）
+- **stateful resume**：cc 给的 session_id 存 server 内存，下次 `--resume` 复用上下文
+
+总览 975 行 Python backend（17 文件，每文件 < 110 行）+ 1349 行 TypeScript frontend（20+ 文件）。
+
+---
+
+## 如何交互（用户视角）
+
+1. **左栏 Alerts**：spec 加载即自动跑 mechanical_check + cross_check，错误点击跳到表单字段
+2. **中栏 Schema-driven 表单**：选 spec → 表单按 JSON Schema 自动生成 → 改字段实时变 dirty → 顶部「💾 保存」
+3. **中右栏 预览**：点「🎨 渲染」→ 右侧 iframe 显示 `outputs/<spec_id>.html`
+4. **右栏 Chat（M4 新加）**：
+   - 「+ 新建」拿 client_id + 起 WS 连接
+   - 输入框打字 / Enter 发送 → cc 流式回复（含 thinking 折叠 / tool_use 卡片 / cost·duration 灰小字）
+   - **拖文件 / 📎 picker** 到 chat 区 → 自动上传 + 后端识别后缀（`.docx/.pptx/.xlsx/.html` 调 `~/scripts/*2text.py` 转 txt）→ 下条消息自动注入"附带参考文件，cc 可 Read：- /tmp/..."
+   - 同 session 连续对话，cc 记得前文（stateful resume）
+
+---
+
+## 产出预期
+
+**v1 (今天)：** chat 只能让 cc **讲话 + 读文件**（Read tool 唯一允许），不能让 cc 直接写 spec / 跑命令。
+设计师在 chat 里讨论 → 拿到 cc 的方案 → 自己把字段填到表单 → 保存。
+
+**Phase 3 后：** PreToolUse hook 允许 cc 调 Bash（`python3 tools/generate_spec.py ...`）+ Write 到 `specs/` 目录。
+设计师能在 chat 里直接说"做一个 lighting_req for 居酒屋夜战"，cc 跑生成器写 spec → 前端文件变更 → 表单自动加载 → 设计师直接改/保存。
+
+**Phase 4 后：** 抽 RemoteAgentRunner，工具组用他们的 gateway 接管 cc 池；加 namespace 多用户隔离；
+打包给团队局域网部署。最终目标是**不会 cc 的设计师也能用**（M3.7+ 决策"app 壳"目标的落地）。
+
+---
+
+## 路线图
+
+| Phase | 状态 | 内容 |
+|---|---|---|
+| 0 | ✅ | `tools/render_level.py` + `template_diff.py` 抽 pure function（CLI byte-identical） |
+| 1 | ✅ | FastAPI backend + React/Vite/TS frontend + 三栏布局（与 editor.html 功能对齐） |
+| 2 | ✅ | AgentRunner + LocalCcRunner + sessions/chat API + WebSocket + stateful resume |
+| 2.5 | ✅ | LocalCcRunner `--add-dir` + 附件上传 + 后端转 txt + 附件 context 注入 |
+| 3 | ⏳ | BubbleDiagramView Mermaid 专用视图 + SpatialLayoutView LevelCraft 集成 + PreToolUse hook 放开 Write/Bash |
+| 4 | ⏳ | RemoteAgentRunner stub + namespace 贯通 + 给工具组的 HANDOFF.md |
+
+详细 plan：[`~/.claude/plans/federated-tickling-sparkle.md`](~/.claude/plans/federated-tickling-sparkle.md)
+
+---
+
+## 测试
+
+```bash
+cd webapp
+PYTHONPATH=. .venv/bin/pytest backend/tests/ -v
+# 当前 32 / 32 通过（specs CRUD / modules / check / render / sessions / WS chat）
+```
+
+frontend 是手动验收（无 e2e，纯交互 UI）。
