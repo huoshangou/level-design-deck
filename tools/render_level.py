@@ -9,15 +9,22 @@ render_level.py
   python3 tools/render_level.py --level-id my_level
   python3 tools/render_level.py --level-id my_level --render-missing
   → outputs/level_<level_id>__full.html
+
+库用法（webapp/backend 直接 import）：
+  from tools.render_level import resolve_specs_for_level, render_module_inline, build_full_html
 """
 
 import argparse
 import json
-import subprocess
 import sys
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
+# 让 CLI 直接跑（python3 tools/render_level.py）时也能 from tools.render import
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from tools.render import render
 
 # 推荐渲染顺序（hub → 空间 → 流程 → 氛围 → 子需求 → 资产）
 MODULE_ORDER = [
@@ -64,7 +71,9 @@ def get_module(spec_id):
     return None
 
 
-def render_one(spec_id, module):
+def render_module_inline(spec_id, module):
+    """读 spec + template，调 render() 出 HTML 写 outputs/<spec_id>.html。
+    返回 (ok, info_or_err_msg)。webapp/backend 可直接 import 用。"""
     spec_path = PROJECT_ROOT / "specs" / f"{spec_id}.spec.json"
     tmpl_path = PROJECT_ROOT / "templates" / f"{module}.html.tmpl"
     out_path = PROJECT_ROOT / "outputs" / f"{spec_id}.html"
@@ -72,57 +81,31 @@ def render_one(spec_id, module):
         return False, f"spec not found: {spec_path}"
     if not tmpl_path.exists():
         return False, f"template not found: {tmpl_path}"
-    r = subprocess.run(
-        ["python3", str(PROJECT_ROOT / "tools" / "render.py"), str(spec_path), str(tmpl_path), str(out_path)],
-        capture_output=True, text=True,
-    )
-    if r.returncode != 0:
-        return False, f"render failed: {r.stderr.strip()}"
+    spec = json.loads(spec_path.read_text(encoding="utf-8"))
+    template = tmpl_path.read_text(encoding="utf-8")
+    html = render(template, spec)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(html, encoding="utf-8")
     return True, str(out_path.relative_to(PROJECT_ROOT))
 
 
-def main():
-    p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("--level-id", required=True)
-    p.add_argument("--output", default=None)
-    p.add_argument("--render-missing", action="store_true", help="自动渲染缺失的 module HTML")
-    args = p.parse_args()
-
-    spec_ids = collect_specs_by_level(args.level_id)
-    if not spec_ids:
-        sys.exit(f"ERROR: no spec found for level_id={args.level_id!r}")
-
+def resolve_specs_for_level(level_id):
+    """level_id → [(module, spec_id), ...] 按 MODULE_ORDER 排序。webapp/backend 可直接 import 用。"""
+    spec_ids = collect_specs_by_level(level_id)
     by_module = {}
     for sid in spec_ids:
         m = get_module(sid)
         if m:
             by_module[m] = sid
+    return [(m, by_module[m]) for m in MODULE_ORDER if m in by_module]
 
-    ordered = [(m, by_module[m]) for m in MODULE_ORDER if m in by_module]
-    if not ordered:
-        sys.exit(f"ERROR: no recognized module for level_id={args.level_id!r} (specs={spec_ids})")
 
-    missing = []
-    for m, sid in ordered:
-        if not (PROJECT_ROOT / "outputs" / f"{sid}.html").exists():
-            missing.append((m, sid))
-
-    if missing:
-        if args.render_missing:
-            print(f"渲染 {len(missing)} 个缺失 module ...")
-            for m, sid in missing:
-                ok, info = render_one(sid, m)
-                print(f"  [{'OK' if ok else 'FAIL'}] {sid}: {info}")
-                if not ok:
-                    sys.exit(1)
-        else:
-            print(f"WARN: 缺失渲染：{[sid for _, sid in missing]}")
-            print("加 --render-missing 自动补，或手动跑 render.py")
-            sys.exit(1)
-
+def build_full_html(level_id, ordered_specs):
+    """ordered_specs = [(module, spec_id), ...]，假设每个 spec 的 outputs/<spec_id>.html 已存在。
+    返回完整关卡文档 HTML 字符串。webapp/backend 可直接 import 用。"""
     nav_links = "\n".join(
         f'  <a href="#{m}" class="nav-link">{MODULE_LABELS[m]}<span class="nav-key">{m}</span></a>'
-        for m, _ in ordered
+        for m, _ in ordered_specs
     )
     sections = "\n".join(
         f'  <section id="{m}" class="module-section">\n'
@@ -130,14 +113,14 @@ def main():
         f'<a href="{sid}.html" class="open-new" target="_blank">独立打开 ↗</a></h2>\n'
         f'    <iframe src="{sid}.html" class="module-frame" title="{MODULE_LABELS[m]}" loading="lazy"></iframe>\n'
         f'  </section>'
-        for m, sid in ordered
+        for m, sid in ordered_specs
     )
 
-    html = f"""<!DOCTYPE html>
+    return f"""<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>{args.level_id} · 完整关卡文档</title>
+<title>{level_id} · 完整关卡文档</title>
 <style>
 *{{box-sizing:border-box}}
 body{{font-family:-apple-system,"Helvetica Neue","Noto Sans SC",sans-serif;margin:0;background:#fafaf6;color:#222}}
@@ -162,8 +145,8 @@ body{{font-family:-apple-system,"Helvetica Neue","Noto Sans SC",sans-serif;margi
 </head>
 <body>
 <nav class="top-nav">
-  <span class="level-id">{args.level_id}</span>
-  <span class="doc-title">完整关卡文档 · {len(ordered)} module</span>
+  <span class="level-id">{level_id}</span>
+  <span class="doc-title">完整关卡文档 · {len(ordered_specs)} module</span>
 {nav_links}
 </nav>
 <div class="container">
@@ -172,6 +155,38 @@ body{{font-family:-apple-system,"Helvetica Neue","Noto Sans SC",sans-serif;margi
 </body>
 </html>
 """
+
+
+def main():
+    p = argparse.ArgumentParser(description=__doc__)
+    p.add_argument("--level-id", required=True)
+    p.add_argument("--output", default=None)
+    p.add_argument("--render-missing", action="store_true", help="自动渲染缺失的 module HTML")
+    args = p.parse_args()
+
+    ordered = resolve_specs_for_level(args.level_id)
+    if not ordered:
+        # 区分两种情况：完全没 spec / 有 spec 但 module 名都不识别
+        spec_ids = collect_specs_by_level(args.level_id)
+        if not spec_ids:
+            sys.exit(f"ERROR: no spec found for level_id={args.level_id!r}")
+        sys.exit(f"ERROR: no recognized module for level_id={args.level_id!r} (specs={spec_ids})")
+
+    missing = [(m, sid) for m, sid in ordered if not (PROJECT_ROOT / "outputs" / f"{sid}.html").exists()]
+    if missing:
+        if args.render_missing:
+            print(f"渲染 {len(missing)} 个缺失 module ...")
+            for m, sid in missing:
+                ok, info = render_module_inline(sid, m)
+                print(f"  [{'OK' if ok else 'FAIL'}] {sid}: {info}")
+                if not ok:
+                    sys.exit(1)
+        else:
+            print(f"WARN: 缺失渲染：{[sid for _, sid in missing]}")
+            print("加 --render-missing 自动补，或手动跑 render.py")
+            sys.exit(1)
+
+    html = build_full_html(args.level_id, ordered)
 
     out = Path(args.output) if args.output else (PROJECT_ROOT / "outputs" / f"level_{args.level_id}__full.html")
     out.parent.mkdir(parents=True, exist_ok=True)

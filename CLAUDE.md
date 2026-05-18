@@ -81,6 +81,16 @@ Steve 直接指示（2026-05-11）：保留 LevelCraft 2D 编辑器作为 deck s
 - **fail loud**：解析/校验失败必须明确报错，不静默 skip
 - 不写注释，除非有非显然的"为什么"
 
+### webapp/ 例外子节（B 阶段，2026-05-15+）
+
+`webapp/` 子目录约束见 [PROJECT.md "webapp/ 例外块"](PROJECT.md)。AI 在 webapp/ 内可：
+- 跨多个 Python 文件（每文件仍 < 300 行）
+- 引入声明在 `webapp/wheels/` 的 pip 依赖
+- 用 React/Vite/TS 构建前端（仅 `webapp/frontend/`）
+- 写 ABC + namespace 抽象层
+
+AI 在原 `tools/` + `editor/` + `cc-skills/` + `lib/` 内**不放宽**任何约束。
+
 ---
 
 ## 4. 思维反污染（L3 防线）
@@ -165,7 +175,7 @@ L3 防线由**两个机制**组成：自问（4.A）+ 决策来源标签（4.B�
 - 修改 PROJECT.md 的"是什么/不是什么"或"核心理念"
 - 修改本文件（CLAUDE.md）的反污染清单
 - 修改 `INHERITANCE.md` 的承袭/反承袭表
-- 引入任何外部依赖（pip install / npm install）
+- 在 webapp/ 之外引入新外部依赖（pip install / npm install）；webapp/ 内按已批准 plan 范围内不重复问
 - 给项目加新里程碑（M3+）
 
 ---
@@ -184,4 +194,4 @@ L3 防线由**两个机制**组成：自问（4.A）+ 决策来源标签（4.B�
 
 ## 版本
 
-CLAUDE.md v0.7（2026-04-30 创建；2026-05-06 加 4.B 决策来源标签输出契约；2026-05-06 同日：补 work_docs_extract.json 和 Steve 直接指示 2 种来源枚举；2026-05-06 M3.2：editor.html 行数约束从 < 300 bump 到 < 400；2026-05-07 M3.3：editor.html 从 < 400 bump 到 < 900，加 bubble_diagram 图状专用视图；2026-05-09 M3.7：加反污染 M3.7 例外块，有限解锁 pipeline spatial_layout/template.html + test_cases/case_05/layout_data.json；2026-05-11 M3.7 扩展：例外块加"运行时资产可复制"层级，解锁 LevelCraft editor.html + levelcraft/ bundle 复制到 deck 内供 spatial_layout 流程使用）
+CLAUDE.md v0.8（2026-04-30 创建；2026-05-06 加 4.B 决策来源标签输出契约；2026-05-06 同日：补 work_docs_extract.json 和 Steve 直接指示 2 种来源枚举；2026-05-06 M3.2：editor.html 行数约束从 < 300 bump 到 < 400；2026-05-07 M3.3：editor.html 从 < 400 bump 到 < 900，加 bubble_diagram 图状专用视图；2026-05-09 M3.7：加反污染 M3.7 例外块，有限解锁 pipeline spatial_layout/template.html + test_cases/case_05/layout_data.json；2026-05-11 M3.7 扩展：例外块加"运行时资产可复制"层级，解锁 LevelCraft editor.html + levelcraft/ bundle 复制到 deck 内供 spatial_layout 流程使用；2026-05-15 v0.7→v0.8 加 webapp/ 例外子节（B 阶段 M4 启动）+ 红线第 5 条加 webapp/ 范围限定）

@@ -9,6 +9,9 @@ M1 范围：仅 lighting 范围。
 
 使用：
   python3 tools/template_diff.py specs/demo_lighting_req.spec.json
+
+库用法（webapp/backend 直接 import）：
+  from tools.template_diff import build_diff_payload, SPEC_TO_WORKDOC_LIGHTING, SKIP_PREFIXES
 """
 
 import argparse
@@ -34,6 +37,16 @@ SPEC_TO_WORKDOC_LIGHTING = {
     "ambience_refs":                "灯光氛围参考",
 }
 
+# M3.2: 图状/外部数据/收集型 module 跳过 lighting field-clipboard diff
+SKIP_PREFIXES = {
+    "bubble_diagram_": "graph-type module (nodes/edges, not field-clipboard)",
+    "spatial_layout_": "geometry/external-tool module (LevelCraft 2D export, not field-clipboard)",
+    "atmosphere_ref_": "atmosphere/refs module (image-collection, not field-clipboard)",
+    "vfx_req_": "vfx module (effects-collection, not field-clipboard)",
+    "audio_req_": "audio module (ambient-sounds-collection, not field-clipboard)",
+    "asset_list_": "asset list module (interface对接表，not field-clipboard)",
+}
+
 
 def get_spec_paths(spec, prefix=""):
     """返回 spec 中所有 top-level + 1 层嵌套的 leaf paths（按需）。
@@ -51,53 +64,21 @@ def get_spec_paths(spec, prefix=""):
     return paths
 
 
-def main():
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("spec", type=Path, help="spec JSON 路径")
-    parser.add_argument("--work-docs", type=Path, default=DEFAULT_WORK_DOCS)
-    parser.add_argument("--template-fields", type=Path, default=DEFAULT_TEMPLATE_FIELDS)
-    parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
-    parser.add_argument("--quiet", action="store_true")
-    args = parser.parse_args()
-
-    if not args.spec.exists():
-        sys.exit(f"ERROR: spec not found: {args.spec}")
-    if not args.work_docs.exists():
-        sys.exit(f"ERROR: work_docs not found: {args.work_docs}")
-    if not args.template_fields.exists():
-        sys.exit(f"ERROR: template_fields not found: {args.template_fields}")
-
-    spec = json.loads(args.spec.read_text(encoding="utf-8"))
-
-    # M3.2: 图状 module 走跳过分支（template_fields.json 是字段填空型 derived from gameplay_template.html，
-    # 对图状 spec 无映射意义，强行套是反污染失误）。[来源: 第一原理推导]
+def build_diff_payload(spec, work_docs, template_fields, *, spec_path_str=""):
+    """spec / work_docs / template_fields 已 load 的 dict；返回完整 diff payload dict（含 diffed_at）。
+    webapp/backend 可直接 import 用。"""
+    diffed_at = datetime.now(timezone.utc).isoformat()
     spec_id = spec.get("meta", {}).get("spec_id", "")
-    SKIP_PREFIXES = {
-        "bubble_diagram_": "graph-type module (nodes/edges, not field-clipboard)",
-        "spatial_layout_": "geometry/external-tool module (LevelCraft 2D export, not field-clipboard)",
-        "atmosphere_ref_": "atmosphere/refs module (image-collection, not field-clipboard)",
-        "vfx_req_": "vfx module (effects-collection, not field-clipboard)",
-        "audio_req_": "audio module (ambient-sounds-collection, not field-clipboard)",
-        "asset_list_": "asset list module (interface对接表，not field-clipboard)",
-    }
     skip_reason = next((r for p, r in SKIP_PREFIXES.items() if spec_id.startswith(p)), None)
     if skip_reason:
-        payload = {
-            "diffed_at": datetime.now(timezone.utc).isoformat(),
-            "spec_path": str(args.spec),
+        return {
+            "diffed_at": diffed_at,
+            "spec_path": spec_path_str,
             "scope": skip_reason,
             "stats": {"mapped": 0, "missing": 0, "extra": 0},
             "mapped": [], "missing": [], "extra": [],
             "rationale": f"{skip_reason}; template_fields.json/work_docs_extract.json are field-clipboard derived. No mapping applicable. [来源: 第一原理推导]",
         }
-        args.output.parent.mkdir(parents=True, exist_ok=True)
-        args.output.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
-        print(f"mapped=0 missing=0 extra=0 (skipped: {skip_reason})")
-        print(f"OK: diff written to {args.output}")
-        sys.exit(0)
-
-    work_docs = json.loads(args.work_docs.read_text(encoding="utf-8"))
-    template_fields = json.loads(args.template_fields.read_text(encoding="utf-8"))
 
     spec_paths = get_spec_paths(spec)
     workdoc_lighting_names = {f["name"] for f in work_docs.get("poi_lighting_fields", [])}
@@ -129,13 +110,10 @@ def main():
     for sp in spec_paths:
         if sp in mapped_spec_paths:
             continue
-        # 已知非 lighting 字段：meta 及其子项
         if sp == "meta" or sp.startswith("meta."):
             continue
-        # concept_art 顶层（其子项 ambient_only/with_mission 已映射）
         if sp == "concept_art":
             continue
-        # 其他 → 视为 EXTRA（schema 多设计了字段）
         extra.append({
             "spec_path": sp,
             "msg": f"spec 提供 '{sp}'，不在映射表也不是 meta —— 检查是否 schema 设计冗余"
@@ -161,9 +139,9 @@ def main():
                    "POI lighting spec 是结构化 source of truth；玩法侧只需声明 N/A 或留空"
         }
 
-    payload = {
-        "diffed_at": datetime.now(timezone.utc).isoformat(),
-        "spec_path": str(args.spec),
+    return {
+        "diffed_at": diffed_at,
+        "spec_path": spec_path_str,
         "scope": "lighting only (M1)",
         "stats": {
             "mapped": len(mapped),
@@ -176,19 +154,49 @@ def main():
         "gameplay_consistency": gameplay_check,
     }
 
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("spec", type=Path, help="spec JSON 路径")
+    parser.add_argument("--work-docs", type=Path, default=DEFAULT_WORK_DOCS)
+    parser.add_argument("--template-fields", type=Path, default=DEFAULT_TEMPLATE_FIELDS)
+    parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
+    parser.add_argument("--quiet", action="store_true")
+    args = parser.parse_args()
+
+    if not args.spec.exists():
+        sys.exit(f"ERROR: spec not found: {args.spec}")
+    if not args.work_docs.exists():
+        sys.exit(f"ERROR: work_docs not found: {args.work_docs}")
+    if not args.template_fields.exists():
+        sys.exit(f"ERROR: template_fields not found: {args.template_fields}")
+
+    spec = json.loads(args.spec.read_text(encoding="utf-8"))
+    work_docs = json.loads(args.work_docs.read_text(encoding="utf-8"))
+    template_fields = json.loads(args.template_fields.read_text(encoding="utf-8"))
+
+    payload = build_diff_payload(spec, work_docs, template_fields, spec_path_str=str(args.spec))
+
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
 
-    print(f"mapped={len(mapped)} missing={len(missing)} extra={len(extra)}")
+    skip_reason = payload.get("rationale")
+    if skip_reason:
+        print(f"mapped=0 missing=0 extra=0 (skipped: {payload['scope']})")
+        print(f"OK: diff written to {args.output}")
+        sys.exit(0)
+
+    stats = payload["stats"]
+    print(f"mapped={stats['mapped']} missing={stats['missing']} extra={stats['extra']}")
     if not args.quiet:
-        for m in missing:
+        for m in payload["missing"]:
             print(f"  [MISSING] {m['workdoc_name']}: {m['msg']}")
-        for e in extra:
+        for e in payload["extra"]:
             print(f"  [EXTRA]   {e['spec_path']}: {e['msg']}")
-        if gameplay_check:
-            print(f"  [INFO]    {gameplay_check['msg']}")
+        if payload.get("gameplay_consistency"):
+            print(f"  [INFO]    {payload['gameplay_consistency']['msg']}")
     print(f"OK: diff written to {args.output}")
-    sys.exit(1 if missing else 0)
+    sys.exit(1 if stats["missing"] else 0)
 
 
 if __name__ == "__main__":

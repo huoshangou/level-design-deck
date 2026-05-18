@@ -91,11 +91,25 @@ level-design-deck/
     └── (生成的 HTML 文档放这里)
 ```
 
+**B 阶段子项目**（2026-05-15+）：
+- `webapp/` — Web UI + Daemon（FastAPI + React/Vite）。self-contained，约束见本文"webapp/ 例外块"
+
 **约束**：
 - 每个 Python 工具 < 300 行
 - editor.html 单文件 < 900 行（M3.2 从 < 300 bump 到 < 400；M3.3 再 bump 到 < 900 加 bubble_diagram 图状专用视图。下次再超强制拆 `editor/views/<module>.js`）
 - 没有 build step（npm/webpack 不要）
 - 离线可用（CDN 依赖只允许 jsonschema、Mermaid 一类必须的）
+
+**`webapp/` 例外块（B 阶段，2026-05-15+）**：
+
+webapp/ 子目录是 deck "app 壳"目标的落地，约束放宽如下：
+- ✅ 允许 build step（Vite / pnpm）— 仅限 `webapp/frontend/`
+- ✅ 允许多文件 Python（路由 / 服务 / 抽象层），单文件仍 < 300 行
+- ✅ 允许引入新依赖（pip / npm），**`webapp/wheels/` 进 git** 保持离线可用（参考 LevelCraft / Mermaid 复制策略）
+- ✅ 允许 ABC + namespace 等"为工具组接管 / 局域网部署"的抽象层，**仅限 webapp/ 内**
+- ❌ 仍禁止：原 `tools/` + `editor/` + `cc-skills/` + `lib/` 的任何约束放宽
+- ❌ 仍禁止：webapp/ 引入"重型管线"（manifest / scorer / HITL 三段 / 状态机）；抽象层只为接口位，不为流程
+- ❌ 仍禁止：违反核心理念 4 条
 
 **`cases/` 目录约定（M3.2 起）**：
 - 真实案例的"输入素材原料"复制到这里（不是 pipeline 产物，不污染）
@@ -162,6 +176,26 @@ level-design-deck/
 - 单字段改动隔离性：cp before/after diff 仅动 1 行 ✓ / 改后 mechanical_check 仍 0 ERROR ✓
 
 **决策点**：M2 跑通后再决定 M3+ 做什么（扩展模块？双层 UI？小范围团队试用？）— 待 Steve 选定。
+
+### M4 · Web UI + Daemon（B 阶段，分发期）
+
+**目标**：cc 在本地 daemon 后跑，用户在浏览器选模板 + 通过对话完成生成；为工具组接管后端 / 局域网部署留接口位。
+
+**实施 plan**：[~/.claude/plans/federated-tickling-sparkle.md](~/.claude/plans/federated-tickling-sparkle.md)
+
+**Phase**：
+- Phase 0 — 重构 5 个 tools 抽 pure function（不影响 CLI）
+- Phase 1 — FastAPI + React 外壳，无 chat（与 editor.html 功能对齐）
+- Phase 2 — Chat + AgentRunner（LocalCcRunner via Claude Agent SDK）
+- Phase 3 — Module-specific views（BubbleDiagramView / SpatialLayoutView）
+- Phase 4 — RemoteAgentRunner stub + namespace 贯通 + HANDOFF.md 给工具组
+
+**验证**：
+- Phase 1：`lighting_req_underground_parking_horror` 端到端无功能退化
+- Phase 2：4 场景（session 持久 / 对话产 spec / 推荐下一个 module / 跨轮上下文）
+- 旧 `editor/editor.html` 走 `/legacy/editor.html` 仍可用
+
+**决策点**：Phase 1 跑通后评估前端栈选择是否合理；Phase 2 跑通后评估 chat UX；Phase 4 完成后评估是否拆 webapp 为独立仓库给工具组。
 
 ---
 
@@ -260,6 +294,9 @@ level-design-deck/
 | 2026-05-11 | M3.7+ Import JSON 完整闭环 · UX 设计 | 闭环 = 选文件 → JSON.parse + sanity check（shapes/layers 必须 array）→ confirm 弹窗（显示 old vs new shape 数防误覆盖）→ SPEC.layout = parsed → saveSpec() PUT → reloadAll() 触发 mechanical_check → renderHtml() 触发 render → renderForm() 重绘视图 → toast 成功提示。**这是 deck "更简单更好用 → app 壳"目标的第一个落地证据**：不会 cc 的人在浏览器里能完成全流程。`[来源: 第一原理推导]` |
 | 2026-05-11 | M3.7+ 工作分工实践 · opus 设计 + sonnet 执行 | Steve 直接指示：复杂事 opus 做、确定事 haiku/sonnet 做。本里程碑实践：CLAUDE.md 措辞/架构设计/UX 设计/文档同步/决策判断 = opus；拆 editor.html + 实现 spatial_layout.js + 端到端测试 = sonnet。结果：sonnet 78 行代码一次过 + 4 项 curl 测试自验。后续大功能默认走这种分工。`[来源: Steve 直接指示（2026-05-11）]` |
 | 2026-05-11 | M3.7+ ✅ 完成 | 4 文件新建（CLAUDE.md 改 + tools/levelcraft/editor.html + tools/levelcraft/levelcraft/* + editor/views/spatial_layout.js + template 占位符修复）。验证：LevelCraft 通过 serve_editor 可访问 ✓ / Import JSON 端到端 PUT→check→render 闭环跑通 ✓ / HTML 反映新内容 ✓ / editor.html 873 < 900 ✓。资产规模：deck 仓库 + 3.1MB（LevelCraft bundle）。`[来源: 第一原理推导 + Steve 直接指示（2026-05-11）]` |
+| 2026-05-15 | **B 阶段启动** · Web UI + Daemon (M4) | A 阶段（8 module + 5 cross_check 规则）完结后进入分发期。M3.7+ 终极目标 "app 壳" + M3.15 "cc + skill 接入" 是前置；本阶段未来由工具组接管后端、可能局域网部署多用户。产出 `webapp/` 子目录 self-contained，原 `tools/` + `editor/` + `cc-skills/` + `lib/` 约束不变。`[来源: Steve 直接指示（2026-05-15）]` |
+| 2026-05-15 | B 阶段架构选型 · Python+FastAPI / React+Vite+TS / 模板优先+对话补全 | 后端：现有 tools/*.py 已 import-and-call，FastAPI 天然栈。前端：editor.html 893 行已临极限，加聊天必拆，React+Vite+TS 是工具组接手主流栈。聊天：cc-skill design-deck.md wizard 已成熟，Web UI 用 chat 暴露而非重新发明。`[来源: Steve 直接指示（2026-05-15）+ 第一原理推导]` |
+| 2026-05-15 | B 阶段抽象层 · AgentRunner ABC + SpecStore ABC + namespace 参数 | 为工具组接管后端 / 局域网多用户留接口位。LocalCcRunner（Claude Agent SDK 子进程）+ FileSpecStore = v1；RemoteAgentRunner + NamespacedStore 留 Phase 4 stub。**与"不是重型管线"理念的边界**：抽象层仅在 webapp/ 内、ABC=2 个不是 N 个、namespace 默认 "default" 透明传递。`[来源: 第一原理推导]` |
 | 2026-05-11 | M3.7+ template_diff 漏跳过修复 | M3.7 时给 spatial_layout 漏加 noop 跳过分支。症状：template_diff 把 spatial_layout 跟 lighting/gameplay 字段比，告警栏出现 7 MISSING + 2 EXTRA 全是概念错位伪告警。修复：把单独 if 重构成 SKIP_PREFIXES 字典（bubble_diagram 同款）。M3.x 后续新加几何/外部数据型 module 加一行字典即可。`[来源: 第一原理推导 + Steve 浏览器实测发现]` |
 | 2026-05-11 | M3.8 启动 · 跨 module 联动校验 PoC（B 阶段）| pipeline 没探索过的方向，是 deck 范式相对零散文档的核心优势。Steve 直接指示先 B（联动）再 A（补 module），强化"加新 module 默认按联动范式"。`[来源: Steve 直接指示（2026-05-11）]` |
 | 2026-05-11 | M3.8 关键决策 · 跨 module ref 用 shape.label 而非 UUID | 人类可读优先（lighting spec 写 region_id: "玄关" vs UUID）。代价：(1) LevelCraft 改 label 需手动同步；(2) label 重复需 cross_check 妥善处理。`[来源: Steve 直接指示（2026-05-11）]` |
