@@ -84,14 +84,29 @@ Vite dev server (:5173)  ──proxy──►  FastAPI (:8766)
 
 ## 如何交互（用户视角）
 
-1. **左栏 Alerts**：spec 加载即自动跑 mechanical_check + cross_check，错误点击跳到表单字段
-2. **中栏 Schema-driven 表单**：选 spec → 表单按 JSON Schema 自动生成 → 改字段实时变 dirty → 顶部「💾 保存」
-3. **中右栏 预览**：点「🎨 渲染」→ 右侧 iframe 显示 `outputs/<spec_id>.html`
-4. **右栏 Chat（M4 新加）**：
-   - 「+ 新建」拿 client_id + 起 WS 连接
-   - 输入框打字 / Enter 发送 → cc 流式回复（含 thinking 折叠 / tool_use 卡片 / cost·duration 灰小字）
-   - **拖文件 / 📎 picker** 到 chat 区 → 自动上传 + 后端识别后缀（`.docx/.pptx/.xlsx/.html` 调 `~/scripts/*2text.py` 转 txt）→ 下条消息自动注入"附带参考文件，cc 可 Read：- /tmp/..."
-   - 同 session 连续对话，cc 记得前文（stateful resume）
+![webapp overview](webapp-overview.png)
+
+四栏布局，从左到右：
+
+1. **告警栏（左）**：spec 加载即自动跑 mechanical_check + cross_check + template_diff，
+   按 ERROR/REVIEW/MISSING/EXTRA 分类统计 + 列表。点击告警跳转到对应字段 + 高亮。
+   截图里左栏「REVIEW 1」即跨模块 `phase 命名集合` REVIEW（提醒人工确认 phase 命名一致）。
+
+2. **schema 表单（中）**：顶部 spec 下拉（按 level_id 分组）→ 表单按 JSON Schema 自动渲染：
+   - 字段标签**人话双显**（主标签 + 灰小字 path key，如 `Spec ID` + `spec_id`）
+   - 改字段 → 顶部 dirty 红字「● 未保存」→ 点「💾 保存」→ 后端 `PUT /api/specs/{id}` 原子写
+   - 嵌套对象自动折叠 fieldset，数组用 chip 列表 + 「+ 添加 / ✕ 删除」
+
+3. **预览（中右）**：点「🎨 渲染」→ 后端 `tools.render` 出 HTML 到 `outputs/<spec_id>.html` → 同栏 iframe 自动刷新。
+   截图里是 `bubble_diagram_test_warehouse` 的 mermaid 流程图（Phase I/II/III subgraph 分组）。
+   顶部还有「📚 完整文档」（拼接同 level 全 module）/「🎞 Deck」（汇报用幻灯片）按钮。
+
+4. **Chat（右）**：cc 在后台跑 stateful session，浏览器对话。
+   - 「+ 新建」→ 起 WS 连接（指示灯绿 = open）→ 输入框打字 / Enter 发送
+   - cc 流式回复：💭 思考折叠 + 🔧 tool_use 卡片 + 文字气泡 + cost/duration 灰小字
+   - **拖文件 / 📎 picker** 到 chat → 后端自动识别后缀转 txt（`.docx/.pptx/.xlsx/.html` 调 `~/scripts/*2text.py`）→
+     下条消息自动注入"附带参考文件，cc 可 Read：- /tmp/..."。截图右下「📎 25-07-17小东京【白狐】剧本.docx (docx, 17.4KB)」即附件 chip
+   - 同 session 多轮，cc 记得前文（CLI `--resume <cc_session_id>`）
 
 ---
 
