@@ -14,14 +14,9 @@ body{
 .scene{
   position:absolute;top:0;left:0;width:1920px;height:1080px;overflow:hidden;
 }
-#s1{z-index:1;background:#100D0A;}
-#s2{z-index:2;background:#100D0A;opacity:0;}
-#s3{z-index:3;background:#100D0A;opacity:0;}
-#s4{z-index:4;background:#100D0A;opacity:0;}
-#s5{z-index:5;background:#100D0A;opacity:0;}
-#s6{z-index:6;background:#100D0A;opacity:0;}
-#s7{z-index:7;background:#100D0A;opacity:0;}
-#s8{z-index:8;background:#100D0A;opacity:0;}
+#s1,#s2,#s3,#s4,#s5,#s6,#s7,#s8{background:#100D0A;opacity:0;}
+#s1{z-index:1;}#s2{z-index:2;}#s3{z-index:3;}#s4{z-index:4;}
+#s5{z-index:5;}#s6{z-index:6;}#s7{z-index:7;}#s8{z-index:8;}
 
 /* ── 三段式固定布局 ──────────────────────────────────────
    top-bar (80px)  → 暗色 header：章节编号 + 标题
@@ -40,13 +35,14 @@ body{
   z-index:20;
 }
 .ch-badge{
-  font-family:"IBM Plex Mono",monospace;font-size:12px;
-  color:#D97757;letter-spacing:2.5px;text-transform:uppercase;
-  background:rgba(217,119,87,0.12);border:1px solid rgba(217,119,87,0.28);
-  border-radius:4px;padding:5px 14px;white-space:nowrap;flex-shrink:0;
+  font-family:"IBM Plex Mono",monospace;font-size:13px;
+  color:#E89674;letter-spacing:3px;text-transform:uppercase;
+  background:rgba(217,119,87,0.14);border:1px solid rgba(217,119,87,0.34);
+  border-radius:4px;padding:6px 16px;white-space:nowrap;flex-shrink:0;
+  box-shadow:0 0 24px rgba(217,119,87,0.08);
 }
 .scene-title{
-  font-size:28px;font-weight:700;color:#F5EDE5;letter-spacing:-0.5px;
+  font-size:32px;font-weight:700;color:#F5EDE5;letter-spacing:-0.4px;
   white-space:nowrap;
 }
 
@@ -71,15 +67,17 @@ body{
 }
 /* 字幕 */
 .caption{
-  font-size:21px;color:#C4B5A8;letter-spacing:0.3px;
-  text-align:center;max-width:1400px;line-height:1.6;
+  font-size:24px;color:#D2C3B5;letter-spacing:0.5px;
+  text-align:center;max-width:1500px;line-height:1.55;font-weight:400;
 }
 
 /* ── 浏览器 frame ── */
 .browser{
   position:absolute;
-  border-radius:12px;
-  box-shadow:0 32px 80px rgba(0,0,0,0.6);
+  border-radius:14px;
+  box-shadow:0 1px 0 rgba(255,230,210,0.05) inset,
+             0 28px 64px rgba(0,0,0,0.55),
+             0 64px 140px rgba(217,119,87,0.08);
   overflow:hidden;
   background:#faf9f7;
 }
@@ -321,12 +319,12 @@ body{
 </style>
 </head>
 <body>
-<div id="root" data-composition-id="webapp-tutorial" data-width="1920" data-height="1080" data-start="0" data-duration="82">
+<div id="root" data-composition-id="webapp-tutorial" data-width="1920" data-height="1080" data-start="0" data-duration="62">
 
 <!-- ══════════════════════════════════════════════════════════
      S1 · 标题卡 (0–8s)
 ════════════════════════════════════════════════════════════ -->
-<div id="s1" class="scene" style="z-index: 1">
+<div id="s1" class="scene">
   <div id="s1-bg"></div>
   <div id="s1-grid"></div>
   <div id="s1-tag" class="mono">关卡设计工作台 · Level Design Deck</div>
@@ -339,7 +337,7 @@ body{
 <!-- ══════════════════════════════════════════════════════════
      S2 · 工作台概览 (8–22s)
 ════════════════════════════════════════════════════════════ -->
-<div id="s2" class="scene" data-start="9.07" data-track-index="0" style="z-index: 2">
+<div id="s2" class="scene">
   <div class="top-bar">
     <div class="ch-badge mono">01 · 工作台概览</div>
     <div class="scene-title">四栏式关卡设计工作台</div>
@@ -476,7 +474,7 @@ body{
 <!-- ══════════════════════════════════════════════════════════
      S3 · Spec 编辑 (22–37s)
 ════════════════════════════════════════════════════════════ -->
-<div id="s3" class="scene" style="z-index: 1">
+<div id="s3" class="scene">
   <div class="top-bar">
     <div class="ch-badge mono">02 · Spec 编辑</div>
     <div class="scene-title">Schema-driven 表单 · 字段即真源</div>
@@ -573,7 +571,7 @@ body{
 <!-- ══════════════════════════════════════════════════════════
      S4 · BubbleDiagram 交互 (37–51s)
 ════════════════════════════════════════════════════════════ -->
-<div id="s4" class="scene" style="z-index: 1">
+<div id="s4" class="scene">
   <div class="top-bar">
     <div class="ch-badge mono">03 · 气泡图交互</div>
     <div class="scene-title">BubbleDiagramView · 点击节点跳转表单</div>
@@ -654,7 +652,7 @@ body{
 <!-- ══════════════════════════════════════════════════════════
      S5 · 告警栏 (51–63s)
 ════════════════════════════════════════════════════════════ -->
-<div id="s5" class="scene" style="z-index: 1">
+<div id="s5" class="scene">
   <div class="top-bar">
     <div class="ch-badge mono">04 · 机械校验</div>
     <div class="scene-title">ERROR / REVIEW / MISSING · 告警即导航</div>
@@ -743,7 +741,7 @@ body{
 <!-- ══════════════════════════════════════════════════════════
      S6 · Chat 对话 (63–79s)
 ════════════════════════════════════════════════════════════ -->
-<div id="s6" class="scene" style="z-index: 1">
+<div id="s6" class="scene">
   <div class="top-bar">
     <div class="ch-badge mono">05 · cc 对话</div>
     <div class="scene-title">Claude Code 后台常驻 · 流式对话 + 附件</div>
@@ -816,7 +814,7 @@ body{
 <!-- ══════════════════════════════════════════════════════════
      S7 · 文档模板 & fill-gamedoc (79–97s)
 ════════════════════════════════════════════════════════════ -->
-<div id="s7" class="scene" style="z-index: 1">
+<div id="s7" class="scene">
   <div class="top-bar">
     <div class="ch-badge mono">06 · 设计文档生成</div>
     <div class="scene-title">/fill-gamedoc · cc 自动填充 gameplay / prop 文档</div>
@@ -914,7 +912,7 @@ body{
 <!-- ══════════════════════════════════════════════════════════
      S8 · 结尾 (97–108s)
 ════════════════════════════════════════════════════════════ -->
-<div id="s8" class="scene" style="z-index: 1">
+<div id="s8" class="scene">
   <div id="s8-glow" style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%,rgba(217,119,87,0.14) 0%,transparent 65%);"></div>
 
   <!-- 快速启动说明 -->
@@ -956,158 +954,130 @@ start-webapp.bat              :: 或双击此文件</pre>
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
 <script>
 window.__timelines = window.__timelines || {};
-const tl = gsap.timeline({ paused: true, timeScale: 1.5 });
+const tl = gsap.timeline({ paused: true });
 
-// ── S1: 标题 (0-8s) ──────────────────────────────────
-tl.from("#s1-tag",   { y: 16, opacity: 0, duration: 0.6, ease: "power3.out" }, 0.2);
-tl.from("#s1-name",  { y: 30, opacity: 0, duration: 0.7, ease: "power3.out" }, 0.5);
-tl.from("#s1-title", { y: 80, opacity: 0, duration: 0.9, ease: "expo.out" }, 0.8);
-tl.from("#s1-sub",   { y: 24, opacity: 0, duration: 0.6, ease: "power2.out" }, 1.4);
-tl.from("#s1-ver",   { y: 16, opacity: 0, duration: 0.5, ease: "power2.out" }, 1.7);
+const FADE = 0.5;
+const show = (sel, t) => tl.to(sel, { opacity: 1, duration: FADE, ease: "power2.out" }, t);
+const hide = (sel, t) => tl.to(sel, { opacity: 0, duration: FADE, ease: "power2.in" }, t);
 
-// S1→S2 crossfade at 7.2s
-tl.to("#s2", { opacity: 1, duration: 0.8, ease: "power2.inOut" }, 7.2);
+/* ── S1 · 标题 (0 – 5.6s) ─────────────────────────────── */
+show("#s1", 0);
+tl.from("#s1-tag",   { y: 14, opacity: 0, duration: 0.55, ease: "power3.out" }, 0.25);
+tl.from("#s1-name",  { y: 28, opacity: 0, duration: 0.6,  ease: "power3.out" }, 0.55);
+tl.from("#s1-title", { y: 70, opacity: 0, duration: 0.8,  ease: "expo.out"   }, 0.85);
+tl.from("#s1-sub",   { y: 22, opacity: 0, duration: 0.55, ease: "power2.out" }, 1.35);
+tl.from("#s1-ver",   { y: 14, opacity: 0, duration: 0.5,  ease: "power2.out" }, 1.65);
 
-// ── S2: 概览 (8-22s) ──────────────────────────────────
-tl.from("#s2 .ch-badge",   { x: -30, opacity: 0, duration: 0.5, ease: "power3.out" }, 8.2);
-tl.from("#s2 .scene-title",{ x: -20, opacity: 0, duration: 0.5, ease: "power2.out" }, 8.5);
-tl.from("#s2-browser",     { y: 40, opacity: 0, duration: 0.8, ease: "expo.out" }, 8.8);
-tl.from("#s2 .caption",    { y: 20, opacity: 0, duration: 0.5, ease: "power2.out" }, 9.4);
-tl.from("#s2-l1", { y: 20, opacity: 0, duration: 0.4, ease: "back.out(2)" }, 10.2);
-tl.from("#s2-l2", { y: 20, opacity: 0, duration: 0.4, ease: "back.out(2)" }, 10.5);
-tl.from("#s2-l3", { y: 20, opacity: 0, duration: 0.4, ease: "back.out(2)" }, 10.8);
-tl.from("#s2-l4", { y: 20, opacity: 0, duration: 0.4, ease: "back.out(2)" }, 11.1);
+/* ── S2 · 工作台概览 (5.2 – 12.6s) ────────────────────── */
+show("#s2", 5.2);   hide("#s1", 5.2);
+tl.from("#s2 .ch-badge",    { x: -28, opacity: 0, duration: 0.5,  ease: "power3.out" }, 5.6);
+tl.from("#s2 .scene-title", { x: -18, opacity: 0, duration: 0.5,  ease: "power2.out" }, 5.85);
+tl.from("#s2-browser",      { y: 36,  opacity: 0, duration: 0.7,  ease: "expo.out"   }, 6.1);
+tl.from("#s2 .caption",     { y: 18,  opacity: 0, duration: 0.5,  ease: "power2.out" }, 6.7);
+tl.from("#s2-l1", { y: 18, opacity: 0, duration: 0.4, ease: "back.out(2)" }, 7.3);
+tl.from("#s2-l2", { y: 18, opacity: 0, duration: 0.4, ease: "back.out(2)" }, 7.5);
+tl.from("#s2-l3", { y: 18, opacity: 0, duration: 0.4, ease: "back.out(2)" }, 7.7);
+tl.from("#s2-l4", { y: 18, opacity: 0, duration: 0.4, ease: "back.out(2)" }, 7.9);
 
-// S2→S3 crossfade at 21s
-tl.to("#s3", { opacity: 1, duration: 0.8, ease: "power2.inOut" }, 21.0);
+/* ── S3 · Spec 编辑 (12.2 – 20.6s) ────────────────────── */
+show("#s3", 12.2); hide("#s2", 12.2);
+tl.from("#s3 .ch-badge",    { x: -28, opacity: 0, duration: 0.5, ease: "power3.out" }, 12.6);
+tl.from("#s3 .scene-title", { x: -18, opacity: 0, duration: 0.5, ease: "power2.out" }, 12.85);
+tl.from("#s3-browser",      { y: 36,  opacity: 0, duration: 0.7, ease: "expo.out"   }, 13.1);
+tl.from("#s3 .caption",     { y: 18,  opacity: 0, duration: 0.5, ease: "power2.out" }, 13.7);
+// 光标进入 → 点告警 → mood 字段闪烁
+tl.to("#s3-cursor", { opacity: 1, duration: 0.25 }, 14.6);
+tl.to("#s3-cursor", { top: 440, left: 320, duration: 0.55, ease: "power2.inOut" }, 14.85);
+tl.fromTo("#s3-cursor", { scale: 1 },   { scale: 0.7, duration: 0.1, ease: "power3.in" }, 15.45);
+tl.fromTo("#s3-cursor", { scale: 0.7 }, { scale: 1,   duration: 0.2, ease: "back.out(3)" }, 15.55);
+tl.fromTo("#s3-mood",   { backgroundColor: "#fff" }, { backgroundColor: "#dbeafe", duration: 0.3 }, 15.7);
+tl.to("#s3-mood",       { backgroundColor: "#fff", duration: 0.7 }, 16.4);
+// 光标移到 mood 模拟填写
+tl.to("#s3-cursor", { top: 540, left: 860, duration: 0.5, ease: "power2.inOut" }, 16.6);
+tl.fromTo("#s3-dirty", { scale: 1 },   { scale: 1.12, duration: 0.18, ease: "back.out(2)" }, 17.5);
+tl.to("#s3-dirty",     { scale: 1,    duration: 0.18 }, 17.68);
+// 光标点保存
+tl.to("#s3-cursor", { top: 186, left: 1300, duration: 0.55, ease: "power2.inOut" }, 18.0);
+tl.to("#s3-cursor", { scale: 0.7, duration: 0.1 }, 18.6);
+tl.to("#s3-cursor", { scale: 1,   duration: 0.2, ease: "back.out(3)" }, 18.72);
+tl.to("#s3-dirty",  { opacity: 0, duration: 0.3 }, 18.95);
+tl.to("#s3-cursor", { opacity: 0, duration: 0.3 }, 19.7);
 
-// ── S3: Spec 编辑 (22-37s) ──────────────────────────────────
-tl.from("#s3 .ch-badge",   { x: -30, opacity: 0, duration: 0.5, ease: "power3.out" }, 22.0);
-tl.from("#s3 .scene-title",{ x: -20, opacity: 0, duration: 0.5, ease: "power2.out" }, 22.3);
-tl.from("#s3-browser",     { y: 40, opacity: 0, duration: 0.8, ease: "expo.out" }, 22.5);
-tl.from("#s3 .caption",    { y: 20, opacity: 0, duration: 0.5, ease: "power2.out" }, 23.2);
+/* ── S4 · BubbleDiagram (20.2 – 28.8s) ────────────────── */
+show("#s4", 20.2); hide("#s3", 20.2);
+tl.from("#s4 .ch-badge",    { x: -28, opacity: 0, duration: 0.5, ease: "power3.out" }, 20.6);
+tl.from("#s4 .scene-title", { x: -18, opacity: 0, duration: 0.5, ease: "power2.out" }, 20.85);
+tl.from("#s4-browser",      { y: 36,  opacity: 0, duration: 0.7, ease: "expo.out"   }, 21.1);
+tl.from("#s4 .caption",     { y: 18,  opacity: 0, duration: 0.5, ease: "power2.out" }, 21.7);
+// 光标移动 patrol → vault 点击高亮
+tl.to("#s4-cursor", { opacity: 1, duration: 0.25 }, 22.4);
+tl.to("#s4-cursor", { top: 327, left: 330, duration: 0.45, ease: "power2.out"   }, 22.6);
+tl.to("#s4-cursor", { top: 327, left: 412, duration: 0.55, ease: "power2.inOut" }, 23.15);
+tl.fromTo("#s4-cursor", { scale: 1 },   { scale: 0.7, duration: 0.1 }, 23.75);
+tl.fromTo("#s4-cursor", { scale: 0.7 }, { scale: 1,   duration: 0.2, ease: "back.out(3)" }, 23.85);
+tl.to("#s4-n-vault",   { borderColor: "#1a73e8", backgroundColor: "#dbeafe", boxShadow: "0 0 0 3px rgba(26,115,232,0.3)", duration: 0.3 }, 24.0);
+tl.to("#s4-form-entry",{ borderColor: "#1a73e8", duration: 0.3 }, 24.15);
+tl.fromTo("#s4-notes", { backgroundColor: "#fff" }, { backgroundColor: "#dbeafe", duration: 0.35 }, 24.4);
+tl.to("#s4-notes",     { backgroundColor: "#fff", duration: 0.7 }, 25.3);
+// 光标移到 exit
+tl.to("#s4-cursor",    { top: 327, left: 606, duration: 0.65, ease: "power2.inOut" }, 26.0);
+tl.fromTo("#s4-cursor",{ scale: 1 },   { scale: 0.7, duration: 0.1 }, 26.75);
+tl.fromTo("#s4-cursor",{ scale: 0.7 }, { scale: 1,   duration: 0.2, ease: "back.out(3)" }, 26.85);
+tl.to("#s4-n-vault",   { borderColor: "#94a3b8", backgroundColor: "#f8fafc", boxShadow: "none", duration: 0.2 }, 26.95);
+tl.to("#s4-n-exit",    { borderColor: "#16a34a", backgroundColor: "#bbf7d0", boxShadow: "0 0 0 3px rgba(22,163,74,0.25)", duration: 0.3 }, 27.15);
+tl.to("#s4-n-exit",    { backgroundColor: "#dcfce7", boxShadow: "none", duration: 0.4 }, 28.0);
+tl.to("#s4-cursor",    { opacity: 0, duration: 0.3 }, 28.5);
 
-// 光标出现 → 点击告警 → mood 字段高亮
-tl.to("#s3-cursor", { opacity: 1, duration: 0.3 }, 25.0);
-tl.to("#s3-cursor", { top: 440, left: 320, duration: 0.6, ease: "power2.inOut" }, 25.3);
-// 点击效果
-tl.fromTo("#s3-cursor", { scale: 1 }, { scale: 0.7, duration: 0.1, ease: "power3.in" }, 26.0);
-tl.fromTo("#s3-cursor", { scale: 0.7 }, { scale: 1, duration: 0.2, ease: "back.out(3)" }, 26.1);
-// mood field 高亮
-tl.fromTo("#s3-mood", { backgroundColor: "#fff" }, { backgroundColor: "#dbeafe", duration: 0.3 }, 26.3);
-tl.to("#s3-mood", { backgroundColor: "#fff", duration: 0.8, delay: 0.5 }, 26.6);
-// 光标移到 mood 字段并模拟填写
-tl.to("#s3-cursor", { top: 540, left: 860, duration: 0.5, ease: "power2.inOut" }, 27.5);
-// dirty badge 出现
-tl.fromTo("#s3-dirty", { scale: 1 }, { scale: 1.1, duration: 0.2, ease: "back.out(2)" }, 30.5);
-tl.to("#s3-dirty", { scale: 1, duration: 0.2 }, 30.7);
-// 光标移到保存按钮
-tl.to("#s3-cursor", { top: 186, left: 1300, duration: 0.6, ease: "power2.inOut" }, 31.5);
-tl.to("#s3-cursor", { scale: 0.7, duration: 0.1 }, 32.3);
-tl.to("#s3-cursor", { scale: 1, duration: 0.2, ease: "back.out(3)" }, 32.4);
-// dirty badge 消失
-tl.to("#s3-dirty", { opacity: 0, duration: 0.3 }, 32.6);
-tl.to("#s3-cursor", { opacity: 0, duration: 0.3 }, 35.0);
+/* ── S5 · 告警 (28.4 – 35.6s) ─────────────────────────── */
+show("#s5", 28.4); hide("#s4", 28.4);
+tl.from("#s5 .ch-badge",    { x: -28, opacity: 0, duration: 0.5, ease: "power3.out" }, 28.8);
+tl.from("#s5 .scene-title", { x: -18, opacity: 0, duration: 0.5, ease: "power2.out" }, 29.05);
+tl.from("#s5-browser",      { y: 36,  opacity: 0, duration: 0.7, ease: "expo.out"   }, 29.3);
+tl.from("#s5 .caption",     { y: 18,  opacity: 0, duration: 0.5, ease: "power2.out" }, 29.9);
+tl.from("#s5-a1", { x: -18, opacity: 0, duration: 0.4, ease: "power2.out" }, 30.4);
+// 光标点告警 → mood 字段被定位
+tl.to("#s5-cursor", { opacity: 1, duration: 0.25 }, 31.4);
+tl.to("#s5-cursor", { top: 440, left: 380, duration: 0.55, ease: "power2.inOut" }, 31.65);
+tl.to("#s5-cursor", { scale: 0.7, duration: 0.1 }, 32.25);
+tl.to("#s5-cursor", { scale: 1,   duration: 0.2, ease: "back.out(3)" }, 32.35);
+tl.fromTo("#s5-mood-field", { borderColor: "#c62828" }, { borderColor: "#1a73e8", backgroundColor: "#dbeafe", duration: 0.35 }, 32.5);
+tl.to("#s5-mood-field",    { borderColor: "#c62828", backgroundColor: "#fef2f2", duration: 0.55 }, 34.4);
+tl.to("#s5-cursor",        { opacity: 0, duration: 0.3 }, 35.0);
 
-// S3→S4 crossfade at 36s
-tl.to("#s4", { opacity: 1, duration: 0.8, ease: "power2.inOut" }, 36.0);
+/* ── S6 · Chat (35.2 – 43.0s) ─────────────────────────── */
+show("#s6", 35.2); hide("#s5", 35.2);
+tl.from("#s6 .ch-badge",    { x: -28, opacity: 0, duration: 0.5, ease: "power3.out" }, 35.6);
+tl.from("#s6 .scene-title", { x: -18, opacity: 0, duration: 0.5, ease: "power2.out" }, 35.85);
+tl.from("#s6-browser",      { y: 36,  opacity: 0, duration: 0.7, ease: "expo.out"   }, 36.1);
+tl.from("#s6 .caption",     { y: 18,  opacity: 0, duration: 0.5, ease: "power2.out" }, 36.7);
+// 输入光标 blink （5.5s 内每 0.5s 翻一次 → 10 次 toggle = repeat 9 + yoyo）
+tl.to("#s6-cursor-blink",   { opacity: 0, duration: 0.5, repeat: 9, yoyo: true }, 37.2);
 
-// ── S4: BubbleDiagram (37-51s) ──────────────────────────────────
-tl.from("#s4 .ch-badge",   { x: -30, opacity: 0, duration: 0.5, ease: "power3.out" }, 37.0);
-tl.from("#s4 .scene-title",{ x: -20, opacity: 0, duration: 0.5, ease: "power2.out" }, 37.3);
-tl.from("#s4-browser",     { y: 40, opacity: 0, duration: 0.8, ease: "expo.out" }, 37.5);
-tl.from("#s4 .caption",    { y: 20, opacity: 0, duration: 0.5, ease: "power2.out" }, 38.2);
+/* ── S7 · 文档模板 (42.6 – 52.2s) ─────────────────────── */
+show("#s7", 42.6); hide("#s6", 42.6);
+tl.from("#s7 .ch-badge",    { x: -28, opacity: 0, duration: 0.5, ease: "power3.out" }, 43.0);
+tl.from("#s7 .scene-title", { x: -18, opacity: 0, duration: 0.5, ease: "power2.out" }, 43.25);
+tl.from("#s7-browser",      { y: 36,  opacity: 0, duration: 0.7, ease: "expo.out"   }, 43.5);
+tl.from("#s7 .caption",     { y: 18,  opacity: 0, duration: 0.5, ease: "power2.out" }, 44.1);
+tl.from("#s7-hint",         { y: 18,  opacity: 0, duration: 0.6, ease: "power3.out" }, 44.7);
+tl.from("#s7-input",        { opacity: 0, duration: 0.4, ease: "power2.out" }, 45.9);
+tl.to("#s7-tool1",          { opacity: 1, duration: 0.4, ease: "power2.out" }, 47.4);
+tl.to("#s7-tool2",          { opacity: 1, duration: 0.4, ease: "power2.out" }, 47.9);
+tl.to("#s7-result",         { opacity: 1, duration: 0.6, ease: "power3.out" }, 48.7);
+tl.from("#s7-tmpl-title",   { opacity: 0.3, duration: 0.5 }, 49.2);
 
-// 光标出现在 patrol 节点附近，然后移到 vault 点击
-tl.to("#s4-cursor", { opacity: 1, duration: 0.3 }, 40.0);
-tl.to("#s4-cursor", { top: 327, left: 330, duration: 0.5, ease: "power2.out" }, 40.2);
-tl.to("#s4-cursor", { top: 327, left: 412, duration: 0.6, ease: "power2.inOut" }, 40.9);
-tl.fromTo("#s4-cursor", { scale: 1 }, { scale: 0.7, duration: 0.1 }, 41.6);
-tl.fromTo("#s4-cursor", { scale: 0.7 }, { scale: 1, duration: 0.2, ease: "back.out(3)" }, 41.72);
-// vault 节点高亮（蓝色保留 webapp 配色）
-tl.to("#s4-n-vault", { borderColor: "#1a73e8", backgroundColor: "#dbeafe", boxShadow: "0 0 0 3px rgba(26,115,232,0.3)", duration: 0.3 }, 41.9);
-// 表单对应 nodes[1]·金库 高亮（当前 form 显示的是 entry，跳到第二个 fieldset）
-tl.to("#s4-form-entry", { borderColor: "#1a73e8", duration: 0.3 }, 42.1);
-tl.fromTo("#s4-notes", { backgroundColor: "#fff" }, { backgroundColor: "#dbeafe", duration: 0.4 }, 42.5);
-tl.to("#s4-notes", { backgroundColor: "#fff", duration: 0.8 }, 43.5);
-// 光标移到 exit 节点（最后一个）
-tl.to("#s4-cursor", { top: 327, left: 606, duration: 0.7, ease: "power2.inOut" }, 44.8);
-tl.fromTo("#s4-cursor", { scale: 1 }, { scale: 0.7, duration: 0.1 }, 45.6);
-tl.fromTo("#s4-cursor", { scale: 0.7 }, { scale: 1, duration: 0.2, ease: "back.out(3)" }, 45.72);
-// vault 恢复，exit 高亮
-tl.to("#s4-n-vault", { borderColor: "#94a3b8", backgroundColor: "#f8fafc", boxShadow: "none", duration: 0.2 }, 45.8);
-tl.to("#s4-n-exit", { borderColor: "#16a34a", backgroundColor: "#bbf7d0", boxShadow: "0 0 0 3px rgba(22,163,74,0.25)", duration: 0.3 }, 46.0);
-tl.to("#s4-n-exit", { borderColor: "#16a34a", backgroundColor: "#dcfce7", boxShadow: "none", duration: 0.4 }, 47.5);
-tl.to("#s4-cursor", { opacity: 0, duration: 0.3 }, 49.0);
-
-// S4→S5 crossfade at 50s
-tl.to("#s5", { opacity: 1, duration: 0.8, ease: "power2.inOut" }, 50.0);
-
-// ── S5: 告警 (51-63s) ──────────────────────────────────
-tl.from("#s5 .ch-badge",   { x: -30, opacity: 0, duration: 0.5, ease: "power3.out" }, 51.0);
-tl.from("#s5 .scene-title",{ x: -20, opacity: 0, duration: 0.5, ease: "power2.out" }, 51.3);
-tl.from("#s5-browser",     { y: 40, opacity: 0, duration: 0.8, ease: "expo.out" }, 51.5);
-tl.from("#s5 .caption",    { y: 20, opacity: 0, duration: 0.5, ease: "power2.out" }, 52.2);
-// 告警条目逐条出现
-tl.from("#s5-a1", { x: -20, opacity: 0, duration: 0.4, ease: "power2.out" }, 53.0);
-
-// 光标点击告警
-tl.to("#s5-cursor", { opacity: 1, duration: 0.3 }, 54.5);
-tl.to("#s5-cursor", { top: 440, left: 380, duration: 0.6, ease: "power2.inOut" }, 54.8);
-tl.to("#s5-cursor", { scale: 0.7, duration: 0.1 }, 55.6);
-tl.to("#s5-cursor", { scale: 1, duration: 0.2, ease: "back.out(3)" }, 55.7);
-// mood 字段跳转高亮
-tl.fromTo("#s5-mood-field", { borderColor: "#c62828" }, { borderColor: "#1a73e8", backgroundColor: "#dbeafe", duration: 0.4 }, 55.9);
-tl.to("#s5-mood-field", { borderColor: "#c62828", backgroundColor: "#fef2f2", duration: 0.6, delay: 1.5 }, 56.3);
-tl.to("#s5-cursor", { opacity: 0, duration: 0.3 }, 61.0);
-
-// S5→S6 crossfade at 62s
-tl.to("#s6", { opacity: 1, duration: 0.8, ease: "power2.inOut" }, 62.0);
-
-// ── S6: Chat (63-79s) ──────────────────────────────────
-tl.from("#s6 .ch-badge",   { x: -30, opacity: 0, duration: 0.5, ease: "power3.out" }, 63.0);
-tl.from("#s6 .scene-title",{ x: -20, opacity: 0, duration: 0.5, ease: "power2.out" }, 63.3);
-tl.from("#s6-browser",     { y: 40, opacity: 0, duration: 0.8, ease: "expo.out" }, 63.5);
-tl.from("#s6 .caption",    { y: 20, opacity: 0, duration: 0.5, ease: "power2.out" }, 64.2);
-// 光标 blink
-tl.to("#s6-cursor-blink", { opacity: 0, duration: 0.5, repeat: Math.floor(14 / 1) - 1, yoyo: true }, 65.0);
-
-// S6→S7 crossfade at 78s
-tl.to("#s7", { opacity: 1, duration: 0.8, ease: "power2.inOut" }, 78.0);
-
-// ── S7: 文档模板 (79-97s) ──────────────────────────────────
-tl.from("#s7 .ch-badge",   { x: -30, opacity: 0, duration: 0.5, ease: "power3.out" }, 79.0);
-tl.from("#s7 .scene-title",{ x: -20, opacity: 0, duration: 0.5, ease: "power2.out" }, 79.3);
-tl.from("#s7-browser",     { y: 40, opacity: 0, duration: 0.8, ease: "expo.out" }, 79.5);
-tl.from("#s7 .caption",    { y: 20, opacity: 0, duration: 0.5, ease: "power2.out" }, 80.2);
-// hint 消息淡入
-tl.from("#s7-hint", { y: 20, opacity: 0, duration: 0.6, ease: "power3.out" }, 81.0);
-// 输入框 prefill 打字效果（通过 opacity 模拟）
-tl.from("#s7-input", { opacity: 0, duration: 0.4, ease: "power2.out" }, 82.5);
-// tool use 消息
-tl.to("#s7-tool1", { opacity: 1, duration: 0.4, ease: "power2.out" }, 84.5);
-tl.to("#s7-tool2", { opacity: 1, duration: 0.4, ease: "power2.out" }, 85.2);
-// 结果消息
-tl.to("#s7-result", { opacity: 1, duration: 0.6, ease: "power3.out" }, 86.5);
-// 模板标题更新（已填写状态）
-tl.from("#s7-tmpl-title", { opacity: 0.3, duration: 0.5 }, 87.0);
-
-// S7→S8 crossfade at 96s
-tl.to("#s8", { opacity: 1, duration: 1.2, ease: "power2.inOut" }, 96.0);
-
-// ── S8: 快速启动 + 结尾 (97-122s) ──────────────────────────────────
-// 97-110s: quickstart 卡片
-tl.from("#s8-qs-head",   { y: 20, opacity: 0, duration: 0.6, ease: "power3.out" }, 97.3);
-tl.from("#s8-qs-mac",    { x: -40, opacity: 0, duration: 0.7, ease: "expo.out" }, 97.8);
-tl.from("#s8-qs-win",    { x: 40, opacity: 0, duration: 0.7, ease: "expo.out" }, 98.1);
-tl.from("#s8-qs-note",   { y: 16, opacity: 0, duration: 0.5, ease: "power2.out" }, 98.8);
-tl.from("#s8-sep",       { scaleX: 0, opacity: 0, duration: 0.6, ease: "power2.out", transformOrigin: "center" }, 99.2);
-// 110s: logo 区域滑入
-tl.from("#s8-logo",      { y: 30, opacity: 0, duration: 0.8, ease: "expo.out" }, 109.5);
-tl.from("#s8-tagline",   { y: 20, opacity: 0, duration: 0.6, ease: "power3.out" }, 110.1);
-tl.from("#s8-url",       { y: 16, opacity: 0, duration: 0.5, ease: "power2.out" }, 110.5);
-// 最终淡出
-tl.to("#s8", { opacity: 0, duration: 1.8, ease: "power2.in" }, 120.0);
+/* ── S8 · Quickstart + 落版 (51.8 – 62s) ──────────────── */
+show("#s8", 51.8); hide("#s7", 51.8);
+tl.from("#s8-qs-head", { y: 18,  opacity: 0, duration: 0.55, ease: "power3.out" }, 52.2);
+tl.from("#s8-qs-mac",  { x: -36, opacity: 0, duration: 0.65, ease: "expo.out"   }, 52.55);
+tl.from("#s8-qs-win",  { x: 36,  opacity: 0, duration: 0.65, ease: "expo.out"   }, 52.8);
+tl.from("#s8-qs-note", { y: 14,  opacity: 0, duration: 0.45, ease: "power2.out" }, 53.4);
+tl.from("#s8-sep",     { scaleX: 0, opacity: 0, duration: 0.55, ease: "power2.out", transformOrigin: "center" }, 53.7);
+tl.from("#s8-logo",    { y: 26, opacity: 0, duration: 0.75, ease: "expo.out"   }, 55.4);
+tl.from("#s8-tagline", { y: 18, opacity: 0, duration: 0.55, ease: "power3.out" }, 55.95);
+tl.from("#s8-url",     { y: 14, opacity: 0, duration: 0.45, ease: "power2.out" }, 56.3);
+// 最终柔和淡出
+hide("#s8", 61.2);
 
 window.__timelines["webapp-tutorial"] = tl;
 </script>
