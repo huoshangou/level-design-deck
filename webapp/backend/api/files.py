@@ -60,9 +60,11 @@ def _convert(src: Path, dst_dir: Path, suffix: str) -> Path | None:
     if not script.exists():
         return None
     out_path = dst_dir / (src.stem + ".extracted.txt")
+    # python3 on macOS/Linux, python on Windows
+    python_cmd = "python3" if shutil.which("python3") else "python"
     try:
         subprocess.run(
-            ["python3", str(script), str(src), str(out_path)],
+            [python_cmd, str(script), str(src), str(out_path)],
             check=True, capture_output=True, timeout=60,
         )
     except (subprocess.CalledProcessError, subprocess.TimeoutExpired):

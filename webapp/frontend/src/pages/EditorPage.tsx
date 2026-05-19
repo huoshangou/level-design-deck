@@ -49,7 +49,7 @@ function HDivider({ onDrag }: { onDrag: (dx: number) => void }) {
 }
 
 export default function EditorPage() {
-  const { currentSpecId, localContent, updateField, toast, clearToast, selectSpec } = useEditorStore();
+  const { currentSpecId, localContent, updateField, toast, clearToast, selectSpec, docTemplateUrl, docTemplateLabel } = useEditorStore();
   const { data: list } = useSpecList();
   useSpec(currentSpecId);
   const queryClient = useQueryClient();
@@ -150,7 +150,11 @@ export default function EditorPage() {
             flexDirection: "column",
           }}
         >
-          <h2 style={SECTION_TITLE}>预览 · /outputs/{currentSpecId ?? "—"}.html</h2>
+          <h2 style={SECTION_TITLE}>
+            {docTemplateUrl
+              ? `📄 ${docTemplateLabel ?? "文档模板"}`
+              : `预览 · /outputs/${currentSpecId ?? "—"}.html`}
+          </h2>
           <div style={{ flex: 1, overflow: "hidden" }}>
             <PreviewPane specId={currentSpecId} refreshKey={previewKey} />
           </div>

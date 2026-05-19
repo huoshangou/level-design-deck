@@ -3,7 +3,7 @@
 > M4 阶段（B 阶段，分发期）的产物。在原 `editor.html` 单文件之上**新增一层** Web 应用 + 本地 daemon，
 > 让 cc 在后台跑、用户在浏览器选模板 + 对话生成 spec。未来由工具组接管后端 / 局域网部署。
 
-**当前进度（2026-05-19）：** Phase 0–4 全部完成（含 BubbleDiagramView / SpatialLayoutView / RemoteAgentRunner stub / HANDOFF.md）
+**当前进度（2026-05-19）：** Phase 0–4 全部完成 + 文档模板工作流（gameplay/prop fill-gamedoc）
 
 ---
 
@@ -96,14 +96,13 @@ Vite dev server (:5173)  ──proxy──►  FastAPI (:8766)
                               cwd=PROJECT_ROOT
                               --resume <session_id>
                               --add-dir ~/Desktop
-                              --allowed-tools Read
+                              --allowed-tools Read Write(specs/*) Write(docs/*) Bash(python3 tools/*)
 ```
 
 - **AgentRunner / SpecStore 抽象** — Phase 4 工具组接管时只换实现，业务层不动
 - **subprocess + claude CLI**（不用 claude-agent-sdk 因协议不兼容）
 - **stateful resume**：cc 给的 session_id 存 server 内存，下次 `--resume` 复用上下文
-
-总览 975 行 Python backend（17 文件，每文件 < 110 行）+ 1349 行 TypeScript frontend（20+ 文件）。
+- **文档模板**：`templates/html/` 存 gameplay/prop 可编辑 HTML 模板，cc 生成的文档存 `docs/`，前端自动检测并在预览栏显示
 
 ---
 

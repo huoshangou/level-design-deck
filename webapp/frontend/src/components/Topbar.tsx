@@ -141,6 +141,7 @@ const KIND_LABEL: Record<string, string> = {
 function DocTemplatesBtn() {
   const [open, setOpen] = useState(false);
   const btnRef = useRef<HTMLButtonElement>(null);
+  const { openDocTemplate, docTemplateUrl } = useEditorStore();
 
   const { data: templates = [] } = useQuery<DocTemplateInfo[]>({
     queryKey: ["doc-templates"],
@@ -150,6 +151,11 @@ function DocTemplatesBtn() {
 
   if (templates.length === 0) return null;
 
+  function handleSelect(t: DocTemplateInfo) {
+    openDocTemplate(t.url, `${KIND_LABEL[t.kind] ?? t.kind} 模板 v${t.version}`);
+    setOpen(false);
+  }
+
   return (
     <div style={{ position: "relative" }}>
       <button
@@ -158,18 +164,17 @@ function DocTemplatesBtn() {
         style={{
           padding: "4px 10px",
           fontSize: 12,
-          border: "1px solid var(--border)",
+          border: `1px solid ${docTemplateUrl ? "var(--accent)" : "var(--border)"}`,
           borderRadius: 3,
-          background: "var(--panel)",
-          color: "var(--text)",
+          background: docTemplateUrl ? "var(--accent-bg)" : "var(--panel)",
+          color: docTemplateUrl ? "var(--accent)" : "var(--text)",
           cursor: "pointer",
         }}
       >
-        📄 文档模板
+        📄 {docTemplateUrl ? "文档模板 ●" : "文档模板"}
       </button>
       {open && (
         <>
-          {/* 点击外部关闭 */}
           <div
             style={{ position: "fixed", inset: 0, zIndex: 19 }}
             onClick={() => setOpen(false)}
@@ -189,15 +194,12 @@ function DocTemplatesBtn() {
             }}
           >
             <div style={{ padding: "4px 12px 6px", fontSize: 10, color: "var(--text-faint)", letterSpacing: 1 }}>
-              新标签打开可编辑模板
+              在预览栏打开可编辑模板
             </div>
             {templates.map((t) => (
-              <a
+              <div
                 key={t.filename}
-                href={t.url}
-                target="_blank"
-                rel="noreferrer"
-                onClick={() => setOpen(false)}
+                onClick={() => handleSelect(t)}
                 style={{
                   display: "flex",
                   alignItems: "center",
@@ -205,7 +207,6 @@ function DocTemplatesBtn() {
                   padding: "6px 12px",
                   fontSize: 12,
                   color: "var(--text)",
-                  textDecoration: "none",
                   cursor: "pointer",
                 }}
                 onMouseEnter={(e) => (e.currentTarget.style.background = "var(--accent-bg)")}
@@ -224,7 +225,7 @@ function DocTemplatesBtn() {
                 </span>
                 <span style={{ flex: 1 }}>{t.filename.replace(/_template_v[\d.]+\.html$/, "")}</span>
                 <span style={{ fontSize: 10, color: "var(--text-faint)" }}>v{t.version}</span>
-              </a>
+              </div>
             ))}
           </div>
         </>
