@@ -9,6 +9,9 @@ type EditorState = {
   localContent: Record<string, unknown> | null;
   dirty: boolean;
   toast: { kind: "ok" | "err"; msg: string } | null;
+  // 文档模板：设置后预览栏显示该模板，null 时显示 spec 渲染输出
+  docTemplateUrl: string | null;
+  docTemplateLabel: string | null;
 
   selectSpec: (id: string | null) => void;
   loadContent: (content: Record<string, unknown>) => void;
@@ -16,6 +19,8 @@ type EditorState = {
   markClean: () => void;
   showToast: (kind: "ok" | "err", msg: string) => void;
   clearToast: () => void;
+  openDocTemplate: (url: string, label: string) => void;
+  closeDocTemplate: () => void;
 };
 
 export const useEditorStore = create<EditorState>((set, get) => ({
@@ -23,6 +28,8 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   localContent: null,
   dirty: false,
   toast: null,
+  docTemplateUrl: null,
+  docTemplateLabel: null,
 
   selectSpec: (id) => set({ currentSpecId: id, localContent: null, dirty: false }),
   loadContent: (content) => set({ localContent: content, dirty: false }),
@@ -38,4 +45,6 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   markClean: () => set({ dirty: false }),
   showToast: (kind, msg) => set({ toast: { kind, msg } }),
   clearToast: () => set({ toast: null }),
+  openDocTemplate: (url, label) => set({ docTemplateUrl: url, docTemplateLabel: label }),
+  closeDocTemplate: () => set({ docTemplateUrl: null, docTemplateLabel: null }),
 }));

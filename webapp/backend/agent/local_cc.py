@@ -28,7 +28,7 @@ DEFAULT_MODEL = "claude-haiku-4-5"
 # - Bash(python3 tools/*)：允许跑 tools/ 下的生成脚本
 # - Bash(ls *)：允许列目录
 # 若环境变量 DECK_WRITE_TOOLS=0 则退回 Read-only（Phase 2 行为）
-_WRITE_ALLOWED_TOOLS = ["Read", "Write(specs/*)", "Bash(python3 tools/*)", "Bash(ls *)"]
+_WRITE_ALLOWED_TOOLS = ["Read", "Write(specs/*)", "Write(docs/*)", "Bash(python3 tools/*)", "Bash(ls *)"]
 _READ_ONLY_TOOLS = ["Read"]
 
 

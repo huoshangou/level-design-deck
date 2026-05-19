@@ -3,6 +3,7 @@
 
 import { create } from "zustand";
 import { api } from "../api/client";
+import { useEditorStore } from "./editorStore";
 import type { AttachedFile, WsEnvelope } from "../api/chat-types";
 
 export type ChatMessage =
@@ -22,6 +23,7 @@ type ChatState = {
   isStreaming: boolean;
   attachedFiles: AttachedFile[];
   uploadingFiles: string[];
+  _lastSendTs: number;
 
   initSession: () => Promise<void>;
   addUserMessage: (text: string) => void;
@@ -42,6 +44,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   isStreaming: false,
   attachedFiles: [],
   uploadingFiles: [],
+  _lastSendTs: 0,
 
   initSession: async () => {
     const record = await api.createSession();
@@ -57,6 +60,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   addUserMessage: (text) => {
     set((s) => ({
       messages: [...s.messages, { kind: "user", text, ts: Date.now() }],
+      _lastSendTs: Date.now() / 1000, // Unix 秒，和 mtime 对齐
     }));
   },
 
@@ -81,6 +85,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
       case "cc_message_complete":
         get().markStreamComplete();
+        // cc 完成后检测 docs/ 是否有新生成的文档
+        void checkNewDoc(get()._lastSendTs);
         break;
 
       case "agent_error":
@@ -153,3 +159,24 @@ export const useChatStore = create<ChatState>((set, get) => ({
     set({ attachedFiles: files });
   },
 }));
+
+// cc 完成后检测 docs/ 是否有比本次对话更新的文档，有则自动在预览栏显示
+async function checkNewDoc(sendTs: number) {
+  try {
+    const res = await fetch("/api/docs");
+    if (!res.ok) return;
+    const list = await res.json() as Array<{ filename: string; url: string; kind: string; mtime: number }>;
+    // 找比发送消息更新的文件（mtime > sendTs）
+    const fresh = list.filter((d) => d.mtime > sendTs);
+    if (fresh.length === 0) return;
+    // 取最新的那个
+    const newest = fresh[0];
+    const kindLabel = newest.kind === "gameplay" ? "玩法设计文档" : newest.kind === "prop" ? "物件需求文档" : "设计文档";
+    useEditorStore.getState().openDocTemplate(
+      newest.url,
+      `📄 ${kindLabel} · ${newest.filename}`,
+    );
+  } catch {
+    // 静默失败，不影响 chat
+  }
+}

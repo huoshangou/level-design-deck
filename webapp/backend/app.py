@@ -10,7 +10,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from backend.api import check, chat, doc_templates, files, modules, render, sessions, specs
+from backend.api import check, chat, doc_templates, docs, files, modules, render, sessions, specs
 from backend.deps import get_settings
 
 
@@ -44,6 +44,7 @@ def create_app() -> FastAPI:
     app.include_router(chat.router)
     app.include_router(files.router)
     app.include_router(doc_templates.router)
+    app.include_router(docs.router)
 
     @app.get("/api/health")
     def health():
@@ -76,6 +77,11 @@ def create_app() -> FastAPI:
     html_tmpl_dir = s.project_root / "templates" / "html"
     if html_tmpl_dir.exists():
         app.mount("/templates/html", StaticFiles(directory=str(html_tmpl_dir)), name="html-templates")
+
+    # 已生成的设计文档（cc fill-gamedoc 产出，不进 git）
+    docs_dir = s.project_root / "docs"
+    docs_dir.mkdir(exist_ok=True)
+    app.mount("/docs", StaticFiles(directory=str(docs_dir)), name="docs")
 
     # frontend build 产物（Phase 1 后期写完前端会有；现在缺也无所谓）
     dist_dir = s.project_root / "webapp" / "frontend" / "dist"
