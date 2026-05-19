@@ -28,3 +28,6 @@ __pycache__/
 node_modules/
 .env
 .env.*
+
+# 设计文档实例（富文本+图片，本地/后端管理）
+docs/

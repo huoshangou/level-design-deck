@@ -10,7 +10,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from backend.api import check, chat, files, modules, render, sessions, specs
+from backend.api import check, chat, doc_templates, files, modules, render, sessions, specs
 from backend.deps import get_settings
 
 
@@ -43,6 +43,7 @@ def create_app() -> FastAPI:
     app.include_router(sessions.router)
     app.include_router(chat.router)
     app.include_router(files.router)
+    app.include_router(doc_templates.router)
 
     @app.get("/api/health")
     def health():
@@ -70,6 +71,11 @@ def create_app() -> FastAPI:
     lc_dir = s.project_root / "tools" / "levelcraft"
     if lc_dir.exists():
         app.mount("/tools/levelcraft", StaticFiles(directory=str(lc_dir), html=True), name="levelcraft")
+
+    # HTML 文档模板（gameplay/prop 等可编辑富文本模板）
+    html_tmpl_dir = s.project_root / "templates" / "html"
+    if html_tmpl_dir.exists():
+        app.mount("/templates/html", StaticFiles(directory=str(html_tmpl_dir)), name="html-templates")
 
     # frontend build 产物（Phase 1 后期写完前端会有；现在缺也无所谓）
     dist_dir = s.project_root / "webapp" / "frontend" / "dist"

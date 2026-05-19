@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useRef, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../api/client";
 import { useEditorStore } from "../stores/editorStore";
 import { useSpecList } from "../hooks/useSpec";
@@ -117,8 +117,119 @@ export default function Topbar({ onPreviewRefresh, chatOpen, onToggleChat }: Pro
       <Btn onClick={onRenderLevel} disabled={!levelId || !!busy}>📚 完整文档</Btn>
       <Btn onClick={onDeck} disabled={!levelId || !!busy}>🎞 Deck</Btn>
       {busy && <span style={{ fontSize: 11, color: "var(--text-faint)" }}>… {busy}</span>}
+      <DocTemplatesBtn />
       <Btn onClick={onToggleChat}>{chatOpen ? "💬▶" : "◀💬"}</Btn>
     </header>
+  );
+}
+
+// ── 文档模板下拉 ─────────────────────────────────────────────────────────────
+
+interface DocTemplateInfo {
+  filename: string;
+  kind: string;
+  version: string;
+  url: string;
+  has_fields_json: boolean;
+}
+
+const KIND_LABEL: Record<string, string> = {
+  gameplay: "玩法设计",
+  prop: "物件需求",
+};
+
+function DocTemplatesBtn() {
+  const [open, setOpen] = useState(false);
+  const btnRef = useRef<HTMLButtonElement>(null);
+
+  const { data: templates = [] } = useQuery<DocTemplateInfo[]>({
+    queryKey: ["doc-templates"],
+    queryFn: () => fetch("/api/doc-templates").then((r) => r.json()),
+    staleTime: 60_000,
+  });
+
+  if (templates.length === 0) return null;
+
+  return (
+    <div style={{ position: "relative" }}>
+      <button
+        ref={btnRef}
+        onClick={() => setOpen((v) => !v)}
+        style={{
+          padding: "4px 10px",
+          fontSize: 12,
+          border: "1px solid var(--border)",
+          borderRadius: 3,
+          background: "var(--panel)",
+          color: "var(--text)",
+          cursor: "pointer",
+        }}
+      >
+        📄 文档模板
+      </button>
+      {open && (
+        <>
+          {/* 点击外部关闭 */}
+          <div
+            style={{ position: "fixed", inset: 0, zIndex: 19 }}
+            onClick={() => setOpen(false)}
+          />
+          <div
+            style={{
+              position: "absolute",
+              top: "calc(100% + 4px)",
+              right: 0,
+              zIndex: 20,
+              background: "var(--panel)",
+              border: "1px solid var(--border)",
+              borderRadius: 4,
+              boxShadow: "0 4px 12px rgba(0,0,0,0.12)",
+              minWidth: 220,
+              padding: "4px 0",
+            }}
+          >
+            <div style={{ padding: "4px 12px 6px", fontSize: 10, color: "var(--text-faint)", letterSpacing: 1 }}>
+              新标签打开可编辑模板
+            </div>
+            {templates.map((t) => (
+              <a
+                key={t.filename}
+                href={t.url}
+                target="_blank"
+                rel="noreferrer"
+                onClick={() => setOpen(false)}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  padding: "6px 12px",
+                  fontSize: 12,
+                  color: "var(--text)",
+                  textDecoration: "none",
+                  cursor: "pointer",
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = "var(--accent-bg)")}
+                onMouseLeave={(e) => (e.currentTarget.style.background = "")}
+              >
+                <span style={{
+                  fontSize: 10,
+                  padding: "1px 5px",
+                  borderRadius: 2,
+                  background: "var(--accent-bg)",
+                  color: "var(--accent)",
+                  fontWeight: 600,
+                  flexShrink: 0,
+                }}>
+                  {KIND_LABEL[t.kind] ?? t.kind}
+                </span>
+                <span style={{ flex: 1 }}>{t.filename.replace(/_template_v[\d.]+\.html$/, "")}</span>
+                <span style={{ fontSize: 10, color: "var(--text-faint)" }}>v{t.version}</span>
+              </a>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
   );
 }
 

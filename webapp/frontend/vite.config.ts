@@ -16,6 +16,7 @@ export default defineConfig({
       "/outputs": BACKEND,
       "/lib": BACKEND,
       "/tools/levelcraft": BACKEND,
+      "/templates/html": BACKEND,
       "/ws": { target: BACKEND.replace("http", "ws"), ws: true },
     },
   },
