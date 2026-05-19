@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{
+  width:1920px;height:1080px;overflow:hidden;background:#100D0A;
+  font-family:"Noto Serif SC",serif;
+}
+
+/* ── 场景基础 ── */
+.scene{
+  position:absolute;top:0;left:0;width:1920px;height:1080px;overflow:hidden;
+}
+#s1{z-index:1;background:#100D0A;}
+#s2{z-index:2;background:#100D0A;opacity:0;}
+#s3{z-index:3;background:#100D0A;opacity:0;}
+#s4{z-index:4;background:#100D0A;opacity:0;}
+#s5{z-index:5;background:#100D0A;opacity:0;}
+#s6{z-index:6;background:#100D0A;opacity:0;}
+#s7{z-index:7;background:#100D0A;opacity:0;}
+#s8{z-index:8;background:#100D0A;opacity:0;}
+
+/* ── 三段式固定布局 ──────────────────────────────────────
+   top-bar (80px)  → 暗色 header：章节编号 + 标题
+   browser area    → 中间 820px：UI mockup
+   bottom-strip (180px) → 暗色：列标注 + 字幕
+   三段完全不重叠，文字始终在暗色背景上
+────────────────────────────────────────────────────── */
+.mono{font-family:"IBM Plex Mono","Courier New",monospace;}
+
+/* 顶部 header 条 */
+.top-bar{
+  position:absolute;top:0;left:0;right:0;height:80px;
+  background:rgba(16,13,10,0.97);
+  border-bottom:1px solid rgba(255,220,195,0.07);
+  display:flex;align-items:center;padding:0 64px;gap:20px;
+  z-index:20;
+}
+.ch-badge{
+  font-family:"IBM Plex Mono",monospace;font-size:12px;
+  color:#D97757;letter-spacing:2.5px;text-transform:uppercase;
+  background:rgba(217,119,87,0.12);border:1px solid rgba(217,119,87,0.28);
+  border-radius:4px;padding:5px 14px;white-space:nowrap;flex-shrink:0;
+}
+.scene-title{
+  font-size:28px;font-weight:700;color:#F5EDE5;letter-spacing:-0.5px;
+  white-space:nowrap;
+}
+
+/* 底部信息条 */
+.bottom-strip{
+  position:absolute;bottom:0;left:0;right:0;height:180px;
+  background:rgba(16,13,10,0.97);
+  border-top:1px solid rgba(255,220,195,0.07);
+  display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:14px;
+  z-index:20;padding:0 60px;
+}
+/* 列标注行（仅 S2 用） */
+.col-labels{
+  display:flex;gap:60px;align-items:center;
+}
+.col-label{
+  font-family:"IBM Plex Mono",monospace;font-size:13px;
+  color:#D97757;letter-spacing:1px;
+  background:rgba(217,119,87,0.1);border:1px solid rgba(217,119,87,0.28);
+  border-radius:4px;padding:5px 16px;white-space:nowrap;
+}
+/* 字幕 */
+.caption{
+  font-size:21px;color:#C4B5A8;letter-spacing:0.3px;
+  text-align:center;max-width:1400px;line-height:1.6;
+}
+
+/* ── 浏览器 frame ── */
+.browser{
+  position:absolute;
+  border-radius:12px;
+  box-shadow:0 32px 80px rgba(0,0,0,0.6);
+  overflow:hidden;
+  background:#faf9f7;
+}
+.browser-bar{
+  height:42px;background:#f4f2ef;border-bottom:1px solid #e0ddd8;
+  display:flex;align-items:center;gap:8px;padding:0 16px;
+  flex-shrink:0;
+}
+.browser-dot{width:12px;height:12px;border-radius:50%;}
+.b-red{background:#ff5f57;}
+.b-yellow{background:#febc2e;}
+.b-green{background:#28c840;}
+.browser-url{
+  flex:1;margin-left:16px;height:26px;border-radius:6px;
+  background:#fff;border:1px solid #e0ddd8;
+  display:flex;align-items:center;padding:0 12px;
+  font-family:"IBM Plex Mono",monospace;font-size:11px;color:#6b7280;
+}
+
+/* ── 工作台 UI 组件 ── */
+:root{
+  --bg:#faf9f7;--panel:#f4f2ef;--border:#e0ddd8;
+  --text:#2d2d2d;--dim:#6b7280;--faint:#9ca3af;
+  --acc:#1a73e8;--acc-bg:rgba(26,115,232,0.08);
+  --err:#c62828;--rev:#e65100;
+  --mono:"IBM Plex Mono",monospace;
+}
+.topbar{
+  height:48px;background:var(--panel);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:10px;padding:0 16px;
+}
+.topbar-brand{font-size:13px;font-weight:700;color:var(--acc);}
+.spec-picker{
+  padding:4px 10px;font-size:12px;border:1px solid var(--border);
+  border-radius:3px;background:#fff;color:var(--text);
+  font-family:var(--mono);min-width:220px;
+}
+.dirty-badge{
+  font-size:11px;padding:2px 8px;border-radius:3px;
+  background:var(--rev);color:#fff;
+}
+.clean-badge{
+  font-size:11px;padding:2px 8px;border-radius:3px;
+  color:var(--faint);
+}
+.tb-btn{
+  padding:4px 10px;font-size:12px;border:1px solid var(--border);
+  border-radius:3px;background:var(--panel);color:var(--text);cursor:pointer;
+}
+.tb-btn-primary{background:var(--acc);color:#fff;border-color:var(--acc);}
+.tb-btn-doc{border-color:var(--acc);background:var(--acc-bg);color:var(--acc);}
+
+/* 四栏布局 */
+.cols{display:flex;flex:1;overflow:hidden;}
+.col-alerts{width:240px;flex-shrink:0;background:var(--panel);border-right:1px solid var(--border);padding:12px 14px;overflow-y:auto;}
+.col-main{flex:1;overflow-y:auto;padding:20px;}
+.col-preview{width:280px;flex-shrink:0;border-right:1px solid var(--border);display:flex;flex-direction:column;}
+.col-chat{width:280px;flex-shrink:0;display:flex;flex-direction:column;}
+
+/* 告警 */
+.alert-head{font-size:11px;font-weight:700;color:var(--dim);letter-spacing:1px;margin-bottom:10px;}
+.badge-row{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px;}
+.badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:2px;color:#fff;}
+.badge-err{background:var(--err);}
+.badge-rev{background:var(--rev);}
+.badge-ok{background:transparent;color:var(--faint);border:1px dashed var(--border);}
+.alert-item{
+  padding:8px 10px;margin-bottom:4px;border-radius:3px;
+  border:1px solid var(--border);background:#fff;font-size:11px;
+}
+.alert-level{font-size:10px;color:#fff;padding:1px 5px;border-radius:2px;margin-right:6px;}
+.alert-msg{color:var(--text);margin-top:3px;font-size:11px;}
+.alert-path{font-family:var(--mono);font-size:10px;color:var(--acc);}
+
+/* 表单 */
+.form-section{margin-bottom:20px;}
+.form-label{font-size:11px;color:var(--dim);margin-bottom:6px;font-weight:600;letter-spacing:0.3px;}
+.form-sublabel{font-size:10px;color:var(--faint);font-family:var(--mono);}
+.field-input{
+  width:100%;padding:7px 10px;border:1px solid var(--border);
+  border-radius:3px;background:#fff;font-size:13px;color:var(--text);
+}
+.field-input.focus{border-color:var(--acc);box-shadow:0 0 0 2px rgba(217,119,87,0.12);}
+.field-chip{
+  display:inline-block;padding:3px 8px;border-radius:12px;
+  background:var(--panel);border:1px solid var(--border);
+  font-size:11px;color:var(--dim);margin:2px;
+}
+.fieldset-box{
+  border:1px solid var(--border);border-radius:3px;
+  padding:10px 14px;background:#fcfcfa;margin-bottom:12px;
+}
+.fieldset-legend{font-size:11px;font-weight:700;color:var(--text);margin-bottom:8px;}
+
+/* 预览 */
+.col-preview-title{
+  padding:8px 12px;font-size:11px;font-weight:600;color:var(--dim);
+  border-bottom:1px solid var(--border);background:var(--panel);
+  font-family:var(--mono);
+}
+.preview-iframe-mock{
+  flex:1;background:#fff;display:flex;align-items:center;justify-content:center;
+  font-size:12px;color:var(--faint);
+}
+.preview-content{width:100%;height:100%;padding:16px;overflow:hidden;}
+
+/* Chat */
+.chat-header{
+  padding:10px 14px;border-bottom:1px solid var(--border);background:var(--panel);
+  display:flex;align-items:center;gap:8px;
+}
+.ws-dot{width:8px;height:8px;border-radius:50%;background:#22c55e;}
+.chat-session{font-size:11px;color:var(--dim);}
+.chat-msgs{flex:1;overflow-y:auto;padding:12px;}
+.msg-user{
+  background:var(--acc);color:#fff;border-radius:12px 12px 3px 12px;
+  padding:8px 12px;font-size:12px;margin-bottom:8px;
+  align-self:flex-end;max-width:90%;margin-left:auto;
+}
+.msg-assistant{
+  background:#fff;border:1px solid var(--border);border-radius:3px 12px 12px 12px;
+  padding:8px 12px;font-size:12px;margin-bottom:8px;color:var(--text);
+  max-width:95%;line-height:1.6;
+}
+.msg-hint{
+  background:var(--acc-bg);border:1px solid var(--acc);border-radius:6px;
+  padding:10px 12px;font-size:11px;color:var(--text);margin-bottom:8px;
+  line-height:1.7;
+}
+.msg-tool{
+  background:var(--panel);border:1px solid var(--border);border-radius:4px;
+  padding:5px 10px;font-size:10px;font-family:var(--mono);color:var(--dim);
+  margin-bottom:6px;
+}
+.chat-input-row{
+  padding:10px;border-top:1px solid var(--border);
+}
+.chat-input{
+  width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;
+  font-size:12px;color:var(--text);background:#fff;resize:none;
+  font-family:"Noto Serif SC",serif;
+}
+.chat-input.prefilled{border-color:var(--acc);color:var(--acc);font-family:var(--mono);font-size:11px;}
+
+/* Mermaid-like 气泡图 */
+.diagram-area{
+  background:#fff;border:1px solid var(--border);border-radius:6px;
+  padding:20px;margin:12px 0;position:relative;height:240px;
+}
+.node-box{
+  position:absolute;border:2px solid #94a3b8;border-radius:6px;
+  background:#f8fafc;padding:6px 12px;font-size:11px;color:#1e293b;
+  text-align:center;cursor:pointer;transition:all 0.2s;
+}
+.node-box.entry{border-radius:20px;background:#e0f2fe;border-color:#0284c7;}
+.node-box.exit{border-radius:20px;background:#dcfce7;border-color:#16a34a;}
+.node-box.puzzle{clip-path:polygon(50% 0%,100% 38%,82% 100%,18% 100%,0% 38%);background:#fef9c3;border-color:#ca8a04;}
+.node-box.selected{border-color:var(--acc);background:#dbeafe;box-shadow:0 0 0 3px rgba(26,115,232,0.2);}
+.edge-line{position:absolute;background:#94a3b8;}
+.phase-label{
+  position:absolute;top:-10px;left:10px;background:#f0f9ff;
+  border:1px solid #bae6fd;border-radius:4px;padding:2px 8px;
+  font-size:9px;color:#0369a1;font-family:var(--mono);
+}
+
+/* 高亮动效 */
+.field-highlight{animation:flash 1s ease;}
+@keyframes flash{
+  0%{background:#fff;}
+  30%{background:#dbeafe;}
+  100%{background:#fff;}
+}
+
+/* ── S1 标题 ── */
+#s1-bg{position:absolute;inset:0;background:radial-gradient(ellipse at 30% 50%,rgba(217,119,87,0.12) 0%,transparent 70%);}
+#s1-grid{
+  position:absolute;inset:0;
+  background-image:linear-gradient(rgba(255,230,210,0.025) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,230,210,0.025) 1px,transparent 1px);
+  background-size:60px 60px;
+}
+/* S1 三层标题：项目名（珊瑚小字）+ 产品名（超大 Mono）+ 副标题 + 版本 */
+#s1-tag{
+  position:absolute;top:280px;left:0;width:1920px;text-align:center;
+  font-family:"IBM Plex Mono",monospace;font-size:14px;color:rgba(217,119,87,0.7);
+  letter-spacing:5px;text-transform:uppercase;white-space:nowrap;
+}
+#s1-name{
+  /* 项目名：Noto Serif SC 中等，珊瑚色 */
+  position:absolute;top:318px;left:0;width:1920px;text-align:center;
+  font-size:52px;font-weight:700;color:#D97757;letter-spacing:-1px;white-space:nowrap;
+}
+#s1-title{
+  /* 产品名：IBM Plex Mono 超大，奶油白，视觉核心 */
+  position:absolute;top:388px;left:0;width:1920px;text-align:center;
+  font-family:"IBM Plex Mono",monospace;
+  font-size:148px;font-weight:700;color:#F5EDE5;letter-spacing:-6px;
+  white-space:nowrap;line-height:1;
+  text-shadow:0 0 100px rgba(217,119,87,0.3),0 0 40px rgba(217,119,87,0.15);
+}
+#s1-sub{
+  position:absolute;top:558px;left:0;width:1920px;text-align:center;
+  font-size:24px;color:#8A7A70;letter-spacing:2px;white-space:nowrap;
+}
+#s1-ver{
+  position:absolute;top:618px;left:0;width:1920px;text-align:center;
+  font-family:"IBM Plex Mono",monospace;font-size:13px;
+  color:#504540;background:rgba(217,119,87,0.06);
+  border:1px solid rgba(217,119,87,0.15);border-radius:20px;
+  padding:6px 24px;white-space:nowrap;display:inline-block;
+}
+
+/* ── 浏览器统一位置（三段式：顶88px + 中812px + 底180px = 1080px）── */
+#s2-browser{top:88px;left:60px;width:1800px;height:812px;}
+#s3-browser{top:88px;left:120px;width:1680px;height:812px;}
+#s4-browser{top:88px;left:120px;width:1680px;height:812px;}
+#s5-browser{top:88px;left:120px;width:1680px;height:812px;}
+#s6-browser{top:88px;left:120px;width:1680px;height:812px;}
+#s7-browser{top:88px;left:120px;width:1680px;height:812px;}
+
+/* ── S8 结尾 ── */
+#s8-logo{
+  position:absolute;top:440px;left:0;width:1920px;text-align:center;
+  font-size:64px;font-weight:800;color:#F5EDE5;letter-spacing:-2px;white-space:nowrap;
+}
+#s8-sub{
+  position:absolute;top:530px;left:50%;transform:translateX(-50%);
+  font-family:"IBM Plex Mono",monospace;font-size:16px;color:#D97757;
+  white-space:nowrap;letter-spacing:1px;
+}
+
+/* 光标点击指示器 */
+.cursor-dot{
+  position:absolute;width:24px;height:24px;border-radius:50%;
+  background:rgba(217,119,87,0.9);border:3px solid #fff;
+  box-shadow:0 0 0 4px rgba(217,119,87,0.3);z-index:100;
+  pointer-events:none;
+}
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="webapp-tutorial" data-width="1920" data-height="1080" data-start="0" data-duration="82">
+
+<!-- ══════════════════════════════════════════════════════════
+     S1 · 标题卡 (0–8s)
+════════════════════════════════════════════════════════════ -->
+<div id="s1" class="scene" style="z-index: 1">
+  <div id="s1-bg"></div>
+  <div id="s1-grid"></div>
+  <div id="s1-tag" class="mono">关卡设计工作台 · Level Design Deck</div>
+  <div id="s1-name">level-design-deck</div>
+  <div id="s1-title">webapp</div>
+  <div id="s1-sub">AI 驱动 · spec 真源 · 文档自动生成</div>
+  <div id="s1-ver" class="mono">v0.1.0 · macOS arm64 + Windows x64</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     S2 · 工作台概览 (8–22s)
+════════════════════════════════════════════════════════════ -->
+<div id="s2" class="scene" data-start="9.07" data-track-index="0" style="z-index: 2">
+  <div class="top-bar">
+    <div class="ch-badge mono">01 · 工作台概览</div>
+    <div class="scene-title">四栏式关卡设计工作台</div>
+  </div>
+
+  <!-- 浏览器 frame -->
+  <div class="browser" id="s2-browser">
+    <div class="browser-bar">
+      <div class="browser-dot b-red"></div>
+      <div class="browser-dot b-yellow"></div>
+      <div class="browser-dot b-green"></div>
+      <div class="browser-url">127.0.0.1:5173</div>
+    </div>
+    <!-- Topbar -->
+    <div class="topbar" style="border-bottom:1px solid #e0ddd8;">
+      <span class="topbar-brand">level-design-deck</span>
+      <div class="spec-picker" style="max-width:200px;font-size:11px;">bubble_diagram_test_warehouse ▾</div>
+      <span style="font-size:10px;color:#9ca3af;font-family:var(--mono);">level=test_warehouse</span>
+      <span style="flex:1"></span>
+      <span class="clean-badge">✓ 已保存</span>
+      <div class="tb-btn">💾 保存</div>
+      <div class="tb-btn">🎨 渲染</div>
+      <div class="tb-btn">📚 完整文档</div>
+      <div class="tb-btn tb-btn-doc">📄 文档模板</div>
+      <div class="tb-btn">💬▶</div>
+    </div>
+    <!-- 四栏 -->
+    <div style="display:flex;height:calc(100% - 90px);">
+      <!-- 告警栏 -->
+      <div class="col-alerts" style="width:220px;">
+        <div class="alert-head">告警</div>
+        <div class="badge-row">
+          <span class="badge badge-err">ERROR 0</span>
+          <span class="badge badge-rev">REVIEW 1</span>
+          <span class="badge badge-ok">MISSING 0</span>
+          <span class="badge badge-ok">EXTRA 0</span>
+        </div>
+        <div class="alert-item">
+          <div><span class="alert-level badge-rev">REVIEW</span><span style="font-size:9px;color:#9ca3af;">cross</span></div>
+          <div class="alert-path">bubble_phase_summary</div>
+          <div class="alert-msg">phase 命名集合需人工确认</div>
+        </div>
+        <div style="font-size:11px;color:#9ca3af;margin-top:8px;">无更多告警 ✓</div>
+      </div>
+
+      <!-- 主编辑区（气泡图） -->
+      <div class="col-main" style="background:#f4f2ef;position:relative;">
+        <div style="font-size:11px;color:#6b7280;margin-bottom:8px;font-family:var(--mono);">点击节点跳转到对应编辑区</div>
+        <div class="diagram-area" style="height:180px;">
+          <div class="phase-label">Phase I 潜入</div>
+          <div class="node-box entry" style="left:20px;top:70px;">入库</div>
+          <div class="node-box" style="left:120px;top:70px;">巡逻规避</div>
+          <div class="phase-label" style="left:210px;">Phase II 行窃</div>
+          <div class="node-box" style="left:240px;top:70px;">金库</div>
+          <div class="node-box puzzle" style="left:340px;top:55px;width:60px;height:56px;display:flex;align-items:center;justify-content:center;">保险柜</div>
+          <div class="phase-label" style="left:400px;">Phase III 撤离</div>
+          <div class="node-box exit" style="left:430px;top:70px;">撤退</div>
+          <!-- arrows simplified as lines -->
+          <svg style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;">
+            <defs><marker id="ar" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#94a3b8"/></marker></defs>
+            <line x1="80" y1="90" x2="115" y2="90" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#ar)"/>
+            <line x1="200" y1="90" x2="235" y2="90" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#ar)"/>
+            <line x1="300" y1="90" x2="335" y2="90" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#ar)"/>
+            <line x1="405" y1="90" x2="425" y2="90" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#ar)"/>
+          </svg>
+        </div>
+        <!-- 表单 -->
+        <div class="fieldset-box">
+          <div class="fieldset-legend">nodes[0] · 入库 <span style="font-family:var(--mono);font-size:9px;color:#9ca3af;">entry</span></div>
+          <div style="display:flex;gap:12px;">
+            <div style="flex:1"><div class="form-label">label</div><div class="field-input" style="font-size:11px;">入库</div></div>
+            <div style="flex:2"><div class="form-label">notes</div><div class="field-input" style="font-size:11px;">夜盗从仓库后侧外墙翻入，低光环境…</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 预览 -->
+      <div class="col-preview">
+        <div class="col-preview-title">预览 · /outputs/bubble_diagram_test_warehouse.html</div>
+        <div style="flex:1;background:#fff;padding:12px;overflow:hidden;">
+          <div style="font-size:10px;color:#9ca3af;text-align:center;padding-top:40px;">bubble_diagram 渲染输出</div>
+          <svg style="width:100%;margin-top:16px;" viewBox="0 0 260 120">
+            <ellipse cx="30" cy="60" rx="24" ry="14" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.5"/>
+            <text x="30" y="64" text-anchor="middle" font-size="8" fill="#0369a1">入库</text>
+            <rect x="65" y="46" width="46" height="28" rx="4" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.5"/>
+            <text x="88" y="63" text-anchor="middle" font-size="8" fill="#1e293b">巡逻规避</text>
+            <rect x="125" y="46" width="36" height="28" rx="4" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.5"/>
+            <text x="143" y="63" text-anchor="middle" font-size="8" fill="#1e293b">金库</text>
+            <rect x="175" y="46" width="40" height="28" rx="4" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.5"/>
+            <text x="195" y="63" text-anchor="middle" font-size="8" fill="#92400e">保险柜</text>
+            <ellipse cx="235" cy="60" rx="20" ry="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+            <text x="235" y="64" text-anchor="middle" font-size="8" fill="#15803d">撤退</text>
+            <line x1="54" y1="60" x2="64" y2="60" stroke="#94a3b8" stroke-width="1" marker-end="url(#ar2)"/>
+            <line x1="111" y1="60" x2="124" y2="60" stroke="#94a3b8" stroke-width="1" marker-end="url(#ar2)"/>
+            <line x1="161" y1="60" x2="174" y2="60" stroke="#94a3b8" stroke-width="1" marker-end="url(#ar2)"/>
+            <line x1="215" y1="60" x2="214" y2="60" stroke="#94a3b8" stroke-width="1" marker-end="url(#ar2)"/>
+            <defs><marker id="ar2" markerWidth="4" markerHeight="4" refX="3" refY="2" orient="auto"><path d="M0,0 L4,2 L0,4 Z" fill="#94a3b8"/></marker></defs>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Chat -->
+      <div class="col-chat">
+        <div class="chat-header">
+          <div class="ws-dot"></div>
+          <span class="chat-session mono">session · 活跃</span>
+          <span style="flex:1"></span>
+          <span style="font-size:11px;color:#6b7280;">+ 新建</span>
+        </div>
+        <div class="chat-msgs" style="flex:1;">
+          <div class="msg-user">分析一下这份 bubble_diagram 的节点结构是否合理？</div>
+          <div class="msg-tool">🔧 Read · specs/bubble_diagram_test_warehouse.spec.json</div>
+          <div class="msg-assistant">节点结构清晰，三个阶段（潜入/行窃/撤离）分组合理。建议在 safe_crack → vault_room 的回路边补充失败条件说明，让非线性流程更易理解…</div>
+        </div>
+        <div class="chat-input-row">
+          <div class="chat-input">输入消息，Enter 发送</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 列标注 -->
+  <div class="bottom-strip">
+    <div class="col-labels">
+      <div id="s2-l1" class="col-label">① 告警栏</div>
+      <div id="s2-l2" class="col-label">② Spec 编辑区</div>
+      <div id="s2-l3" class="col-label">③ 预览栏</div>
+      <div id="s2-l4" class="col-label">④ Chat 对话栏</div>
+    </div>
+    <div class="caption" id="s2-cap">四栏布局 · 告警 + 编辑 + 预览 + 对话，设计数据与 AI 协作一屏直达</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     S3 · Spec 编辑 (22–37s)
+════════════════════════════════════════════════════════════ -->
+<div id="s3" class="scene" style="z-index: 1">
+  <div class="top-bar">
+    <div class="ch-badge mono">02 · Spec 编辑</div>
+    <div class="scene-title">Schema-driven 表单 · 字段即真源</div>
+  </div>
+
+  <div class="browser" id="s3-browser">
+    <div class="browser-bar">
+      <div class="browser-dot b-red"></div><div class="browser-dot b-yellow"></div><div class="browser-dot b-green"></div>
+      <div class="browser-url">127.0.0.1:5173/#spec=lighting_req_abandoned_temple</div>
+    </div>
+    <div class="topbar">
+      <span class="topbar-brand">level-design-deck</span>
+      <div class="spec-picker" id="s3-picker">lighting_req_abandoned_temple ▾</div>
+      <span style="font-size:10px;color:#9ca3af;font-family:var(--mono);">level=abandoned_temple</span>
+      <span style="flex:1"></span>
+      <span class="dirty-badge" id="s3-dirty">● 未保存</span>
+      <div class="tb-btn tb-btn-primary">💾 保存</div>
+      <div class="tb-btn">🎨 渲染</div>
+      <div class="tb-btn">📚 完整文档</div>
+      <div class="tb-btn tb-btn-doc">📄 文档模板</div>
+    </div>
+    <div style="display:flex;height:calc(100% - 90px);">
+      <div class="col-alerts" style="width:180px;">
+        <div class="alert-head">告警</div>
+        <div class="badge-row">
+          <span class="badge badge-err">ERROR 2</span>
+          <span class="badge badge-rev">REVIEW 1</span>
+        </div>
+        <div class="alert-item" id="s3-alert1" style="cursor:pointer;">
+          <div><span class="alert-level" style="background:#c62828;color:#fff;font-size:9px;padding:1px 4px;border-radius:2px;">ERROR</span></div>
+          <div class="alert-path">intent.mood</div>
+          <div class="alert-msg">字段为占位符值</div>
+        </div>
+        <div class="alert-item">
+          <div><span class="alert-level" style="background:#c62828;color:#fff;font-size:9px;padding:1px 4px;border-radius:2px;">ERROR</span></div>
+          <div class="alert-path">regions[0].color</div>
+          <div class="alert-msg">未填写</div>
+        </div>
+      </div>
+      <div class="col-main">
+        <!-- spec.meta -->
+        <div class="fieldset-box">
+          <div class="fieldset-legend">meta</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+            <div><div class="form-label">spec_id <span class="form-sublabel">spec_id</span></div><div class="field-input mono" style="font-size:11px;">lighting_req_abandoned_temple</div></div>
+            <div><div class="form-label">关卡 ID <span class="form-sublabel">level_id</span></div><div class="field-input mono" style="font-size:11px;">abandoned_temple</div></div>
+            <div><div class="form-label">版本 <span class="form-sublabel">version</span></div><div class="field-input mono" style="font-size:11px;">0.1.0</div></div>
+          </div>
+        </div>
+        <!-- intent -->
+        <div class="fieldset-box">
+          <div class="fieldset-legend">intent · 场景意图</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+            <div><div class="form-label">场景功能 <span class="form-sublabel">scene_function</span></div>
+              <div class="field-input focus" id="s3-scene-fn" style="font-size:12px;">玩家初入废弃神庙的恐惧与敬畏</div>
+            </div>
+            <div><div class="form-label">氛围基调 <span class="form-sublabel">mood</span></div>
+              <div class="field-input" id="s3-mood" style="font-size:12px;color:#c62828;">请描述主要氛围基调…</div>
+            </div>
+          </div>
+          <div><div class="form-label">时段 <span class="form-sublabel">time_of_day</span></div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <span class="field-chip" style="background:#dbeafe;border-color:#93c5fd;color:#1d4ed8;">夜间 ✓</span>
+              <span class="field-chip">黎明</span><span class="field-chip">黄昏</span>
+            </div>
+          </div>
+        </div>
+        <!-- regions -->
+        <div class="fieldset-box">
+          <div class="fieldset-legend">regions[0] · 主殿入口</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+            <div><div class="form-label">区域名称</div><div class="field-input" style="font-size:12px;">主殿入口</div></div>
+            <div><div class="form-label">主色调 <span class="form-sublabel">color</span></div>
+              <div class="field-input" id="s3-color" style="font-size:12px;border-color:#c62828;color:#c62828;">（未填写）</div>
+            </div>
+            <div><div class="form-label">光源强度</div><div class="field-input" style="font-size:12px;">低（0.3）</div></div>
+          </div>
+        </div>
+      </div>
+      <div style="width:260px;flex-shrink:0;border-left:1px solid #e0ddd8;background:#faf9f7;">
+        <div style="padding:8px 12px;font-size:11px;color:#6b7280;border-bottom:1px solid #e0ddd8;background:#f4f2ef;font-family:var(--mono);">预览 · /outputs/lighting_req_abandoned_temple.html</div>
+        <div style="padding:16px;font-size:11px;color:#9ca3af;text-align:center;margin-top:40px;">点「🎨 渲染」生成预览</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 光标 -->
+  <div class="cursor-dot" id="s3-cursor" style="opacity:0;top:600px;left:700px;"></div>
+  <div class="bottom-strip">
+    <div class="caption" id="s3-cap">JSON Schema 自动生成表单 · 字段改动即 dirty 标记 · 告警点击跳转字段</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     S4 · BubbleDiagram 交互 (37–51s)
+════════════════════════════════════════════════════════════ -->
+<div id="s4" class="scene" style="z-index: 1">
+  <div class="top-bar">
+    <div class="ch-badge mono">03 · 气泡图交互</div>
+    <div class="scene-title">BubbleDiagramView · 点击节点跳转表单</div>
+  </div>
+
+  <div class="browser" id="s4-browser">
+    <div class="browser-bar">
+      <div class="browser-dot b-red"></div><div class="browser-dot b-yellow"></div><div class="browser-dot b-green"></div>
+      <div class="browser-url">127.0.0.1:5173/#spec=bubble_diagram_test_warehouse</div>
+    </div>
+    <div class="topbar">
+      <span class="topbar-brand">level-design-deck</span>
+      <div class="spec-picker">bubble_diagram_test_warehouse ▾</div>
+      <span style="flex:1"></span>
+      <div class="tb-btn">💾 保存</div><div class="tb-btn">🎨 渲染</div>
+    </div>
+    <div style="height:calc(100% - 90px);display:flex;flex-direction:column;overflow:hidden;">
+      <!-- 上半：Mermaid 图 -->
+      <div style="flex:0 0 42%;overflow:auto;background:#f4f2ef;border-bottom:2px solid #e0ddd8;padding:16px;position:relative;">
+        <div style="font-size:11px;color:#6b7280;margin-bottom:10px;font-family:var(--mono);">点击节点跳转到对应编辑区</div>
+        <div class="diagram-area" style="height:180px;position:relative;">
+          <!-- subgraph Phase I -->
+          <div style="position:absolute;left:10px;top:8px;right:380px;bottom:8px;border:1.5px dashed #cbd5e1;border-radius:8px;background:rgba(248,250,252,0.6);"></div>
+          <div style="position:absolute;top:10px;left:16px;font-size:9px;color:#64748b;font-family:var(--mono);">Phase I 潜入</div>
+          <div class="node-box entry" id="s4-n-entry" style="left:30px;top:75px;cursor:pointer;transition:all 0.2s;">入库</div>
+          <div class="node-box" id="s4-n-patrol" style="left:120px;top:75px;cursor:pointer;">巡逻规避</div>
+
+          <!-- subgraph Phase II -->
+          <div style="position:absolute;left:225px;top:8px;right:200px;bottom:8px;border:1.5px dashed #cbd5e1;border-radius:8px;background:rgba(248,250,252,0.6);"></div>
+          <div style="position:absolute;top:10px;left:232px;font-size:9px;color:#64748b;font-family:var(--mono);">Phase II 行窃</div>
+          <div class="node-box" id="s4-n-vault" style="left:240px;top:75px;cursor:pointer;">金库</div>
+          <div style="position:absolute;left:340px;top:62px;width:54px;height:54px;cursor:pointer;z-index:2;" id="s4-n-safe">
+            <svg viewBox="0 0 54 54" width="54" height="54"><polygon points="27,4 50,18 50,38 27,52 4,38 4,18" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.5"/><text x="27" y="30" text-anchor="middle" font-size="8" fill="#92400e">保险柜</text></svg>
+          </div>
+
+          <!-- Phase III -->
+          <div style="position:absolute;left:406px;top:8px;right:0px;bottom:8px;border:1.5px dashed #cbd5e1;border-radius:8px;background:rgba(248,250,252,0.6);"></div>
+          <div style="position:absolute;top:10px;left:412px;font-size:9px;color:#64748b;font-family:var(--mono);">Phase III 撤离</div>
+          <div class="node-box exit" id="s4-n-exit" style="left:430px;top:75px;cursor:pointer;">撤退</div>
+
+          <svg style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;" overflow="visible">
+            <defs><marker id="a4" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#94a3b8"/></marker></defs>
+            <line x1="87" y1="90" x2="117" y2="90" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#a4)"/>
+            <line x1="185" y1="90" x2="237" y2="90" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#a4)"/>
+            <line x1="296" y1="90" x2="337" y2="90" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#a4)"/>
+            <line x1="397" y1="90" x2="427" y2="90" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#a4)"/>
+            <path d="M 367 62 Q 367 40 296 40 Q 240 40 240 65" stroke="#94a3b8" stroke-width="1.5" fill="none" stroke-dasharray="4,3" marker-end="url(#a4)"/>
+          </svg>
+        </div>
+      </div>
+      <!-- 下半：表单 -->
+      <div style="flex:1;overflow-y:auto;padding:16px;background:#faf9f7;">
+        <div class="fieldset-box" id="s4-form-entry" style="border-color:#e0ddd8;">
+          <div class="fieldset-legend">nodes[0] · 入库 <span style="font-family:var(--mono);font-size:9px;color:#9ca3af;">entry</span></div>
+          <div style="display:grid;grid-template-columns:1fr 2fr 1fr;gap:10px;">
+            <div><div class="form-label">label</div><div class="field-input" style="font-size:11px;">入库</div></div>
+            <div><div class="form-label">notes</div><div class="field-input" id="s4-notes" style="font-size:11px;">夜盗从仓库后侧外墙翻入…</div></div>
+            <div><div class="form-label">phase</div><div class="field-input mono" style="font-size:11px;">Phase I 潜入</div></div>
+          </div>
+        </div>
+        <div class="fieldset-box" style="opacity:0.5;">
+          <div class="fieldset-legend">nodes[1] · 巡逻规避</div>
+        </div>
+        <div class="fieldset-box" style="opacity:0.4;">
+          <div class="fieldset-legend">nodes[2] · 金库</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 光标 -->
+  <div class="cursor-dot" id="s4-cursor" style="opacity:0;top:370px;left:490px;"></div>
+  <div class="bottom-strip">
+    <div class="caption">Mermaid 渲染 + 上下分割 · 点击气泡节点自动滚动并高亮对应表单字段</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     S5 · 告警栏 (51–63s)
+════════════════════════════════════════════════════════════ -->
+<div id="s5" class="scene" style="z-index: 1">
+  <div class="top-bar">
+    <div class="ch-badge mono">04 · 机械校验</div>
+    <div class="scene-title">ERROR / REVIEW / MISSING · 告警即导航</div>
+  </div>
+
+  <div class="browser" id="s5-browser">
+    <div class="browser-bar">
+      <div class="browser-dot b-red"></div><div class="browser-dot b-yellow"></div><div class="browser-dot b-green"></div>
+      <div class="browser-url">127.0.0.1:5173/#spec=lighting_req_abandoned_temple</div>
+    </div>
+    <div class="topbar">
+      <span class="topbar-brand">level-design-deck</span>
+      <div class="spec-picker">lighting_req_abandoned_temple ▾</div>
+      <span style="flex:1"></span>
+      <div class="tb-btn">💾 保存</div><div class="tb-btn">🎨 渲染</div>
+    </div>
+    <div style="display:flex;height:calc(100% - 90px);">
+      <!-- 告警栏放大 -->
+      <div style="width:340px;background:var(--panel);border-right:1px solid var(--border);padding:16px;">
+        <div style="font-size:13px;font-weight:700;color:#4b5563;letter-spacing:1px;margin-bottom:14px;">告警</div>
+        <div class="badge-row" style="gap:8px;margin-bottom:16px;">
+          <span class="badge badge-err" style="font-size:12px;padding:4px 10px;">ERROR 2</span>
+          <span class="badge badge-rev" style="font-size:12px;padding:4px 10px;">REVIEW 1</span>
+          <span class="badge badge-ok" style="font-size:12px;padding:4px 10px;border:1px dashed #e0ddd8;">MISSING 0</span>
+          <span class="badge badge-ok" style="font-size:12px;padding:4px 10px;border:1px dashed #e0ddd8;">EXTRA 0</span>
+        </div>
+        <!-- 告警列表 -->
+        <div class="alert-item" id="s5-a1" style="margin-bottom:8px;cursor:pointer;padding:12px 14px;">
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;">
+            <span style="background:#c62828;color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:3px;">ERROR</span>
+            <span style="font-size:10px;color:#9ca3af;">mechanical</span>
+            <span style="font-size:10px;color:#9ca3af;">placeholder</span>
+          </div>
+          <div style="font-family:var(--mono);font-size:12px;color:#1a73e8;margin-bottom:4px;">intent.mood</div>
+          <div style="font-size:12px;color:#374151;">字段仍为占位符默认值，请填写实际内容</div>
+        </div>
+        <div class="alert-item" style="margin-bottom:8px;padding:12px 14px;cursor:pointer;">
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;">
+            <span style="background:#c62828;color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:3px;">ERROR</span>
+            <span style="font-size:10px;color:#9ca3af;">mechanical</span>
+            <span style="font-size:10px;color:#9ca3af;">type_check</span>
+          </div>
+          <div style="font-family:var(--mono);font-size:12px;color:#1a73e8;margin-bottom:4px;">regions[0].color</div>
+          <div style="font-size:12px;color:#374151;">必填字段为空</div>
+        </div>
+        <div class="alert-item" style="padding:12px 14px;cursor:pointer;">
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;">
+            <span style="background:#e65100;color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:3px;">REVIEW</span>
+            <span style="font-size:10px;color:#9ca3af;">cross</span>
+            <span style="font-size:10px;color:#9ca3af;">region_ref</span>
+          </div>
+          <div style="font-family:var(--mono);font-size:12px;color:#1a73e8;margin-bottom:4px;">regions[0].region_id</div>
+          <div style="font-size:12px;color:#374151;">region_id 未在 spatial_layout 中找到对应区域，请人工确认</div>
+        </div>
+      </div>
+      <!-- 主区 -->
+      <div style="flex:1;padding:20px;overflow-y:auto;">
+        <div class="fieldset-box">
+          <div class="fieldset-legend">intent · 场景意图</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+            <div>
+              <div class="form-label">场景功能 <span class="form-sublabel">scene_function</span></div>
+              <div class="field-input">玩家初入废弃神庙的恐惧与敬畏</div>
+            </div>
+            <div>
+              <div class="form-label">氛围基调 <span class="form-sublabel">mood</span></div>
+              <div class="field-input" id="s5-mood-field" style="border-color:#c62828;background:#fef2f2;color:#c62828;">请描述主要氛围基调…</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- 预览 -->
+      <div style="width:260px;border-left:1px solid #e0ddd8;background:#faf9f7;">
+        <div style="padding:8px 12px;font-size:11px;color:#6b7280;border-bottom:1px solid #e0ddd8;background:#f4f2ef;font-family:var(--mono);">预览</div>
+        <div style="padding:16px;font-size:11px;color:#9ca3af;text-align:center;margin-top:60px;">mechanical_check + template_diff<br/>+ cross_check 三源合并</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cursor-dot" id="s5-cursor" style="opacity:0;top:440px;left:380px;"></div>
+  <div class="bottom-strip">
+    <div class="caption">机械检测 + 模板 diff + 跨模块 cross_check · 点击告警直接跳转到错误字段</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     S6 · Chat 对话 (63–79s)
+════════════════════════════════════════════════════════════ -->
+<div id="s6" class="scene" style="z-index: 1">
+  <div class="top-bar">
+    <div class="ch-badge mono">05 · cc 对话</div>
+    <div class="scene-title">Claude Code 后台常驻 · 流式对话 + 附件</div>
+  </div>
+
+  <div class="browser" id="s6-browser">
+    <div class="browser-bar">
+      <div class="browser-dot b-red"></div><div class="browser-dot b-yellow"></div><div class="browser-dot b-green"></div>
+      <div class="browser-url">127.0.0.1:5173/</div>
+    </div>
+    <div class="topbar">
+      <span class="topbar-brand">level-design-deck</span>
+      <div class="spec-picker">bubble_diagram_abandoned_temple ▾</div>
+      <span style="flex:1"></span>
+      <div class="tb-btn">💾 保存</div><div class="tb-btn">🎨 渲染</div>
+    </div>
+    <div style="display:flex;height:calc(100% - 90px);">
+      <!-- 主区简化 -->
+      <div style="flex:1;background:#f4f2ef;display:flex;align-items:center;justify-content:center;">
+        <div style="text-align:center;color:#9ca3af;font-size:13px;">
+          <div style="font-size:28px;margin-bottom:8px;">⬝⬝⬝</div>
+          Spec 表单编辑区
+        </div>
+      </div>
+      <!-- Chat 放大 -->
+      <div style="width:480px;flex-shrink:0;border-left:1px solid #e0ddd8;display:flex;flex-direction:column;">
+        <div class="chat-header">
+          <div class="ws-dot"></div>
+          <span class="chat-session mono" style="font-size:12px;">session·活跃 · claude-haiku-4-5</span>
+          <span style="flex:1"></span>
+          <div style="font-size:12px;color:#1a73e8;cursor:pointer;">+ 新建</div>
+        </div>
+        <div style="flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:6px;">
+          <div class="msg-user" style="font-size:13px;">帮我分析一下仓库场景的流程设计，有附件参考资料</div>
+          <!-- 附件 chip -->
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px;">
+            <div style="background:#fff;border:1px solid #e0ddd8;border-radius:20px;padding:4px 12px;font-size:11px;color:#374151;display:flex;align-items:center;gap:6px;">
+              📎 仓库场景设计草案.docx <span style="color:#9ca3af;">(docx, 24KB)</span>
+            </div>
+          </div>
+          <div class="msg-tool" style="font-size:11px;">🔧 Read · /tmp/deck-chat-uploads/…/仓库场景设计草案.extracted.txt</div>
+          <div class="msg-tool" style="font-size:11px;">🔧 Read · specs/bubble_diagram_test_warehouse.spec.json</div>
+          <!-- 流式回复 -->
+          <div class="msg-assistant" style="font-size:12px;line-height:1.7;" id="s6-streaming">
+            根据附件草案和当前 spec 分析：<br/><br/>
+            <strong>结构优点：</strong><br/>
+            · 三阶段划分（潜入→行窃→撤离）与空间逻辑高度吻合<br/>
+            · safe_crack→vault_room 的回路设计体现了失败重试机制<br/><br/>
+            <strong>建议优化：</strong><br/>
+            · 建议在 patrol_evasion 节点补充「被发现」分支<span id="s6-cursor-blink" style="display:inline-block;width:8px;height:14px;background:#1a73e8;margin-left:2px;vertical-align:middle;"></span>
+          </div>
+        </div>
+        <!-- 附件区 -->
+        <div style="padding:10px 14px;border-top:1px solid #e0ddd8;background:#fafafa;">
+          <div style="font-size:10px;color:#9ca3af;margin-bottom:6px;font-family:var(--mono);">拖拽文件到此区域，或点击添加附件</div>
+          <div style="border:1.5px dashed #e0ddd8;border-radius:6px;padding:8px 12px;font-size:11px;color:#9ca3af;text-align:center;">📎 支持 docx · pptx · xlsx · html · txt</div>
+        </div>
+        <div class="chat-input-row">
+          <div class="chat-input" style="height:52px;padding:10px 12px;font-size:12px;">输入消息，Enter 发送，Shift+Enter 换行</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom-strip">
+    <div class="caption">cc stateful session · 附件自动提取文本 · 流式回复 + 工具调用实时显示</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     S7 · 文档模板 & fill-gamedoc (79–97s)
+════════════════════════════════════════════════════════════ -->
+<div id="s7" class="scene" style="z-index: 1">
+  <div class="top-bar">
+    <div class="ch-badge mono">06 · 设计文档生成</div>
+    <div class="scene-title">/fill-gamedoc · cc 自动填充 gameplay / prop 文档</div>
+  </div>
+
+  <div class="browser" id="s7-browser">
+    <div class="browser-bar">
+      <div class="browser-dot b-red"></div><div class="browser-dot b-yellow"></div><div class="browser-dot b-green"></div>
+      <div class="browser-url">127.0.0.1:5173/</div>
+    </div>
+    <div class="topbar">
+      <span class="topbar-brand">level-design-deck</span>
+      <div class="spec-picker">level_overview_abandoned_temple ▾</div>
+      <span style="flex:1"></span>
+      <div class="tb-btn">💾 保存</div><div class="tb-btn">🎨 渲染</div>
+      <div class="tb-btn tb-btn-doc" id="s7-doc-btn" style="position:relative;">📄 文档模板 ●</div>
+    </div>
+    <div style="display:flex;height:calc(100% - 90px);">
+      <!-- 主区简化 -->
+      <div style="flex:0 0 240px;background:#f4f2ef;border-right:1px solid #e0ddd8;padding:14px;">
+        <div style="font-size:11px;color:#6b7280;margin-bottom:10px;font-weight:700;">告警</div>
+        <div style="font-size:11px;color:#9ca3af;">无告警 ✓</div>
+      </div>
+      <div style="flex:1;background:#f4f2ef;overflow:hidden;">
+        <div style="height:100%;display:flex;align-items:center;justify-content:center;color:#9ca3af;font-size:13px;">Spec 表单</div>
+      </div>
+
+      <!-- 预览栏：显示 gameplay 模板 -->
+      <div style="width:440px;flex-shrink:0;border-left:1px solid #e0ddd8;display:flex;flex-direction:column;">
+        <div style="padding:8px 12px;font-size:11px;font-weight:600;color:#1a73e8;border-bottom:1px solid #e0ddd8;background:#dbeafe;font-family:var(--mono);display:flex;align-items:center;gap:6px;">
+          <span>📄 玩法设计 模板 v1.5</span>
+          <span style="flex:1"></span>
+          <span style="font-size:10px;color:#6b7280;cursor:pointer;">✕ 关闭</span>
+        </div>
+        <!-- 模板内容预览 -->
+        <div style="flex:1;overflow:hidden;background:#fff;padding:16px;">
+          <!-- 模板 header -->
+          <div style="border-bottom:2px solid #e0ddd8;padding-bottom:16px;margin-bottom:14px;">
+            <div style="font-size:9px;color:#0d9488;text-transform:uppercase;letter-spacing:2px;margin-bottom:4px;">玩法设计文档 · Gameplay Design</div>
+            <div style="font-size:22px;font-weight:800;color:#2d2d2d;" id="s7-tmpl-title">仓库夜袭玩法</div>
+            <div style="font-size:11px;color:#6b7280;margin-top:4px;">Warehouse Night Raid Gameplay</div>
+            <div style="display:flex;gap:16px;margin-top:10px;font-size:10px;color:#9ca3af;">
+              <span>版本 <strong style="color:#2d2d2d;">v1.0</strong></span>
+              <span>日期 <strong style="color:#2d2d2d;" id="s7-tmpl-date">2026-05-19</strong></span>
+              <span>状态 <strong style="color:#e65100;">设计中</strong></span>
+            </div>
+          </div>
+          <!-- 已填字段 -->
+          <div style="font-size:11px;margin-bottom:10px;">
+            <div style="font-weight:700;color:#0d9488;font-size:10px;padding:2px 8px;background:rgba(13,148,136,0.08);border-radius:4px;display:inline-block;margin-bottom:6px;">02 玩法信息</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:11px;">
+              <div style="background:#f4f2ef;padding:4px 8px;border-radius:3px;"><span style="color:#6b7280;">设定：</span>现代都市仓库区，夜间</div>
+              <div style="background:#f4f2ef;padding:4px 8px;border-radius:3px;"><span style="color:#6b7280;">玩法级别：</span>T2</div>
+            </div>
+          </div>
+          <div style="font-size:11px;">
+            <div style="font-weight:700;color:#0d9488;font-size:10px;padding:2px 8px;background:rgba(13,148,136,0.08);border-radius:4px;display:inline-block;margin-bottom:6px;">03 设计概述</div>
+            <div style="font-size:11px;color:#374151;line-height:1.6;">玩家扮演夜盗潜入废弃仓库，规避巡逻、破解保险柜并撤离…</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chat 栏 -->
+      <div style="width:360px;flex-shrink:0;border-left:1px solid #e0ddd8;display:flex;flex-direction:column;">
+        <div class="chat-header">
+          <div class="ws-dot"></div>
+          <span class="chat-session mono" style="font-size:11px;">session·活跃</span>
+        </div>
+        <div style="flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:6px;">
+          <!-- hint 消息 -->
+          <div class="msg-hint" id="s7-hint">
+            📄 玩法设计 模板 v1.5 已在预览栏打开<br/><br/>
+            把源文件（group_doc HTML / IR JSON / 设计草稿）拖到附件区，或者输入 /fill-gamedoc &lt;源文件路径&gt;，cc 会自动填充这份玩法设计文档。
+          </div>
+          <div class="msg-tool" id="s7-tool1" style="opacity:0;font-size:11px;">🔧 Read · templates/html/gameplay_template_v1.5.html</div>
+          <div class="msg-tool" id="s7-tool2" style="opacity:0;font-size:11px;">🔧 Read · specs/bubble_diagram_test_warehouse.spec.json</div>
+          <div class="msg-assistant" id="s7-result" style="opacity:0;font-size:11px;line-height:1.7;">
+            ✅ 已填充 23 个字段<br/>
+            📄 docs/【玩法】仓库夜袭-设计文档.html 已生成<br/><br/>
+            <span style="color:#9ca3af;">需手动补填：白盒视角截图、音效需求表</span>
+          </div>
+        </div>
+        <div style="padding:10px;border-top:1px solid #e0ddd8;">
+          <div class="chat-input prefilled" id="s7-input">/fill-gamedoc specs/bubble_diagram_test_warehouse.spec.json</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom-strip">
+    <div class="caption" id="s7-cap">点击模板 → 预览栏自动打开 → Chat 引导 → /fill-gamedoc 自动填充 → 文档即刻生成</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     S8 · 结尾 (97–108s)
+════════════════════════════════════════════════════════════ -->
+<div id="s8" class="scene" style="z-index: 1">
+  <div id="s8-glow" style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%,rgba(217,119,87,0.14) 0%,transparent 65%);"></div>
+
+  <!-- 快速启动说明 -->
+  <div id="s8-qs-head" style="position:absolute;top:52px;left:0;width:1920px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:13px;color:#D97757;letter-spacing:4px;text-transform:uppercase;">如何启动 · Quickstart</div>
+
+  <div id="s8-qs-panels" style="position:absolute;top:98px;left:160px;right:160px;display:flex;gap:40px;">
+    <div id="s8-qs-mac" style="flex:1;background:rgba(217,119,87,0.05);border:1px solid rgba(217,119,87,0.2);border-radius:12px;padding:24px 30px;">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#D97757;margin-bottom:14px;letter-spacing:2px;">🍎 macOS</div>
+      <pre style="font-family:'IBM Plex Mono',monospace;font-size:14px;color:#C4B5A8;line-height:2;margin:0;white-space:pre;">cd webapp
+python3 -m venv .venv
+.venv/bin/pip install --no-index --find-links wheels/ \
+  fastapi uvicorn pydantic python-multipart watchfiles httpx
+cp .env.example .env  # 填入 ANTHROPIC_API_KEY
+./start-webapp.command        # 或双击此文件</pre>
+    </div>
+    <div id="s8-qs-win" style="flex:1;background:rgba(217,119,87,0.05);border:1px solid rgba(217,119,87,0.2);border-radius:12px;padding:24px 30px;">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#D97757;margin-bottom:14px;letter-spacing:2px;">🪟 Windows</div>
+      <pre style="font-family:'IBM Plex Mono',monospace;font-size:14px;color:#C4B5A8;line-height:2;margin:0;white-space:pre;">cd webapp
+python -m venv .venv
+.venv\Scripts\pip install --no-index --find-links wheels\ ^
+  fastapi uvicorn pydantic python-multipart watchfiles httpx
+copy .env.example .env   :: 填入 ANTHROPIC_API_KEY
+start-webapp.bat              :: 或双击此文件</pre>
+    </div>
+  </div>
+
+  <div id="s8-qs-note" style="position:absolute;top:700px;left:0;width:1920px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:13px;color:#504540;letter-spacing:1px;">wheels/ 已预打包 · 无需联网安装 · Python 3.13 + Node 24（前端 dev 模式可选）</div>
+
+  <div id="s8-sep" style="position:absolute;top:744px;left:280px;right:280px;height:1px;background:rgba(217,119,87,0.18);"></div>
+
+  <!-- Logo 尾板 -->
+  <div id="s8-logo" style="font-size:64px;font-weight:800;color:#F5EDE5;letter-spacing:-2px;position:absolute;top:772px;left:0;width:1920px;text-align:center;white-space:nowrap;text-shadow:0 0 60px rgba(217,119,87,0.4);">level-design-deck</div>
+  <div id="s8-tagline" style="position:absolute;top:856px;left:0;width:1920px;text-align:center;font-size:19px;color:#8A7A70;white-space:nowrap;">spec 真源 · AI 协作 · 文档自动生成</div>
+  <div id="s8-url" style="position:absolute;top:896px;left:0;width:1920px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:14px;color:#D97757;white-space:nowrap;letter-spacing:1px;">github.com/huoshangou/level-design-deck</div>
+</div>
+
+</div><!-- /root -->
+
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<script>
+window.__timelines = window.__timelines || {};
+const tl = gsap.timeline({ paused: true, timeScale: 1.5 });
+
+// ── S1: 标题 (0-8s) ──────────────────────────────────
+tl.from("#s1-tag",   { y: 16, opacity: 0, duration: 0.6, ease: "power3.out" }, 0.2);
+tl.from("#s1-name",  { y: 30, opacity: 0, duration: 0.7, ease: "power3.out" }, 0.5);
+tl.from("#s1-title", { y: 80, opacity: 0, duration: 0.9, ease: "expo.out" }, 0.8);
+tl.from("#s1-sub",   { y: 24, opacity: 0, duration: 0.6, ease: "power2.out" }, 1.4);
+tl.from("#s1-ver",   { y: 16, opacity: 0, duration: 0.5, ease: "power2.out" }, 1.7);
+
+// S1→S2 crossfade at 7.2s
+tl.to("#s2", { opacity: 1, duration: 0.8, ease: "power2.inOut" }, 7.2);
+
+// ── S2: 概览 (8-22s) ──────────────────────────────────
+tl.from("#s2 .ch-badge",   { x: -30, opacity: 0, duration: 0.5, ease: "power3.out" }, 8.2);
+tl.from("#s2 .scene-title",{ x: -20, opacity: 0, duration: 0.5, ease: "power2.out" }, 8.5);
+tl.from("#s2-browser",     { y: 40, opacity: 0, duration: 0.8, ease: "expo.out" }, 8.8);
+tl.from("#s2 .caption",    { y: 20, opacity: 0, duration: 0.5, ease: "power2.out" }, 9.4);
+tl.from("#s2-l1", { y: 20, opacity: 0, duration: 0.4, ease: "back.out(2)" }, 10.2);
+tl.from("#s2-l2", { y: 20, opacity: 0, duration: 0.4, ease: "back.out(2)" }, 10.5);
+tl.from("#s2-l3", { y: 20, opacity: 0, duration: 0.4, ease: "back.out(2)" }, 10.8);
+tl.from("#s2-l4", { y: 20, opacity: 0, duration: 0.4, ease: "back.out(2)" }, 11.1);
+
+// S2→S3 crossfade at 21s
+tl.to("#s3", { opacity: 1, duration: 0.8, ease: "power2.inOut" }, 21.0);
+
+// ── S3: Spec 编辑 (22-37s) ──────────────────────────────────
+tl.from("#s3 .ch-badge",   { x: -30, opacity: 0, duration: 0.5, ease: "power3.out" }, 22.0);
+tl.from("#s3 .scene-title",{ x: -20, opacity: 0, duration: 0.5, ease: "power2.out" }, 22.3);
+tl.from("#s3-browser",     { y: 40, opacity: 0, duration: 0.8, ease: "expo.out" }, 22.5);
+tl.from("#s3 .caption",    { y: 20, opacity: 0, duration: 0.5, ease: "power2.out" }, 23.2);
+
+// 光标出现 → 点击告警 → mood 字段高亮
+tl.to("#s3-cursor", { opacity: 1, duration: 0.3 }, 25.0);
+tl.to("#s3-cursor", { top: 440, left: 320, duration: 0.6, ease: "power2.inOut" }, 25.3);
+// 点击效果
+tl.fromTo("#s3-cursor", { scale: 1 }, { scale: 0.7, duration: 0.1, ease: "power3.in" }, 26.0);
+tl.fromTo("#s3-cursor", { scale: 0.7 }, { scale: 1, duration: 0.2, ease: "back.out(3)" }, 26.1);
+// mood field 高亮
+tl.fromTo("#s3-mood", { backgroundColor: "#fff" }, { backgroundColor: "#dbeafe", duration: 0.3 }, 26.3);
+tl.to("#s3-mood", { backgroundColor: "#fff", duration: 0.8, delay: 0.5 }, 26.6);
+// 光标移到 mood 字段并模拟填写
+tl.to("#s3-cursor", { top: 540, left: 860, duration: 0.5, ease: "power2.inOut" }, 27.5);
+// dirty badge 出现
+tl.fromTo("#s3-dirty", { scale: 1 }, { scale: 1.1, duration: 0.2, ease: "back.out(2)" }, 30.5);
+tl.to("#s3-dirty", { scale: 1, duration: 0.2 }, 30.7);
+// 光标移到保存按钮
+tl.to("#s3-cursor", { top: 186, left: 1300, duration: 0.6, ease: "power2.inOut" }, 31.5);
+tl.to("#s3-cursor", { scale: 0.7, duration: 0.1 }, 32.3);
+tl.to("#s3-cursor", { scale: 1, duration: 0.2, ease: "back.out(3)" }, 32.4);
+// dirty badge 消失
+tl.to("#s3-dirty", { opacity: 0, duration: 0.3 }, 32.6);
+tl.to("#s3-cursor", { opacity: 0, duration: 0.3 }, 35.0);
+
+// S3→S4 crossfade at 36s
+tl.to("#s4", { opacity: 1, duration: 0.8, ease: "power2.inOut" }, 36.0);
+
+// ── S4: BubbleDiagram (37-51s) ──────────────────────────────────
+tl.from("#s4 .ch-badge",   { x: -30, opacity: 0, duration: 0.5, ease: "power3.out" }, 37.0);
+tl.from("#s4 .scene-title",{ x: -20, opacity: 0, duration: 0.5, ease: "power2.out" }, 37.3);
+tl.from("#s4-browser",     { y: 40, opacity: 0, duration: 0.8, ease: "expo.out" }, 37.5);
+tl.from("#s4 .caption",    { y: 20, opacity: 0, duration: 0.5, ease: "power2.out" }, 38.2);
+
+// 光标出现在 patrol 节点附近，然后移到 vault 点击
+tl.to("#s4-cursor", { opacity: 1, duration: 0.3 }, 40.0);
+tl.to("#s4-cursor", { top: 327, left: 330, duration: 0.5, ease: "power2.out" }, 40.2);
+tl.to("#s4-cursor", { top: 327, left: 412, duration: 0.6, ease: "power2.inOut" }, 40.9);
+tl.fromTo("#s4-cursor", { scale: 1 }, { scale: 0.7, duration: 0.1 }, 41.6);
+tl.fromTo("#s4-cursor", { scale: 0.7 }, { scale: 1, duration: 0.2, ease: "back.out(3)" }, 41.72);
+// vault 节点高亮（蓝色保留 webapp 配色）
+tl.to("#s4-n-vault", { borderColor: "#1a73e8", backgroundColor: "#dbeafe", boxShadow: "0 0 0 3px rgba(26,115,232,0.3)", duration: 0.3 }, 41.9);
+// 表单对应 nodes[1]·金库 高亮（当前 form 显示的是 entry，跳到第二个 fieldset）
+tl.to("#s4-form-entry", { borderColor: "#1a73e8", duration: 0.3 }, 42.1);
+tl.fromTo("#s4-notes", { backgroundColor: "#fff" }, { backgroundColor: "#dbeafe", duration: 0.4 }, 42.5);
+tl.to("#s4-notes", { backgroundColor: "#fff", duration: 0.8 }, 43.5);
+// 光标移到 exit 节点（最后一个）
+tl.to("#s4-cursor", { top: 327, left: 606, duration: 0.7, ease: "power2.inOut" }, 44.8);
+tl.fromTo("#s4-cursor", { scale: 1 }, { scale: 0.7, duration: 0.1 }, 45.6);
+tl.fromTo("#s4-cursor", { scale: 0.7 }, { scale: 1, duration: 0.2, ease: "back.out(3)" }, 45.72);
+// vault 恢复，exit 高亮
+tl.to("#s4-n-vault", { borderColor: "#94a3b8", backgroundColor: "#f8fafc", boxShadow: "none", duration: 0.2 }, 45.8);
+tl.to("#s4-n-exit", { borderColor: "#16a34a", backgroundColor: "#bbf7d0", boxShadow: "0 0 0 3px rgba(22,163,74,0.25)", duration: 0.3 }, 46.0);
+tl.to("#s4-n-exit", { borderColor: "#16a34a", backgroundColor: "#dcfce7", boxShadow: "none", duration: 0.4 }, 47.5);
+tl.to("#s4-cursor", { opacity: 0, duration: 0.3 }, 49.0);
+
+// S4→S5 crossfade at 50s
+tl.to("#s5", { opacity: 1, duration: 0.8, ease: "power2.inOut" }, 50.0);
+
+// ── S5: 告警 (51-63s) ──────────────────────────────────
+tl.from("#s5 .ch-badge",   { x: -30, opacity: 0, duration: 0.5, ease: "power3.out" }, 51.0);
+tl.from("#s5 .scene-title",{ x: -20, opacity: 0, duration: 0.5, ease: "power2.out" }, 51.3);
+tl.from("#s5-browser",     { y: 40, opacity: 0, duration: 0.8, ease: "expo.out" }, 51.5);
+tl.from("#s5 .caption",    { y: 20, opacity: 0, duration: 0.5, ease: "power2.out" }, 52.2);
+// 告警条目逐条出现
+tl.from("#s5-a1", { x: -20, opacity: 0, duration: 0.4, ease: "power2.out" }, 53.0);
+
+// 光标点击告警
+tl.to("#s5-cursor", { opacity: 1, duration: 0.3 }, 54.5);
+tl.to("#s5-cursor", { top: 440, left: 380, duration: 0.6, ease: "power2.inOut" }, 54.8);
+tl.to("#s5-cursor", { scale: 0.7, duration: 0.1 }, 55.6);
+tl.to("#s5-cursor", { scale: 1, duration: 0.2, ease: "back.out(3)" }, 55.7);
+// mood 字段跳转高亮
+tl.fromTo("#s5-mood-field", { borderColor: "#c62828" }, { borderColor: "#1a73e8", backgroundColor: "#dbeafe", duration: 0.4 }, 55.9);
+tl.to("#s5-mood-field", { borderColor: "#c62828", backgroundColor: "#fef2f2", duration: 0.6, delay: 1.5 }, 56.3);
+tl.to("#s5-cursor", { opacity: 0, duration: 0.3 }, 61.0);
+
+// S5→S6 crossfade at 62s
+tl.to("#s6", { opacity: 1, duration: 0.8, ease: "power2.inOut" }, 62.0);
+
+// ── S6: Chat (63-79s) ──────────────────────────────────
+tl.from("#s6 .ch-badge",   { x: -30, opacity: 0, duration: 0.5, ease: "power3.out" }, 63.0);
+tl.from("#s6 .scene-title",{ x: -20, opacity: 0, duration: 0.5, ease: "power2.out" }, 63.3);
+tl.from("#s6-browser",     { y: 40, opacity: 0, duration: 0.8, ease: "expo.out" }, 63.5);
+tl.from("#s6 .caption",    { y: 20, opacity: 0, duration: 0.5, ease: "power2.out" }, 64.2);
+// 光标 blink
+tl.to("#s6-cursor-blink", { opacity: 0, duration: 0.5, repeat: Math.floor(14 / 1) - 1, yoyo: true }, 65.0);
+
+// S6→S7 crossfade at 78s
+tl.to("#s7", { opacity: 1, duration: 0.8, ease: "power2.inOut" }, 78.0);
+
+// ── S7: 文档模板 (79-97s) ──────────────────────────────────
+tl.from("#s7 .ch-badge",   { x: -30, opacity: 0, duration: 0.5, ease: "power3.out" }, 79.0);
+tl.from("#s7 .scene-title",{ x: -20, opacity: 0, duration: 0.5, ease: "power2.out" }, 79.3);
+tl.from("#s7-browser",     { y: 40, opacity: 0, duration: 0.8, ease: "expo.out" }, 79.5);
+tl.from("#s7 .caption",    { y: 20, opacity: 0, duration: 0.5, ease: "power2.out" }, 80.2);
+// hint 消息淡入
+tl.from("#s7-hint", { y: 20, opacity: 0, duration: 0.6, ease: "power3.out" }, 81.0);
+// 输入框 prefill 打字效果（通过 opacity 模拟）
+tl.from("#s7-input", { opacity: 0, duration: 0.4, ease: "power2.out" }, 82.5);
+// tool use 消息
+tl.to("#s7-tool1", { opacity: 1, duration: 0.4, ease: "power2.out" }, 84.5);
+tl.to("#s7-tool2", { opacity: 1, duration: 0.4, ease: "power2.out" }, 85.2);
+// 结果消息
+tl.to("#s7-result", { opacity: 1, duration: 0.6, ease: "power3.out" }, 86.5);
+// 模板标题更新（已填写状态）
+tl.from("#s7-tmpl-title", { opacity: 0.3, duration: 0.5 }, 87.0);
+
+// S7→S8 crossfade at 96s
+tl.to("#s8", { opacity: 1, duration: 1.2, ease: "power2.inOut" }, 96.0);
+
+// ── S8: 快速启动 + 结尾 (97-122s) ──────────────────────────────────
+// 97-110s: quickstart 卡片
+tl.from("#s8-qs-head",   { y: 20, opacity: 0, duration: 0.6, ease: "power3.out" }, 97.3);
+tl.from("#s8-qs-mac",    { x: -40, opacity: 0, duration: 0.7, ease: "expo.out" }, 97.8);
+tl.from("#s8-qs-win",    { x: 40, opacity: 0, duration: 0.7, ease: "expo.out" }, 98.1);
+tl.from("#s8-qs-note",   { y: 16, opacity: 0, duration: 0.5, ease: "power2.out" }, 98.8);
+tl.from("#s8-sep",       { scaleX: 0, opacity: 0, duration: 0.6, ease: "power2.out", transformOrigin: "center" }, 99.2);
+// 110s: logo 区域滑入
+tl.from("#s8-logo",      { y: 30, opacity: 0, duration: 0.8, ease: "expo.out" }, 109.5);
+tl.from("#s8-tagline",   { y: 20, opacity: 0, duration: 0.6, ease: "power3.out" }, 110.1);
+tl.from("#s8-url",       { y: 16, opacity: 0, duration: 0.5, ease: "power2.out" }, 110.5);
+// 最终淡出
+tl.to("#s8", { opacity: 0, duration: 1.8, ease: "power2.in" }, 120.0);
+
+window.__timelines["webapp-tutorial"] = tl;
+</script>
+</body>
+</html>
