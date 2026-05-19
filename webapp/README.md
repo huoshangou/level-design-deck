@@ -3,7 +3,7 @@
 > M4 阶段（B 阶段，分发期）的产物。在原 `editor.html` 单文件之上**新增一层** Web 应用 + 本地 daemon，
 > 让 cc 在后台跑、用户在浏览器选模板 + 对话生成 spec。未来由工具组接管后端 / 局域网部署。
 
-**当前进度（2026-05-18）：** Phase 0、1、2、2.5 完成 · Phase 3 / 4 待做（见底部路线图）
+**当前进度（2026-05-19）：** Phase 0–4 全部完成（含 BubbleDiagramView / SpatialLayoutView / RemoteAgentRunner stub / HANDOFF.md）
 
 ---
 
@@ -24,28 +24,53 @@ webapp `start-webapp.command` 跑新 daemon（占用同 8766，自动接管）�
 
 ## Quickstart
 
-**前置：** Python 3.13 + Node 24 / npm 11+ + macOS arm64（其他平台未测）
+**前置：** Python 3.13 + Node 24 / npm 11+ + Claude Code CLI (`claude` 在 PATH 中)
+
+支持平台：**macOS arm64** / **Windows 10/11 x64**（Linux 未测，理论可行）
+
+### macOS
 
 ```bash
-# 1. 装 backend（一次性，wheels 已进 git 不需要联网）
+# 1. 装 backend（wheels 已进 git，无需联网）
 cd webapp
 python3 -m venv .venv
-.venv/bin/pip install --no-index --find-links wheels/ fastapi 'uvicorn[standard]' pydantic python-multipart watchfiles pytest httpx claude-agent-sdk
+.venv/bin/pip install --no-index --find-links wheels/ fastapi 'uvicorn[standard]' pydantic pydantic-settings python-multipart watchfiles pytest httpx python-dotenv
 
-# 2. 配 cc API 凭证（webapp/.env，不进 git）
+# 2. 配 cc API 凭证
 cp .env.example .env
-# 编辑 .env：把 ANTHROPIC_BASE_URL / ANTHROPIC_API_KEY / ANTHROPIC_CUSTOM_HEADERS 改成你的 cc gateway / token
+# 编辑 .env：填入 ANTHROPIC_API_KEY（或公司 gateway 地址）
 
-# 3. 装 frontend
+# 3. 装 frontend（可选，用于 dev 热更新；prod 已有 dist/）
 cd frontend && npm install && cd ..
 
-# 4. 启动（两条命令，两个进程）
-./start-webapp.command                 # backend :8766 (nohup)
-cd frontend && npm run dev             # frontend :5173 (前台)
+# 4. 启动
+./start-webapp.command          # backend :8766（后台）
+cd frontend && npm run dev      # frontend :5173（可选，dev 热更新）
 
-# 5. 浏览器开
-open http://127.0.0.1:5173/
+# 5. 浏览器
+open http://127.0.0.1:5173/    # dev 模式
+# 或直接 open http://127.0.0.1:8766/  (prod，读 frontend/dist/)
 ```
+
+### Windows
+
+```bat
+REM 1. 装 backend（注意：Windows 不用 uvicorn[standard]，uvloop 不支持）
+cd webapp
+python -m venv .venv
+.venv\Scripts\pip install --no-index --find-links wheels\ fastapi uvicorn pydantic pydantic-settings python-multipart watchfiles pytest httpx python-dotenv
+
+REM 2. 配 cc API 凭证
+copy .env.example .env
+REM 用记事本编辑 .env，填入 ANTHROPIC_API_KEY
+
+REM 3. 启动（双击 start-webapp.bat，或在 cmd 里运行）
+start-webapp.bat
+
+REM 浏览器自动打开，或手动访问 http://127.0.0.1:8766/
+```
+
+> **Windows wheels 说明：** `webapp/wheels/` 里同时包含 macOS 和 Windows 的平台包（`win_amd64`），pip 会自动选正确的版本安装。
 
 也可以只跑 backend 不开前端 — `http://127.0.0.1:8766/legacy/editor.html` 是老 editor 兜底。
 
@@ -131,8 +156,8 @@ Vite dev server (:5173)  ──proxy──►  FastAPI (:8766)
 | 1 | ✅ | FastAPI backend + React/Vite/TS frontend + 三栏布局（与 editor.html 功能对齐） |
 | 2 | ✅ | AgentRunner + LocalCcRunner + sessions/chat API + WebSocket + stateful resume |
 | 2.5 | ✅ | LocalCcRunner `--add-dir` + 附件上传 + 后端转 txt + 附件 context 注入 |
-| 3 | ⏳ | BubbleDiagramView Mermaid 专用视图 + SpatialLayoutView LevelCraft 集成 + PreToolUse hook 放开 Write/Bash |
-| 4 | ⏳ | RemoteAgentRunner stub + namespace 贯通 + 给工具组的 HANDOFF.md |
+| 3 | ✅ | BubbleDiagramView Mermaid 专用视图（点击节点跳转表单）+ SpatialLayoutView LevelCraft 集成 + Write/Bash 白名单 |
+| 4 | ✅ | RemoteAgentRunner stub + namespace 贯通 + HANDOFF.md + Windows 支持 + 四栏可拖宽度 |
 
 详细 plan：[`~/.claude/plans/federated-tickling-sparkle.md`](~/.claude/plans/federated-tickling-sparkle.md)
 

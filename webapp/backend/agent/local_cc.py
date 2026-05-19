@@ -12,7 +12,7 @@ import json
 import os
 import time
 from pathlib import Path
-from typing import AsyncIterator
+from typing import AsyncIterator, Sequence
 
 from backend.agent.base import AgentRunner
 from backend.agent.events import (
@@ -21,10 +21,22 @@ from backend.agent.events import (
 )
 
 DEFAULT_MODEL = "claude-haiku-4-5"
-# v1 收紧：只允许 Read。Phase 3 加 PreToolUse hook 后再放开 Write/Bash，
-# 防止 cc 像 Phase 2 测试时那样自动往用户 ~/.claude/ 写 memory artifact。
-# 生成 spec 时 cc 让用户/前端通过 PUT /api/specs 写，不直接调 Write tool。
-ALLOWED_TOOLS = "Read"
+
+# Phase 3 工具白名单：
+# - Read：读任何文件
+# - Write(specs/*)：只允许写 specs/ 目录（防止 cc 写 ~/.claude/memory 等）
+# - Bash(python3 tools/*)：允许跑 tools/ 下的生成脚本
+# - Bash(ls *)：允许列目录
+# 若环境变量 DECK_WRITE_TOOLS=0 则退回 Read-only（Phase 2 行为）
+_WRITE_ALLOWED_TOOLS = ["Read", "Write(specs/*)", "Bash(python3 tools/*)", "Bash(ls *)"]
+_READ_ONLY_TOOLS = ["Read"]
+
+
+def _resolve_allowed_tools() -> Sequence[str]:
+    """读环境变量决定工具白名单。DECK_WRITE_TOOLS=0 → read-only；否则 Phase 3 完整白名单。"""
+    if os.environ.get("DECK_WRITE_TOOLS", "1") == "0":
+        return _READ_ONLY_TOOLS
+    return _WRITE_ALLOWED_TOOLS
 
 
 class LocalCcRunner(AgentRunner):
@@ -38,6 +50,7 @@ class LocalCcRunner(AgentRunner):
         self.default_model = default_model
         self.add_dirs = add_dirs
         self._sessions: dict[str, dict] = {}
+        self._allowed_tools: Sequence[str] = _resolve_allowed_tools()
 
     def start_session(self, client_id: str, namespace: str = "default") -> dict:
         if client_id in self._sessions:
@@ -81,7 +94,7 @@ class LocalCcRunner(AgentRunner):
             "--input-format=stream-json",
             "--verbose",
             "--model", self.default_model,
-            "--allowed-tools", ALLOWED_TOOLS,
+            "--allowed-tools", *self._allowed_tools,
         ]
         for d in self.add_dirs:
             cmd.extend(["--add-dir", str(d)])

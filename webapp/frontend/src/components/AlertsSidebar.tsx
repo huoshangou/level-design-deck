@@ -4,6 +4,7 @@ type Props = {
   alerts: Alert[];
   isLoading: boolean;
   onJump: (path: string) => void;
+  width?: number;
 };
 
 const COLOR: Record<Alert["level"], string> = {
@@ -22,7 +23,7 @@ const ORDER: Record<Alert["level"], number> = {
   INFO: 4,
 };
 
-export default function AlertsSidebar({ alerts, isLoading, onJump }: Props) {
+export default function AlertsSidebar({ alerts, isLoading, onJump, width = 320 }: Props) {
   const sorted = [...alerts].sort((a, b) => ORDER[a.level] - ORDER[b.level]);
   const stats = alerts.reduce<Record<string, number>>((acc, a) => {
     acc[a.level] = (acc[a.level] ?? 0) + 1;
@@ -32,8 +33,8 @@ export default function AlertsSidebar({ alerts, isLoading, onJump }: Props) {
   return (
     <aside
       style={{
-        width: 320,
-        flex: "0 0 320px",
+        width,
+        flex: `0 0 ${width}px`,
         borderRight: "1px solid var(--border)",
         background: "var(--panel)",
         overflow: "auto",

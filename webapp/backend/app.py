@@ -51,6 +51,8 @@ def create_app() -> FastAPI:
             "agent_backend": s.agent_backend,
             "namespace_default": s.namespace_default,
             "project_root": str(s.project_root),
+            "write_tools": s.write_tools,
+            "remote_gateway_url": s.remote_gateway_url or None,
         }
 
     # 老 editor.html 兜底（plan: /legacy/editor.html 过渡期可用）

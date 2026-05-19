@@ -8,6 +8,7 @@
 from __future__ import annotations
 import os
 import sys
+import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -32,6 +33,9 @@ class Settings:
     namespace_default: str
     agent_backend: str           # local | remote
     structured_wizard: bool
+    write_tools: bool            # True → Phase 3 完整白名单（Write+Bash），False → Read-only
+    remote_gateway_url: str      # DECK_REMOTE_GATEWAY_URL（agent_backend=remote 时必填）
+    remote_gateway_token: str | None  # DECK_REMOTE_GATEWAY_TOKEN
     cors_allow_dev_origin: str
     add_dirs: tuple[Path, ...]   # 额外让 cc 能 Read 的目录（--add-dir）
     uploads_dir: Path            # chat 附件临时存放
@@ -57,7 +61,10 @@ def load_settings() -> Settings:
         namespace_default=os.environ.get("DECK_NAMESPACE", "default"),
         agent_backend=os.environ.get("DECK_AGENT", "local"),
         structured_wizard=os.environ.get("DECK_STRUCTURED_WIZARD", "0") == "1",
+        write_tools=os.environ.get("DECK_WRITE_TOOLS", "1") != "0",
+        remote_gateway_url=os.environ.get("DECK_REMOTE_GATEWAY_URL", ""),
+        remote_gateway_token=os.environ.get("DECK_REMOTE_GATEWAY_TOKEN") or None,
         cors_allow_dev_origin=os.environ.get("DECK_DEV_ORIGIN", "http://localhost:5173"),
         add_dirs=_parse_add_dirs(os.environ.get("DECK_ADD_DIRS", "~/Desktop")),
-        uploads_dir=Path(os.environ.get("DECK_UPLOADS_DIR", "/tmp/deck-chat-uploads")),
+        uploads_dir=Path(os.environ.get("DECK_UPLOADS_DIR", str(Path(tempfile.gettempdir()) / "deck-chat-uploads"))),
     )

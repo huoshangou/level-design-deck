@@ -96,8 +96,8 @@ export default function ChatSidebar() {
       onDragLeave={onSidebarDragLeave}
       onDrop={(e) => void onSidebarDrop(e)}
       style={{
-        width: 360,
-        flex: "0 0 360px",
+        width: "100%",
+        height: "100%",
         display: "flex",
         flexDirection: "column",
         borderLeft: "1px solid var(--border)",

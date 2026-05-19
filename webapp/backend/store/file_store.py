@@ -58,7 +58,7 @@ class FileSpecStore(SpecStore):
             except (OSError, json.JSONDecodeError):
                 continue
             meta = content.get("meta", {}) if isinstance(content, dict) else {}
-            spec_id = meta.get("spec_id") or p.stem.removesuffix(".spec")
+            spec_id = p.stem.removesuffix(".spec")  # 文件名为 canonical ID，与 get() 一致
             out.append(SpecInfo(
                 id=spec_id,
                 module=_infer_module(spec_id),

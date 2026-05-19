@@ -29,7 +29,13 @@ def _make_agent() -> AgentRunner:
     s = get_settings()
     if s.agent_backend == "local":
         return LocalCcRunner(s.project_root, add_dirs=s.add_dirs)
-    raise NotImplementedError(f"agent_backend={s.agent_backend!r} 未实现（Phase 4 stub）")
+    if s.agent_backend == "remote":
+        from backend.agent.remote import RemoteAgentRunner
+        return RemoteAgentRunner(
+            gateway_url=s.remote_gateway_url,
+            token=s.remote_gateway_token,
+        )
+    raise NotImplementedError(f"agent_backend={s.agent_backend!r} 不是合法值（local | remote）")
 
 
 def get_store() -> SpecStore:
