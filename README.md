@@ -10,7 +10,7 @@
 
 <video src="https://github.com/huoshangou/level-design-deck/raw/main/outputs/tutorial-video.mp4" controls width="100%"></video>
 
-> 无法内嵌播放？[点此直接下载 MP4](https://github.com/huoshangou/level-design-deck/raw/main/outputs/tutorial-video.mp4)（10 MB，168 秒）
+> 无法内嵌播放？[点此直接下载 MP4](https://github.com/huoshangou/level-design-deck/raw/main/outputs/tutorial-video.mp4)（5.5 MB，62 秒）
 
 ---
 
