@@ -1,0 +1,4518 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="template-version" content="1.5">
+<meta name="template-kind" content="gameplay">
+<title>XXX玩法 - 玩法设计文档</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<style>
+/* ============================================================
+   CSS Variables — 暗色侧边栏 + 暖白内容区
+   ============================================================ */
+:root {
+  /* 侧边栏（暗色） */
+  --nav-bg: #1a1d27;
+  --nav-surface: #22263a;
+  --nav-border: #2e3352;
+  --nav-text: #8892b0;
+  --nav-text-hover: #e2e8f0;
+  --nav-accent: #64ffda;
+
+  /* 内容区（暖白） */
+  --bg: #faf9f7;
+  --surface: #ffffff;
+  --surface2: #f0eeeb;
+  --border: #e0ddd8;
+  --text: #2d2d2d;
+  --text-muted: #6b7280;
+  --text-light: #9ca3af;
+
+  /* 强调色 */
+  --accent: #0d9488;
+  --accent-light: rgba(13,148,136,0.08);
+
+  /* 状态色（亮色背景适配） */
+  --confirmed: #16a34a;
+  --pending: #d97706;
+  --risk: #dc2626;
+
+  /* 字体 */
+  --font: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+
+  /* 文案填写区 */
+  --copywriter-bg: #fef9ee;
+  --copywriter-border: #f5d88e;
+}
+
+/* ============================================================
+   Reset & Base
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font);
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--text);
+  background: var(--bg);
+  display: flex;
+  min-height: 100vh;
+}
+
+/* ============================================================
+   Sidebar Navigation（暗色）
+   ============================================================ */
+nav {
+  width: 240px;
+  min-width: 240px;
+  background: var(--nav-bg);
+  border-right: 1px solid var(--nav-border);
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  overflow-y: auto;
+  padding: 24px 0;
+  z-index: 100;
+}
+nav::-webkit-scrollbar { width: 4px; }
+nav::-webkit-scrollbar-thumb { background: var(--nav-border); border-radius: 2px; }
+
+nav .nav-logo {
+  padding: 0 20px 20px;
+  border-bottom: 1px solid var(--nav-border);
+  margin-bottom: 12px;
+}
+nav .nav-logo .project {
+  font-size: 10px;
+  color: var(--nav-text);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+nav .nav-logo .title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--nav-accent);
+  margin-top: 4px;
+  line-height: 1.4;
+}
+nav .nav-logo .version {
+  font-size: 11px;
+  color: var(--nav-text);
+  margin-top: 2px;
+}
+
+nav .nav-section {
+  padding: 16px 20px 4px;
+  font-size: 10px;
+  color: var(--nav-border);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  font-weight: 600;
+}
+nav a {
+  display: block;
+  padding: 5px 20px 5px 28px;
+  color: var(--nav-text);
+  text-decoration: none;
+  font-size: 12px;
+  transition: all 0.15s;
+  border-left: 2px solid transparent;
+}
+nav a:hover, nav a.active {
+  color: var(--nav-text-hover);
+  background: var(--nav-surface);
+  border-left-color: var(--nav-accent);
+}
+nav a .nav-num {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--nav-accent);
+  margin-right: 6px;
+  opacity: 0.7;
+}
+
+
+/* Nav sub-items (indented under parent) */
+nav a.nav-sub {
+  padding-left: 40px;
+  font-size: 11px;
+  opacity: 0.85;
+}
+nav a.nav-sub:hover { opacity: 1; }
+/* 工具栏 */
+nav .nav-save {
+  padding: 8px 20px;
+  border-bottom: 1px solid var(--nav-border);
+  margin-bottom: 4px;
+}
+nav .nav-save button {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--nav-accent);
+  color: var(--nav-bg);
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s;
+  letter-spacing: 0.5px;
+}
+nav .nav-save button:hover { opacity: 0.85; }
+
+nav .nav-tools {
+  border-top: 1px solid var(--nav-border);
+  margin-top: 16px;
+  padding-top: 16px;
+}
+nav .nav-tools button {
+  display: block;
+  width: calc(100% - 40px);
+  margin: 4px 20px;
+  padding: 6px 12px;
+  font-size: 11px;
+  background: var(--nav-surface);
+  color: var(--nav-text);
+  border: 1px solid var(--nav-border);
+  border-radius: 4px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s;
+}
+nav .nav-tools button:hover {
+  background: var(--nav-accent);
+  color: var(--nav-bg);
+  border-color: var(--nav-accent);
+}
+
+/* ============================================================
+   Main Content Area（暖白）
+   ============================================================ */
+main {
+  flex: 1;
+  padding: 40px 56px;
+  max-width: 1200px;
+  min-width: 0;
+}
+
+/* ============================================================
+   Document Header
+   ============================================================ */
+.doc-header {
+  border-bottom: 2px solid var(--border);
+  padding-bottom: 28px;
+  margin-bottom: 40px;
+}
+.doc-header .doc-type {
+  font-size: 11px;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+.doc-header h1 {
+  font-size: 36px;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1.25;
+  letter-spacing: -0.5px;
+}
+.doc-header .subtitle {
+  color: var(--text-muted);
+  margin-top: 6px;
+  font-size: 14px;
+}
+/* v1.5: contenteditable placeholder for empty subtitle/data-placeholder fields */
+[data-placeholder]:empty::before {
+  content: attr(data-placeholder);
+  color: var(--text-muted);
+  opacity: 0.6;
+  pointer-events: none;
+}
+[data-placeholder]:focus { outline: none; }
+/* v1.5: info-table 内的下拉框,样式与单元格融为一体 */
+.info-select {
+  font: inherit;
+  color: var(--text);
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--text-muted) 50%), linear-gradient(135deg, var(--text-muted) 50%, transparent 50%);
+  background-position: calc(100% - 12px) 50%, calc(100% - 7px) 50%;
+  background-size: 5px 5px;
+  background-repeat: no-repeat;
+  padding-right: 22px;
+}
+.info-select:focus { outline: 1px dashed var(--accent); outline-offset: 2px; }
+.doc-header .meta {
+  display: flex;
+  gap: 24px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+.doc-header .meta-item {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.doc-header .meta-item span {
+  color: var(--text);
+  font-weight: 500;
+}
+
+/* ============================================================
+   Sections
+   ============================================================ */
+section { margin-bottom: 48px; }
+section h2 {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--text);
+  padding: 4px 0 12px 14px;
+  border-bottom: 1px solid var(--border);
+  border-left: 4px solid var(--accent);
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  line-height: 1.3;
+}
+section h2 .sec-num {
+  font-size: 13px;
+  color: var(--accent);
+  font-family: var(--mono);
+  background: var(--accent-light);
+  padding: 3px 9px;
+  border-radius: 4px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+section h2 .collapse-btn {
+  margin-left: auto;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 11px;
+  padding: 2px 8px;
+  transition: all 0.15s;
+}
+section h2 .collapse-btn:hover {
+  background: var(--surface2);
+  color: var(--text);
+}
+section h3 {
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 32px 0 14px;
+  padding-bottom: 6px;
+  border-bottom: 1px dashed var(--border);
+}
+section h4 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 24px 0 10px;
+}
+p { color: var(--text); margin-bottom: 10px; font-size: 14px; }
+p.fill-placeholder { color: var(--text-light); }
+
+/* Section hidden state */
+.section-hidden .section-content {
+  display: none;
+}
+.section-hidden .section-hidden-hint {
+  display: block;
+}
+.section-hidden-hint {
+  display: none;
+  padding: 16px 20px;
+  background: var(--surface2);
+  border-radius: 8px;
+  color: var(--text-light);
+  font-size: 13px;
+  font-style: italic;
+}
+
+/* Collapsed state */
+.section-collapsed .section-content { display: none; }
+.section-collapsed h2 { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+
+/* ============================================================
+   Tables
+   ============================================================ */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  margin: 12px 0;
+}
+th {
+  background: var(--surface2);
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 10px 14px;
+  text-align: left;
+  border: 1px solid var(--border);
+}
+td {
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  color: var(--text);
+  vertical-align: top;
+  background: var(--surface);
+}
+tr:nth-child(even) td {
+  background: var(--bg);
+}
+td strong { color: var(--text); font-weight: 600; }
+td.label-cell {
+  background: var(--surface2);
+  font-weight: 500;
+  color: var(--text-muted);
+  width: 160px;
+  white-space: nowrap;
+}
+
+/* ============================================================
+   Cards
+   ============================================================ */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin: 12px 0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.card-confirmed { border-left: 3px solid var(--confirmed); }
+.card-pending { border-left: 3px solid var(--pending); }
+.card-risk { border-left: 3px solid var(--risk); }
+
+/* ============================================================
+   Tags & Badges
+   ============================================================ */
+.tag {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+.tag-confirmed { background: rgba(22,163,74,0.1); color: var(--confirmed); }
+.tag-pending { background: rgba(217,119,6,0.1); color: var(--pending); }
+.tag-risk { background: rgba(220,38,38,0.1); color: var(--risk); }
+
+.group-badge {
+  display: inline-block;
+  font-size: 11px;
+  padding: 2px 10px;
+  border-radius: 12px;
+  margin: 2px;
+  background: var(--surface2);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+
+.version-tag {
+  display: inline-block;
+  font-size: 10px;
+  background: var(--accent-light);
+  color: var(--accent);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-weight: 600;
+}
+
+.param-code {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--accent);
+  background: var(--accent-light);
+  padding: 1px 6px;
+  border-radius: 3px;
+}
+
+/* ============================================================
+   Requirement Lists
+   ============================================================ */
+.req-list { list-style: none; }
+.req-list li {
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+.req-list li:last-child { border-bottom: none; }
+.req-list li::before {
+  content: '·';
+  color: var(--accent);
+  font-size: 18px;
+  line-height: 1.4;
+  flex-shrink: 0;
+}
+
+/* ============================================================
+   Requirement Checklist（需求清单）
+   ============================================================ */
+.checklist-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px 24px;
+  margin: 12px 0;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+.checklist-group {
+  margin-bottom: 14px;
+}
+.checklist-group:last-child { margin-bottom: 0; }
+.checklist-group-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+  padding: 3px 10px;
+  background: var(--accent-light);
+  border-radius: 4px;
+  display: inline-block;
+}
+.checklist-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 10px;
+  border-radius: 6px;
+  transition: all 0.12s;
+  cursor: pointer;
+}
+.checklist-item:hover { background: var(--surface2); }
+.checklist-item input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.checklist-item label {
+  font-size: 13px;
+  color: var(--text);
+  cursor: pointer;
+  flex: 1;
+  user-select: none;
+}
+.checklist-item .checklist-hint {
+  font-size: 10px;
+  color: var(--text-light);
+  background: var(--surface2);
+  padding: 1px 6px;
+  border-radius: 3px;
+}
+/* Readonly snapshot (导出文档中的需求清单只读态) */
+.readonly-snapshot .checklist-item,
+.readonly-snapshot .checklist-item label { cursor: default; }
+.readonly-snapshot .checklist-item:hover { background: transparent; }
+.readonly-snapshot .checklist-mark { font-family: var(--font); }
+
+/* ============================================================
+   Key-Value Info Table
+   ============================================================ */
+.info-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0;
+}
+.info-table td {
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+}
+.info-table td:first-child {
+  background: var(--surface2);
+  font-weight: 500;
+  color: var(--text-muted);
+  width: 160px;
+}
+.info-table td:nth-child(2) {
+  background: var(--surface);
+}
+
+/* ============================================================
+   Editable Fields
+   ============================================================ */
+[contenteditable="true"] {
+  outline: none;
+  transition: box-shadow 0.15s, background 0.15s;
+  border-radius: 2px;
+  min-height: 1.5em;
+}
+[contenteditable="true"]:hover {
+  box-shadow: inset 0 0 0 1px rgba(13,148,136,0.2);
+}
+[contenteditable="true"]:focus {
+  box-shadow: inset 0 0 0 2px var(--accent);
+  background: rgba(13,148,136,0.03);
+}
+.fill-placeholder {
+  color: var(--text-light);
+  font-style: italic;
+}
+
+/* User-typed text in editable fields is always black */
+[contenteditable="true"] {
+  color: var(--text);
+}
+td[contenteditable="true"] {
+  color: var(--text);
+}
+
+/* ============================================================
+   Copywriter Fields（文案填写区 — 黄色标记）
+   ============================================================ */
+.copywriter-field {
+  background: var(--copywriter-bg) !important;
+  border-left: 3px solid var(--copywriter-border) !important;
+}
+
+/* ============================================================
+   Image Placeholder & Upload
+   ============================================================ */
+.image-placeholder {
+  background: var(--surface);
+  border: 2px dashed var(--border);
+  border-radius: 8px;
+  padding: 24px;
+  margin: 16px 0;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  outline: none;
+}
+.image-placeholder:hover {
+  border-color: var(--accent);
+  background: var(--accent-light);
+}
+.image-placeholder.has-image {
+  border-style: solid;
+  padding: 8px;
+  cursor: default;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: flex-start;
+}
+.image-placeholder.has-image .placeholder-content { display: none; }
+.image-placeholder .placeholder-label {
+  font-size: 14px;
+  color: var(--text);
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+.image-placeholder .placeholder-hint {
+  font-size: 12px;
+  color: var(--text-light);
+  margin-top: 8px;
+}
+.image-placeholder .upload-icon {
+  font-size: 32px;
+  color: var(--text-light);
+  margin-bottom: 8px;
+}
+/* Multi-image wrapper */
+.img-wrapper {
+  position: relative;
+  display: inline-block;
+  border-radius: 4px;
+  overflow: visible;
+  transition: width 0.2s;
+}
+.img-wrapper img {
+  width: 100%;
+  border-radius: 4px;
+  display: block;
+}
+.img-wrapper .img-actions {
+  display: none;
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  gap: 3px;
+  z-index: 2;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.img-wrapper:hover .img-actions { display: flex; }
+.img-actions button {
+  background: rgba(0,0,0,0.6);
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 3px 6px;
+  font-size: 10px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.img-actions button:hover { background: rgba(0,0,0,0.8); }
+.img-actions button.active { background: var(--accent); }
+/* Image caption input */
+.img-caption {
+  display: block;
+  width: 100%;
+  font-size: 11px;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 2px 4px;
+  margin-top: 2px;
+  border: 1px dashed var(--border);
+  border-radius: 3px;
+  background: transparent;
+  box-sizing: border-box;
+}
+.img-caption:focus { border-color: var(--accent); outline: none; }
+/* Nav disabled (exported clean version) */
+.nav-disabled {
+  color: var(--text-muted) !important;
+  opacity: 0.5;
+  pointer-events: none;
+  text-decoration: line-through;
+}
+/* Add-more button inside has-image placeholder */
+.img-add-more {
+  width: 60px; height: 60px;
+  border: 2px dashed var(--border);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: var(--text-light);
+  cursor: pointer;
+  transition: all 0.15s;
+  flex-shrink: 0;
+  align-self: center;
+}
+.img-add-more:hover { border-color: var(--accent); color: var(--accent); }
+/* Legacy single image support (backwards compat) */
+.image-placeholder > img { max-width: 100%; border-radius: 4px; display: block; margin: 0 auto; }
+.image-placeholder .image-actions {
+  display: none;
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  gap: 4px;
+}
+.image-placeholder.has-image:hover > .image-actions { display: flex; }
+.image-actions button {
+  background: rgba(0,0,0,0.6);
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 11px;
+  cursor: pointer;
+}
+.image-actions button:hover { background: rgba(0,0,0,0.8); }
+
+/* Prompt block (for AI image prompts) */
+.prompt-block {
+  background: var(--surface2);
+  border-radius: 6px;
+  padding: 12px 16px;
+  margin-top: 10px;
+  text-align: left;
+}
+.prompt-tag {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--accent);
+  display: block;
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+.prompt-block p { font-size: 12px; color: var(--text-muted); margin: 0; }
+.prompt-block code {
+  font-size: 11px;
+  color: var(--accent);
+  font-family: var(--mono);
+  line-height: 1.6;
+  display: block;
+}
+
+/* ============================================================
+   Mermaid Diagrams
+   ============================================================ */
+.diagram-container {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 24px;
+  margin: 16px 0;
+  text-align: center;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.diagram-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 16px;
+  font-weight: 600;
+}
+.mermaid { background: transparent !important; }
+
+/* ============================================================
+   Add Row Button
+   ============================================================ */
+.add-row-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 14px;
+  font-size: 12px;
+  color: var(--accent);
+  background: var(--accent-light);
+  border: 1px dashed var(--accent);
+  border-radius: 6px;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: all 0.15s;
+}
+.add-row-btn:hover { background: rgba(13,148,136,0.15); }
+.delete-row-btn {
+  background: none;
+  border: none;
+  color: var(--text-light);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  transition: all 0.15s;
+}
+.delete-row-btn:hover { color: var(--risk); background: rgba(220,38,38,0.08); }
+
+/* ============================================================
+   Param Group Cards (配置模块分组)
+   ============================================================ */
+.param-group {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 14px 16px;
+  margin-bottom: 14px;
+}
+.param-group-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.param-group-header .group-letter {
+  font-weight: 600;
+  color: var(--accent);
+}
+.param-group-header .group-name {
+  font-weight: 600;
+  font-size: 14px;
+  border-bottom: 1px dashed var(--border);
+  padding: 0 4px;
+  min-width: 120px;
+}
+.param-group-header .delete-group-btn {
+  margin-left: auto;
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 12px;
+  padding: 3px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.param-group-header .delete-group-btn:hover {
+  color: var(--risk);
+  border-color: var(--risk);
+  background: rgba(220,38,38,0.05);
+}
+.param-group table { margin-bottom: 6px; }
+
+/* ============================================================
+   Select Dropdowns
+   ============================================================ */
+select {
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 13px;
+  font-family: var(--font);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+}
+select:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+
+/* Radio & Checkbox groups */
+.option-group {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin: 4px 0;
+}
+.option-group label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text);
+  cursor: pointer;
+}
+.option-group input { accent-color: var(--accent); }
+
+/* ============================================================
+   3C Restriction Matrix
+   ============================================================ */
+.matrix-table th { font-size: 11px; text-align: center; }
+.matrix-table td { text-align: center; font-size: 12px; }
+.matrix-table td.matrix-label {
+  text-align: left;
+  font-weight: 500;
+  background: var(--surface2);
+}
+.matrix-table .matrix-group-header {
+  background: var(--surface2);
+  font-weight: 600;
+  text-align: left;
+  font-size: 12px;
+  color: var(--text);
+}
+
+
+/* ============================================================
+   Rich Editor Toolbar
+   ============================================================ */
+.rich-editor {
+  position: relative;
+  margin: 12px 0;
+}
+.rich-editor-toolbar {
+  display: none;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+  padding: 6px 10px;
+  gap: 2px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.rich-editor:focus-within .rich-editor-toolbar { display: flex; }
+.rich-editor:focus-within .rich-editor-content {
+  border-radius: 0 0 8px 8px;
+}
+.rich-editor-toolbar button {
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 13px;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-family: var(--font);
+  transition: all 0.1s;
+  line-height: 1;
+}
+.rich-editor-toolbar button:hover {
+  background: var(--surface2);
+  color: var(--text);
+  border-color: var(--border);
+}
+.rich-editor-toolbar .sep {
+  width: 1px;
+  height: 20px;
+  background: var(--border);
+  margin: 0 4px;
+}
+.rich-editor-content {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px 20px;
+  min-height: 120px;
+  outline: none;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  line-height: 1.8;
+  font-size: 14px;
+  color: var(--text);
+}
+.rich-editor-content:focus {
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+.rich-editor-content img {
+  max-width: 100%;
+  border-radius: 4px;
+  margin: 8px 0;
+  display: block;
+  cursor: pointer;
+}
+.rich-img-resizer {
+  display: inline-block; position: relative; max-width: 100%; line-height: 0; margin: 8px 0;
+}
+.rich-img-resizer img { margin: 0; }
+.rich-img-resizer.active { outline: 2px solid var(--accent); outline-offset: 2px; }
+.rich-img-handle {
+  display: none; position: absolute; right: -4px; bottom: -4px;
+  width: 10px; height: 10px; background: var(--accent); border: 1px solid #fff;
+  cursor: nwse-resize; border-radius: 2px; z-index: 2;
+}
+.rich-img-resizer.active .rich-img-handle { display: block; }
+.rich-editor-content table {
+  margin: 8px 0;
+}
+.rich-editor-content h4 {
+  margin: 16px 0 8px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 4px;
+}
+.rich-editor-content ul, .rich-editor-content ol {
+  margin: 8px 0;
+  padding-left: 24px;
+}
+.rich-editor-content ul li, .rich-editor-content ol li {
+  margin: 2px 0;
+}
+
+.rich-editor-toolbar button.active {
+  background: var(--accent-light);
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.rich-table-wrapper { position: relative; margin: 8px 0; }
+.rich-table-wrapper th { position: relative; }
+.rich-table-wrapper th::after {
+  content: ''; position: absolute; right: -2px; top: 0; bottom: 0;
+  width: 5px; cursor: col-resize; z-index: 1;
+}
+.rich-table-wrapper th:last-child::after { display: none; }
+.rich-table-wrapper th::after:hover,
+.rich-table-wrapper th.col-resizing::after { background: var(--accent); opacity: 0.6; }
+.rich-table-actions { display: none; gap: 4px; margin-top: 4px; }
+.rich-table-wrapper:hover .rich-table-actions,
+.rich-table-wrapper:focus-within .rich-table-actions { display: flex; }
+.rich-table-actions button {
+  font-size: 11px; padding: 2px 8px; border: 1px solid var(--border);
+  border-radius: 3px; background: var(--surface); cursor: pointer;
+  color: var(--text-muted); font-family: var(--font); transition: all 0.1s;
+}
+.rich-table-actions button:hover { background: var(--surface2); color: var(--text); }
+
+.rich-color-panel {
+  position: absolute; z-index: 60; top: 100%; left: 0; margin-top: 4px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 6px; padding: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  display: grid; grid-template-columns: repeat(5, 28px); gap: 4px;
+}
+.rich-color-swatch {
+  width: 28px; height: 28px; border-radius: 4px; border: 1px solid var(--border);
+  cursor: pointer; transition: transform 0.1s;
+}
+.rich-color-swatch:hover { transform: scale(1.15); border-color: var(--accent); }
+
+/* ============================================================
+   Print Styles
+   ============================================================ */
+@media print {
+  nav { display: none; }
+  main { padding: 20px; max-width: 100%; }
+  .add-row-btn, .delete-row-btn, .collapse-btn, .nav-tools,
+  .image-actions, .checklist-hint, .rich-table-actions, .rich-img-handle { display: none !important; }
+  .rich-img-resizer.active { outline: none; }
+  .section-hidden { display: none; }
+  [contenteditable] { box-shadow: none !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     Sidebar Navigation
+     ============================================================ -->
+<nav>
+  <div class="nav-logo">
+    <div class="project">ProjectX · 关卡策划</div>
+    <div class="title" id="nav-title">XXX玩法<br>玩法设计</div>
+    <div class="version" id="nav-version">v1.0 · YYYY-MM-DD</div>
+  </div>
+
+  <div class="nav-save"><button onclick="saveDocument()">保存文档</button></div>
+
+  <div class="nav-section">文档结构</div>
+  <a href="#version"><span class="nav-num">01</span>版本记录</a>
+  <a href="#info"><span class="nav-num">02</span>玩法信息</a>
+  <a href="#overview"><span class="nav-num">03</span>设计概述</a>
+  <a href="#whitebox"><span class="nav-num">04</span>白盒视频</a>
+  <a href="#related-docs"><span class="nav-num">05</span>关联文档</a>
+  <a href="#requirements"><span class="nav-num">06</span>玩法需求</a>
+  <a href="#req-flow" class="nav-sub"><span class="nav-num">6.1</span>玩法流程图</a>
+  <a href="#req-function" class="nav-sub"><span class="nav-num">6.2</span>玩法功能</a>
+  <a href="#req-physics" class="nav-sub"><span class="nav-num">6.3</span>物理需求</a>
+  <a href="#req-3c" class="nav-sub"><span class="nav-num">6.4</span>3C需求</a>
+  <a href="#req-system" class="nav-sub"><span class="nav-num">6.5</span>系统需求</a>
+  <a href="#req-mission" class="nav-sub"><span class="nav-num">6.6</span>任务需求</a>
+  <a href="#req-combat" class="nav-sub"><span class="nav-num">6.7</span>战斗需求</a>
+  <a href="#req-ai" class="nav-sub"><span class="nav-num">6.8</span>AI需求</a>
+  <a href="#req-vehicle" class="nav-sub"><span class="nav-num">6.9</span>载具需求</a>
+  <a href="#req-anim" class="nav-sub"><span class="nav-num">6.10</span>动画需求</a>
+  <a href="#req-light" class="nav-sub"><span class="nav-num">6.11</span>灯光需求</a>
+  <a href="#req-vfx" class="nav-sub"><span class="nav-num">6.12</span>特效需求</a>
+  <a href="#req-sfx" class="nav-sub"><span class="nav-num">6.13</span>音效需求</a>
+  <a href="#multiplayer"><span class="nav-num">07</span>多人游玩</a>
+  <a href="#config"><span class="nav-num">08</span>配置</a>
+  <a href="#placement"><span class="nav-num">09</span>玩法布设规范</a>
+  <a href="#reference"><span class="nav-num">10</span>补充参考图</a>
+
+
+  <div class="nav-tools">
+    <button onclick="document.getElementById('import-file-input').click()">导入已有文档</button>
+    <input type="file" id="import-file-input" accept=".html" style="display:none" onchange="importCleanHTML(this)">
+    <button onclick="loadDiffBaseline()">对比旧版</button>
+    <input type="file" id="diff-file-input" accept=".html" style="display:none" onchange="onDiffFileSelected(this)">
+    <button onclick="exportCleanHTML()">导出纯净 HTML</button>
+    <button onclick="window.print()">打印 / PDF</button>
+  </div>
+</nav>
+
+<!-- ============================================================
+     Main Content
+     ============================================================ -->
+<main>
+
+<!-- Document Header -->
+<div class="doc-header">
+  <div class="doc-type">玩法设计文档 · Gameplay Design</div>
+  <h1 contenteditable="true" id="header-title" data-field="gameplay_name_cn">XXX玩法</h1>
+  <div class="subtitle" contenteditable="true" data-field="gameplay_name_en" data-placeholder="Gameplay Name — 一句话描述"></div>
+  <div class="meta">
+    <div class="meta-item">版本 <span contenteditable="true" id="header-version" data-field="version_num">v1.0</span></div>
+    <div class="meta-item">日期 <input type="date" id="header-date" data-field="header_date" max="9999-12-31" style="border:1px solid var(--border);border-radius:4px;padding:2px 6px;font-size:12px;font-family:var(--font);background:var(--surface);color:var(--text);cursor:pointer"></div>
+    <div class="meta-item">状态 <span contenteditable="true" style="color:var(--pending)" data-field="status">设计中</span></div>
+    <div class="meta-item">策划 <span contenteditable="true" data-field="designer">—</span></div>
+  </div>
+</div>
+
+<!-- ============================================================
+     01 版本记录
+     ============================================================ -->
+<section id="version">
+  <h2>
+    <span class="sec-num">01</span>版本记录
+    <button class="collapse-btn" onclick="toggleCollapse(this)">折叠</button>
+  </h2>
+  <div class="section-content">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:120px">日期</th>
+          <th>内容</th>
+          <th style="width:100px">策划</th>
+          <th style="width:50px">操作</th>
+        </tr>
+      </thead>
+      <tbody id="version-table-body">
+        <tr>
+          <td><input type="date" class="date-input" max="9999-12-31" style="width:100%;border:1px solid var(--border);border-radius:4px;padding:4px 6px;font-size:13px;font-family:var(--font);background:var(--surface);color:var(--text);cursor:pointer"></td>
+          <td contenteditable="true">完成文档</td>
+          <td contenteditable="true">—</td>
+          <td></td>
+        </tr>
+      </tbody>
+    </table>
+    <button class="add-row-btn" onclick="addTableRow('version-table-body', 3)">+ 添加版本记录</button>
+  </div>
+</section>
+
+<!-- ============================================================
+     02 玩法信息
+     ============================================================ -->
+<section id="info">
+  <h2>
+    <span class="sec-num">02</span>玩法信息
+    <button class="collapse-btn" onclick="toggleCollapse(this)">折叠</button>
+  </h2>
+  <div class="section-content">
+
+    <!-- 基本信息 -->
+    <h3>基本信息</h3>
+    <table class="info-table">
+      <tr><td>版本</td><td contenteditable="true" data-field="info_version">1.0版本</td></tr>
+      <tr><td>设定</td><td contenteditable="true" data-field="info_setting">—</td></tr>
+      <tr><td>地块</td><td contenteditable="true" data-field="info_region">Los Angeles</td></tr>
+      <tr><td>玩法分级</td><td><select data-field="info_level" class="info-select">
+        <option value="T0">T0</option>
+        <option value="T1">T1</option>
+        <option value="T2" selected>T2</option>
+        <option value="T3">T3</option>
+      </select></td></tr>
+      <tr><td>玩法命名（中文）</td><td contenteditable="true" data-field="info_name_cn">—</td></tr>
+      <tr><td>玩法命名（英文）</td><td contenteditable="true" data-field="info_name_en">—</td></tr>
+    </table>
+
+    <!-- 需求清单 -->
+    <h3>需求清单</h3>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:8px">勾选对应需求，文档将自动显示相关章节。取消勾选的章节将被隐藏。</p>
+    <div class="checklist-panel" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0 24px">
+
+      <!-- Column 1 -->
+      <div>
+        <div class="checklist-group">
+          <div class="checklist-group-title">文案组</div>
+          <div class="checklist-item"><input type="checkbox" id="chk-copywriting-gameplay" data-controls=""><label for="chk-copywriting-gameplay">玩法包装需求</label></div>
+          <div class="checklist-item"><input type="checkbox" id="chk-copywriting-prop" data-controls=""><label for="chk-copywriting-prop">物件包装需求</label></div>
+        </div>
+        <div class="checklist-group">
+          <div class="checklist-group-title">角色组</div>
+          <div class="checklist-item"><input type="checkbox" id="chk-3c" data-controls="req-3c"><label for="chk-3c">3C需求</label></div>
+          <div class="checklist-item"><input type="checkbox" id="chk-action" data-controls="req-3c-action"><label for="chk-action">角色动作</label></div>
+        </div>
+        <div class="checklist-group">
+          <div class="checklist-group-title">物理组</div>
+          <div class="checklist-item"><input type="checkbox" id="chk-physics-nondestructive" data-controls="req-physics"><label for="chk-physics-nondestructive">非破坏类物理表现</label></div>
+          <div class="checklist-item"><input type="checkbox" id="chk-physics-destructive" data-controls="req-physics"><label for="chk-physics-destructive">可破坏物</label></div>
+        </div>
+        <div class="checklist-group">
+          <div class="checklist-group-title">系统组</div>
+          <div class="checklist-item"><input type="checkbox" id="chk-system" data-controls="req-system"><label for="chk-system">系统组合作需求</label></div>
+          <div class="checklist-item"><input type="checkbox" id="chk-map" data-controls="req-system-map"><label for="chk-map">地图系统</label></div>
+          <div class="checklist-item"><input type="checkbox" id="chk-ux" checked data-controls="req-system-ui"><label for="chk-ux">UIUX</label></div>
+          <div class="checklist-item" style="padding-left:20px"><input type="checkbox" id="chk-ux-interaction" checked data-controls=""><label for="chk-ux-interaction">UX交互稿</label></div>
+          <div class="checklist-item" style="padding-left:20px"><input type="checkbox" id="chk-ux-prompt" checked data-controls=""><label for="chk-ux-prompt">提示UI</label></div>
+          <div class="checklist-item" style="padding-left:20px"><input type="checkbox" id="chk-ux-nonprompt" data-controls=""><label for="chk-ux-nonprompt">非提示UI与UI动效</label></div>
+          <div class="checklist-item" style="padding-left:20px"><input type="checkbox" id="chk-ux-map" data-controls=""><label for="chk-ux-map">地图系统UI</label></div>
+        </div>
+      </div>
+
+      <!-- Column 2 -->
+      <div>
+        <div class="checklist-group">
+          <div class="checklist-group-title">地图组</div>
+          <div class="checklist-item"><input type="checkbox" id="chk-lighting" data-controls="req-light"><label for="chk-lighting">灯光需求</label></div>
+        </div>
+        <div class="checklist-group">
+          <div class="checklist-group-title">载具组</div>
+          <div class="checklist-item"><input type="checkbox" id="chk-vehicle" data-controls="req-vehicle"><label for="chk-vehicle">载具需求</label></div>
+        </div>
+        <div class="checklist-group">
+          <div class="checklist-group-title">AI组</div>
+          <div class="checklist-item"><input type="checkbox" id="chk-ai" data-controls="req-ai"><label for="chk-ai">AI需求</label></div>
+        </div>
+        <div class="checklist-group">
+          <div class="checklist-group-title">战斗组</div>
+          <div class="checklist-item"><input type="checkbox" id="chk-combat" data-controls="req-combat"><label for="chk-combat">战斗需求</label></div>
+        </div>
+        <div class="checklist-group">
+          <div class="checklist-group-title">任务组</div>
+          <div class="checklist-item"><input type="checkbox" id="chk-mission" data-controls="req-mission"><label for="chk-mission">任务需求</label></div>
+        </div>
+        <div class="checklist-group">
+          <div class="checklist-group-title">TD组</div>
+          <div class="checklist-item"><input type="checkbox" id="chk-td" data-controls=""><label for="chk-td">TD需求</label></div>
+        </div>
+        <div class="checklist-group">
+          <div class="checklist-group-title">GPP</div>
+          <div class="checklist-item"><input type="checkbox" id="chk-gpp" data-controls="req-anim"><label for="chk-gpp">引擎动画</label></div>
+        </div>
+      </div>
+
+      <!-- Column 3 -->
+      <div>
+        <div class="checklist-group">
+          <div class="checklist-group-title">美术</div>
+          <div class="checklist-item"><input type="checkbox" id="chk-concept" checked data-controls=""><label for="chk-concept">原画</label></div>
+          <div class="checklist-item"><input type="checkbox" id="chk-model" checked data-controls=""><label for="chk-model">模型</label></div>
+          <div class="checklist-item"><input type="checkbox" id="chk-vfx" data-controls="req-vfx"><label for="chk-vfx">特效</label></div>
+          <div class="checklist-item"><input type="checkbox" id="chk-sfx" data-controls="req-sfx"><label for="chk-sfx">音效</label></div>
+          <div class="checklist-item"><input type="checkbox" id="chk-skeleton-anim" data-controls=""><label for="chk-skeleton-anim">骨骼动画</label></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     03 设计概述（Excel Sheet3 第1章）
+     ============================================================ -->
+<section id="overview">
+  <h2>
+    <span class="sec-num">03</span>设计概述
+    <button class="collapse-btn" onclick="toggleCollapse(this)">折叠</button>
+  </h2>
+  <div class="section-content">
+
+    <h3>设计目标与体验</h3>
+    <div class="rich-editor">
+        <div class="rich-editor-toolbar">
+          <button onclick="richCmd('bold')" data-cmd="bold" title="加粗"><b>B</b></button>
+          <button onclick="richCmd('italic')" data-cmd="italic" title="斜体"><i>I</i></button>
+          <button onclick="richCmd('underline')" data-cmd="underline" title="下划线"><u>U</u></button>
+          <div class="sep"></div>
+          <button onclick="richCmd('insertUnorderedList')" data-cmd="insertUnorderedList" title="无序列表">• 列表</button>
+          <button onclick="richCmd('insertOrderedList')" data-cmd="insertOrderedList" title="有序列表">1. 列表</button>
+          <div class="sep"></div>
+          <button onclick="richInsertTable(this)" title="插入表格">表格</button>
+          <button onclick="richInsertImage(this)" title="插入图片">图片</button>
+          <div class="sep"></div>
+          <button onclick="richCmd('formatBlock','<h4>')" title="设为标题">标题</button>
+          <button onclick="richCmd('formatBlock','<p>')" title="还原为正文段落（取消标题/列表格式）">正文</button>
+          <button onclick="richColorPick(this,'foreColor')" title="文字颜色" style="position:relative">A<span style="border-bottom:3px solid #e53e3e;display:inline-block;width:10px"></span></button>
+          <button onclick="richColorPick(this,'backColor')" title="背景颜色" style="position:relative">背景</button>
+          <button onclick="richClearFormat(this)" title="清除所有格式">清除</button>
+        </div>
+        <div class="rich-editor-content" contenteditable="true" data-field="design_goal">
+          <p class="fill-placeholder">描述本玩法的核心设计目标和期望带给玩家的体验感受…</p>
+        </div>
+      </div>
+
+    <h3>玩法描述</h3>
+    <div class="rich-editor">
+        <div class="rich-editor-toolbar">
+          <button onclick="richCmd('bold')" data-cmd="bold" title="加粗"><b>B</b></button>
+          <button onclick="richCmd('italic')" data-cmd="italic" title="斜体"><i>I</i></button>
+          <button onclick="richCmd('underline')" data-cmd="underline" title="下划线"><u>U</u></button>
+          <div class="sep"></div>
+          <button onclick="richCmd('insertUnorderedList')" data-cmd="insertUnorderedList" title="无序列表">• 列表</button>
+          <button onclick="richCmd('insertOrderedList')" data-cmd="insertOrderedList" title="有序列表">1. 列表</button>
+          <div class="sep"></div>
+          <button onclick="richInsertTable(this)" title="插入表格">表格</button>
+          <button onclick="richInsertImage(this)" title="插入图片">图片</button>
+          <div class="sep"></div>
+          <button onclick="richCmd('formatBlock','<h4>')" title="设为标题">标题</button>
+          <button onclick="richCmd('formatBlock','<p>')" title="还原为正文段落（取消标题/列表格式）">正文</button>
+          <button onclick="richColorPick(this,'foreColor')" title="文字颜色" style="position:relative">A<span style="border-bottom:3px solid #e53e3e;display:inline-block;width:10px"></span></button>
+          <button onclick="richColorPick(this,'backColor')" title="背景颜色" style="position:relative">背景</button>
+          <button onclick="richClearFormat(this)" title="清除所有格式">清除</button>
+        </div>
+        <div class="rich-editor-content" contenteditable="true" data-field="gameplay_description">
+          <p class="fill-placeholder">概述本玩法的基本流程和核心机制…</p>
+        </div>
+      </div>
+
+    <h3>校验项</h3>
+    <div class="rich-editor">
+        <div class="rich-editor-toolbar">
+          <button onclick="richCmd('bold')" data-cmd="bold" title="加粗"><b>B</b></button>
+          <button onclick="richCmd('italic')" data-cmd="italic" title="斜体"><i>I</i></button>
+          <button onclick="richCmd('underline')" data-cmd="underline" title="下划线"><u>U</u></button>
+          <div class="sep"></div>
+          <button onclick="richCmd('insertUnorderedList')" data-cmd="insertUnorderedList" title="无序列表">• 列表</button>
+          <button onclick="richCmd('insertOrderedList')" data-cmd="insertOrderedList" title="有序列表">1. 列表</button>
+          <div class="sep"></div>
+          <button onclick="richInsertTable(this)" title="插入表格">表格</button>
+          <button onclick="richInsertImage(this)" title="插入图片">图片</button>
+          <div class="sep"></div>
+          <button onclick="richCmd('formatBlock','<h4>')" title="设为标题">标题</button>
+          <button onclick="richCmd('formatBlock','<p>')" title="还原为正文段落（取消标题/列表格式）">正文</button>
+          <button onclick="richColorPick(this,'foreColor')" title="文字颜色" style="position:relative">A<span style="border-bottom:3px solid #e53e3e;display:inline-block;width:10px"></span></button>
+          <button onclick="richColorPick(this,'backColor')" title="背景颜色" style="position:relative">背景</button>
+          <button onclick="richClearFormat(this)" title="清除所有格式">清除</button>
+        </div>
+        <div class="rich-editor-content" contenteditable="true" data-field="validation_items">
+          <p class="fill-placeholder">列出设计完成后需要校验的关键点…</p>
+        </div>
+      </div>
+
+    <h3>名词解释</h3>
+    <table>
+      <thead>
+        <tr>
+          <th style="width:180px">名词</th>
+          <th>名词简述</th>
+          <th style="width:50px">操作</th>
+        </tr>
+      </thead>
+      <tbody id="glossary-table-body">
+        <tr>
+          <td contenteditable="true">—</td>
+          <td contenteditable="true">—</td>
+          <td></td>
+        </tr>
+      </tbody>
+    </table>
+    <button class="add-row-btn" onclick="addTableRow('glossary-table-body', 2)">+ 添加名词</button>
+
+  </div>
+</section>
+
+<!-- ============================================================
+     04 白盒视频
+     ============================================================ -->
+<section id="whitebox">
+  <h2>
+    <span class="sec-num">04</span>白盒视频
+    <button class="collapse-btn" onclick="toggleCollapse(this)">折叠</button>
+  </h2>
+  <div class="section-content">
+    <table class="info-table">
+      <tr><td>P4路径</td><td contenteditable="true"><span data-field="whitebox_p4_path">—</span></td></tr>
+      <tr><td>文件名</td><td contenteditable="true"><span data-field="whitebox_filename">—</span></td></tr>
+    </table>
+
+    <div class="image-placeholder" onclick="handleImageUpload(this)">
+      <div class="image-actions">
+        <button onclick="event.stopPropagation(); replaceImage(this.closest('.image-placeholder'))">替换</button>
+        <button onclick="event.stopPropagation(); removeImage(this.closest('.image-placeholder'))">删除</button>
+      </div>
+      <div class="placeholder-content">
+        <div class="upload-icon">&#128247;</div>
+        <div class="placeholder-label">白盒视频截图 / 关键帧</div>
+        <div class="placeholder-hint">点击上传、拖拽或粘贴图片到此处（自动嵌入为base64）</div>
+      </div>
+      <!-- IMAGE_SLOT: {"id":"whitebox_screenshot","desc":"白盒视频关键帧截图"} -->
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     05 关联文档
+     ============================================================ -->
+<section id="related-docs">
+  <h2>
+    <span class="sec-num">05</span>关联文档
+    <button class="collapse-btn" onclick="toggleCollapse(this)">折叠</button>
+  </h2>
+  <div class="section-content">
+
+    <h3>玩法文档</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>文档名称</th>
+          <th>链接/路径</th>
+          <th>说明</th>
+          <th style="width:50px">操作</th>
+        </tr>
+      </thead>
+      <tbody id="related-gameplay-body">
+        <tr>
+          <td contenteditable="true">—</td>
+          <td contenteditable="true">—</td>
+          <td contenteditable="true">—</td>
+          <td></td>
+        </tr>
+      </tbody>
+    </table>
+    <button class="add-row-btn" onclick="addTableRow('related-gameplay-body', 3)">+ 添加文档</button>
+
+    <h3>IP设定</h3>
+    <table class="info-table">
+      <tr><td>文案包装链接</td><td contenteditable="true"><span data-field="ip_link">—</span></td></tr>
+    </table>
+
+    <h3>合作组</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>合作组</th>
+          <th>文档/链接</th>
+          <th>说明</th>
+          <th style="width:50px">操作</th>
+        </tr>
+      </thead>
+      <tbody id="related-collab-body">
+        <tr>
+          <td contenteditable="true">—</td>
+          <td contenteditable="true">—</td>
+          <td contenteditable="true">—</td>
+          <td></td>
+        </tr>
+      </tbody>
+    </table>
+    <button class="add-row-btn" onclick="addTableRow('related-collab-body', 3)">+ 添加合作组</button>
+
+  </div>
+</section>
+
+<!-- ============================================================
+     06 玩法需求（主体章节）
+     ============================================================ -->
+<section id="requirements">
+  <h2>
+    <span class="sec-num">06</span>玩法需求
+    <button class="collapse-btn" onclick="toggleCollapse(this)">折叠</button>
+  </h2>
+  <div class="section-content">
+
+    <!-- 6.1 玩法流程图 -->
+    <div id="req-flow" class="sub-section">
+      <h3>6.1 玩法流程图</h3>
+
+      <!-- 模式切换 -->
+      <div style="display:flex;gap:8px;margin-bottom:12px">
+        <button class="flow-mode-btn active" onclick="switchFlowMode('mermaid')" id="btn-flow-mermaid" style="padding:6px 16px;font-size:12px;border:1px solid var(--border);border-radius:4px;cursor:pointer;background:var(--accent);color:#fff;font-family:var(--font);transition:all 0.15s">Mermaid 图表</button>
+        <button class="flow-mode-btn" onclick="switchFlowMode('image')" id="btn-flow-image" style="padding:6px 16px;font-size:12px;border:1px solid var(--border);border-radius:4px;cursor:pointer;background:var(--surface);color:var(--text-muted);font-family:var(--font);transition:all 0.15s">上传图片</button>
+      </div>
+
+      <!-- Mode A: Mermaid -->
+      <div id="flow-mermaid-mode">
+        <div class="diagram-container">
+          <div class="diagram-label">玩法核心流程</div>
+          
+          <div class="mermaid" contenteditable="false" data-field="mermaid_flowchart">
+flowchart TD
+    A[玩法触发] --> B[核心循环]
+    B --> C{成功条件}
+    C -->|达成| D[奖励结算]
+    C -->|未达成| B
+          </div>
+        </div>
+      </div>
+
+      <!-- Mode B: Image Upload -->
+      <div id="flow-image-mode" style="display:none">
+        <div class="image-placeholder" onclick="handleImageUpload(this)">
+          <div class="image-actions">
+            <button onclick="event.stopPropagation(); replaceImage(this.closest('.image-placeholder'))">替换</button>
+            <button onclick="event.stopPropagation(); removeImage(this.closest('.image-placeholder'))">删除</button>
+          </div>
+          <div class="placeholder-content">
+            <div class="upload-icon">&#128247;</div>
+            <div class="placeholder-label">玩法流程图</div>
+            <div class="placeholder-hint">点击上传流程图图片，或拖拽图片到此处</div>
+          </div>
+          <!-- IMAGE_SLOT: {"id":"gameplay_flowchart_img","desc":"玩法流程图（图片版）"} -->
+        </div>
+      </div>
+
+      <div class="rich-editor">
+        <div class="rich-editor-toolbar">
+          <button onclick="richCmd('bold')" data-cmd="bold" title="加粗"><b>B</b></button>
+          <button onclick="richCmd('italic')" data-cmd="italic" title="斜体"><i>I</i></button>
+          <button onclick="richCmd('underline')" data-cmd="underline" title="下划线"><u>U</u></button>
+          <div class="sep"></div>
+          <button onclick="richCmd('insertUnorderedList')" data-cmd="insertUnorderedList" title="无序列表">• 列表</button>
+          <button onclick="richCmd('insertOrderedList')" data-cmd="insertOrderedList" title="有序列表">1. 列表</button>
+          <div class="sep"></div>
+          <button onclick="richInsertTable(this)" title="插入表格">表格</button>
+          <button onclick="richInsertImage(this)" title="插入图片">图片</button>
+          <div class="sep"></div>
+          <button onclick="richCmd('formatBlock','<h4>')" title="设为标题">标题</button>
+          <button onclick="richCmd('formatBlock','<p>')" title="还原为正文段落（取消标题/列表格式）">正文</button>
+          <button onclick="richColorPick(this,'foreColor')" title="文字颜色" style="position:relative">A<span style="border-bottom:3px solid #e53e3e;display:inline-block;width:10px"></span></button>
+          <button onclick="richColorPick(this,'backColor')" title="背景颜色" style="position:relative">背景</button>
+          <button onclick="richClearFormat(this)" title="清除所有格式">清除</button>
+        </div>
+        <div class="rich-editor-content" contenteditable="true" data-field="flowchart_description">
+          <p class="fill-placeholder">流程图补充说明…</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6.2 玩法功能 -->
+    <div id="req-function" class="sub-section">
+      <h3>6.2 玩法功能</h3>
+      <div class="rich-editor">
+        <div class="rich-editor-toolbar">
+          <button onclick="richCmd('bold')" data-cmd="bold" title="加粗"><b>B</b></button>
+          <button onclick="richCmd('italic')" data-cmd="italic" title="斜体"><i>I</i></button>
+          <button onclick="richCmd('underline')" data-cmd="underline" title="下划线"><u>U</u></button>
+          <div class="sep"></div>
+          <button onclick="richCmd('insertUnorderedList')" data-cmd="insertUnorderedList" title="无序列表">• 列表</button>
+          <button onclick="richCmd('insertOrderedList')" data-cmd="insertOrderedList" title="有序列表">1. 列表</button>
+          <div class="sep"></div>
+          <button onclick="richInsertTable(this)" title="插入表格">表格</button>
+          <button onclick="richInsertImage(this)" title="插入图片">图片</button>
+          <div class="sep"></div>
+          <button onclick="richCmd('formatBlock','<h4>')" title="设为标题">标题</button>
+          <button onclick="richCmd('formatBlock','<p>')" title="还原为正文段落（取消标题/列表格式）">正文</button>
+          <button onclick="richColorPick(this,'foreColor')" title="文字颜色" style="position:relative">A<span style="border-bottom:3px solid #e53e3e;display:inline-block;width:10px"></span></button>
+          <button onclick="richColorPick(this,'backColor')" title="背景颜色" style="position:relative">背景</button>
+          <button onclick="richClearFormat(this)" title="清除所有格式">清除</button>
+        </div>
+        <div class="rich-editor-content" contenteditable="true" data-field="gameplay_function">
+          <p class="fill-placeholder">描述玩法的功能设计需求，包括核心机制、触发条件、结束条件等…</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6.3 物理需求 -->
+    <div id="req-physics" class="sub-section" data-section="physics">
+      <h3>6.3 物理需求</h3>
+      <div class="section-hidden-hint">本玩法无物理需求，已隐藏。可在需求清单中勾选启用。</div>
+      <div class="section-content">
+        <div class="rich-editor">
+        <div class="rich-editor-toolbar">
+          <button onclick="richCmd('bold')" data-cmd="bold" title="加粗"><b>B</b></button>
+          <button onclick="richCmd('italic')" data-cmd="italic" title="斜体"><i>I</i></button>
+          <button onclick="richCmd('underline')" data-cmd="underline" title="下划线"><u>U</u></button>
+          <div class="sep"></div>
+          <button onclick="richCmd('insertUnorderedList')" data-cmd="insertUnorderedList" title="无序列表">• 列表</button>
+          <button onclick="richCmd('insertOrderedList')" data-cmd="insertOrderedList" title="有序列表">1. 列表</button>
+          <div class="sep"></div>
+          <button onclick="richInsertTable(this)" title="插入表格">表格</button>
+          <button onclick="richInsertImage(this)" title="插入图片">图片</button>
+          <div class="sep"></div>
+          <button onclick="richCmd('formatBlock','<h4>')" title="设为标题">标题</button>
+          <button onclick="richCmd('formatBlock','<p>')" title="还原为正文段落（取消标题/列表格式）">正文</button>
+          <button onclick="richColorPick(this,'foreColor')" title="文字颜色" style="position:relative">A<span style="border-bottom:3px solid #e53e3e;display:inline-block;width:10px"></span></button>
+          <button onclick="richColorPick(this,'backColor')" title="背景颜色" style="position:relative">背景</button>
+          <button onclick="richClearFormat(this)" title="清除所有格式">清除</button>
+        </div>
+        <div class="rich-editor-content" contenteditable="true" data-field="physics_requirement">
+          <p class="fill-placeholder">描述物理表现需求，包括非破坏类物理表现和可破坏物需求…</p>
+        </div>
+      </div>
+      </div>
+    </div>
+
+    <!-- 6.4 3C需求 -->
+    <div id="req-3c" class="sub-section" data-section="3c">
+      <h3>6.4 3C需求</h3>
+      <div class="section-hidden-hint">本玩法无3C需求，已隐藏。可在需求清单中勾选启用。</div>
+      <div class="section-content">
+
+        <h4>区域能力3C限制</h4>
+        <table class="info-table" style="margin-bottom:16px">
+          <tr>
+            <td>需求类型</td>
+            <td>
+              <select id="sel-3c-type" onchange="update3CDescription()">
+                <option value="玩法模式（Gameplay）">玩法模式（Gameplay）</option>
+                <option value="区域规则（Zone）">区域规则（Zone）</option>
+                <option value="任务定制（Mission）">任务定制（Mission）</option>
+              </select>
+              <div id="3c-type-desc" style="margin-top:6px;font-size:12px;color:var(--text-muted)">由角色主动或被动进入的特定玩法或交互。以交互玩法为主要判断维度。</div>
+            </td>
+          </tr>
+          <tr>
+            <td>影响对象</td>
+            <td>
+              <select id="sel-3c-target" onchange="update3CTargetDesc()">
+                <option value="主角（Hero）">主角（Hero）</option>
+                <option value="非主角（NPC）">非主角（NPC）</option>
+              </select>
+              <div id="3c-target-desc" style="margin-top:6px;font-size:12px;color:var(--text-muted)">此限制将会影响 Hero 类型的角色身上的能力、或改变 Hero 类型的行为</div>
+            </td>
+          </tr>
+          <tr>
+            <td>触发方式</td>
+            <td>
+              <select id="sel-3c-trigger" onchange="update3CTriggerDesc()">
+                <option value="Volume">Volume</option>
+                <option value="程序接口">程序接口</option>
+              </select>
+              <div id="3c-trigger-desc" style="margin-top:6px;font-size:12px;color:var(--text-muted)">策划将其安放在对应关卡、物件中，调整至合适触发范围，当 Hero 进入Volume 时触发，退出 Volume 时解除。</div>
+            </td>
+          </tr>
+        </table>
+
+        <h4>需求背景</h4>
+        <div class="rich-editor">
+        <div class="rich-editor-toolbar">
+          <button onclick="richCmd('bold')" data-cmd="bold" title="加粗"><b>B</b></button>
+          <button onclick="richCmd('italic')" data-cmd="italic" title="斜体"><i>I</i></button>
+          <button onclick="richCmd('underline')" data-cmd="underline" title="下划线"><u>U</u></button>
+          <div class="sep"></div>
+          <button onclick="richCmd('insertUnorderedList')" data-cmd="insertUnorderedList" title="无序列表">• 列表</button>
+          <button onclick="richCmd('insertOrderedList')" data-cmd="insertOrderedList" title="有序列表">1. 列表</button>
+          <div class="sep"></div>
+          <button onclick="richInsertTable(this)" title="插入表格">表格</button>
+          <button onclick="richInsertImage(this)" title="插入图片">图片</button>
+          <div class="sep"></div>
+          <button onclick="richCmd('formatBlock','<h4>')" title="设为标题">标题</button>
+          <button onclick="richCmd('formatBlock','<p>')" title="还原为正文段落（取消标题/列表格式）">正文</button>
+          <button onclick="richColorPick(this,'foreColor')" title="文字颜色" style="position:relative">A<span style="border-bottom:3px solid #e53e3e;display:inline-block;width:10px"></span></button>
+          <button onclick="richColorPick(this,'backColor')" title="背景颜色" style="position:relative">背景</button>
+          <button onclick="richClearFormat(this)" title="清除所有格式">清除</button>
+        </div>
+        <div class="rich-editor-content" contenteditable="true" data-field="3c_background">
+          <p class="fill-placeholder">eg.在规定范围内，让玩家使用角色射击系统击破靶子的大世界填充玩法。不希望玩家使用垂直运动能力，攀爬靶场物件，使角色进入靶子放置区内部。</p>
+        </div>
+      </div>
+
+        <h4>3C限制模板</h4>
+        <p style="font-size:13px;color:var(--text);margin-bottom:4px" contenteditable="true" data-field="3c_limit_area_name">《模板 - 这里填写限制区域名》</p>
+
+        <!-- [角色组] 区域能力限制 -->
+        <table class="matrix-table">
+          <thead>
+            <tr>
+              <th style="width:80px">模块</th>
+              <th style="width:90px">模板</th>
+              <th style="width:90px">子模板</th>
+              <th style="width:120px">单选选项</th>
+              <th style="width:120px">区域类型</th>
+              <th>说明</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="matrix-group-header" colspan="6">[角色组] 区域能力限制</td>
+            </tr>
+            <tr>
+              <td class="matrix-label" rowspan="9">战斗维度<br>+<br>运动能力</td>
+              <td class="matrix-label" rowspan="3">战斗维度</td>
+              <td class="matrix-label" rowspan="3">能否战斗</td>
+              <td><label><input type="radio" name="3c-combat" value="无限制" checked> 无限制</label></td>
+              <td><span class="param-code">战斗区</span></td>
+              <td style="font-size:12px;color:var(--text-muted)">无限制</td>
+            </tr>
+            <tr>
+              <td><label><input type="radio" name="3c-combat" value="禁技能"> 禁技能</label></td>
+              <td><span class="param-code">射击区</span></td>
+              <td style="font-size:12px;color:var(--text-muted)">只能进行射击、瞄准等基础武器操作</td>
+            </tr>
+            <tr>
+              <td><label><input type="radio" name="3c-combat" value="禁武器"> 禁武器</label></td>
+              <td><span class="param-code">安全区</span></td>
+              <td style="font-size:12px;color:var(--text-muted)">不可以掏出或使用任何武器。无法限制被动进战</td>
+            </tr>
+            <tr>
+              <td class="matrix-label" rowspan="6">运动能力</td>
+              <td class="matrix-label" rowspan="2">移动限制</td>
+              <td><label><input type="radio" name="3c-move" value="无限制" checked> 无限制</label></td>
+              <td><span class="param-code">大型空间</span></td>
+              <td style="font-size:12px;color:var(--text-muted)">无限制</td>
+            </tr>
+            <tr>
+              <td><label><input type="radio" name="3c-move" value="禁用移动"> 禁用移动</label></td>
+              <td><span class="param-code">固定空间</span></td>
+              <td style="font-size:12px;color:var(--text-muted)">禁用移动、跳跃、攀爬等</td>
+            </tr>
+            <tr>
+              <td class="matrix-label" rowspan="2">垂直限制</td>
+              <td><label><input type="radio" name="3c-vertical" value="垂直运动受限"> 垂直运动受限</label></td>
+              <td><span class="param-code">扁平空间</span></td>
+              <td style="font-size:12px;color:var(--text-muted)">禁用攀爬等</td>
+            </tr>
+            <tr>
+              <td><label><input type="radio" name="3c-vertical" value="垂直移动受限"> 垂直移动受限</label></td>
+              <td><span class="param-code">低矮空间</span></td>
+              <td style="font-size:12px;color:var(--text-muted)">禁用跳跃、攀爬等</td>
+            </tr>
+            <tr>
+              <td class="matrix-label" rowspan="2">水平限制</td>
+              <td><label><input type="radio" name="3c-horizontal" value="水平运动受限"> 水平运动受限</label></td>
+              <td><span class="param-code">小型空间</span></td>
+              <td style="font-size:12px;color:var(--text-muted)">禁用冲刺、闪避等</td>
+            </tr>
+            <tr>
+              <td><label><input type="radio" name="3c-horizontal" value="水平移动受限"> 水平移动受限</label></td>
+              <td><span class="param-code">狭窄空间</span></td>
+              <td style="font-size:12px;color:var(--text-muted)">禁用冲刺、闪避、跑步等</td>
+            </tr>
+            <tr>
+              <td class="matrix-label">其他能力</td>
+              <td class="matrix-label">其他能力</td>
+              <td class="matrix-label">待补充</td>
+              <td><label><input type="radio" name="3c-other" value="其他"> 其他</label></td>
+              <td></td>
+              <td style="font-size:12px;color:var(--text-muted)">特殊需求（需三方评审）</td>
+            </tr>
+
+            <tr>
+              <td class="matrix-group-header" colspan="6">[角色组] 载具使用限制</td>
+            </tr>
+            <tr>
+              <td class="matrix-label" rowspan="3">载具维度</td>
+              <td class="matrix-label" rowspan="3">载具维度</td>
+              <td class="matrix-label" rowspan="3">能否开车</td>
+              <td><label><input type="radio" name="3c-vehicle" value="无限制" checked> 无限制</label></td>
+              <td><span class="param-code">行驶区</span></td>
+              <td style="font-size:12px;color:var(--text-muted)">默认情况。可以开车驶入</td>
+            </tr>
+            <tr>
+              <td><label><input type="radio" name="3c-vehicle" value="车辆无法驶入"> 车辆无法驶入</label></td>
+              <td><span class="param-code">禁车区</span></td>
+              <td style="font-size:12px;color:var(--text-muted)">车辆靠近区域，会逐渐减速，无法驶入</td>
+            </tr>
+            <tr>
+              <td><label><input type="radio" name="3c-vehicle" value="无法驶入且强制下车"> 无法驶入且强制下车</label></td>
+              <td><span class="param-code">步行区</span></td>
+              <td style="font-size:12px;color:var(--text-muted)">车辆靠近区域，除减速外，会自动下车</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h4>镜头需求</h4>
+        <table class="matrix-table" style="margin-bottom:16px">
+          <thead>
+            <tr>
+              <th style="width:160px">模块</th>
+              <th style="width:160px">子模板</th>
+              <th>单选选项</th>
+              <th>说明</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="matrix-label" rowspan="2">[角色组] 镜头需求限制</td>
+              <td class="matrix-label" rowspan="2">是否有特殊镜头需求？</td>
+              <td><label><input type="radio" name="3c-camera" value="否" checked> 否</label></td>
+              <td style="font-size:12px;color:var(--text-muted)">若有需求，在下方描述</td>
+            </tr>
+            <tr>
+              <td><label><input type="radio" name="3c-camera" value="是"> 是</label></td>
+              <td></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h4>特殊镜头需求</h4>
+        <div class="rich-editor">
+          <div class="rich-editor-toolbar">
+            <button onclick="richCmd('bold')" data-cmd="bold" title="加粗"><b>B</b></button>
+            <button onclick="richCmd('italic')" data-cmd="italic" title="斜体"><i>I</i></button>
+            <button onclick="richCmd('underline')" data-cmd="underline" title="下划线"><u>U</u></button>
+            <div class="sep"></div>
+            <button onclick="richCmd('insertUnorderedList')" data-cmd="insertUnorderedList" title="无序列表">• 列表</button>
+            <button onclick="richCmd('insertOrderedList')" data-cmd="insertOrderedList" title="有序列表">1. 列表</button>
+            <div class="sep"></div>
+            <button onclick="richInsertTable(this)" title="插入表格">表格</button>
+            <button onclick="richInsertImage(this)" title="插入图片">图片</button>
+            <div class="sep"></div>
+            <button onclick="richCmd('formatBlock','<h4>')" title="设为标题">标题</button>
+            <button onclick="richCmd('formatBlock','<p>')" title="还原为正文段落（取消标题/列表格式）">正文</button>
+            <button onclick="richClearFormat(this)" title="清除所有格式">清除</button>
+          </div>
+          <div class="rich-editor-content" contenteditable="true" data-field="special_camera">
+            <p class="fill-placeholder">若有特殊镜头需求，在此描述…</p>
+          </div>
+        </div>
+
+        <div id="req-3c-action">
+          <h4>角色动作</h4>
+          <div class="section-hidden-hint">本玩法无角色动作需求，已隐藏。</div>
+          <div class="section-content">
+            <div class="rich-editor">
+              <div class="rich-editor-toolbar">
+          <button onclick="richCmd('bold')" data-cmd="bold" title="加粗"><b>B</b></button>
+          <button onclick="richCmd('italic')" data-cmd="italic" title="斜体"><i>I</i></button>
+          <button onclick="richCmd('underline')" data-cmd="underline" title="下划线"><u>U</u></button>
+          <div class="sep"></div>
+          <button onclick="richCmd('insertUnorderedList')" data-cmd="insertUnorderedList" title="无序列表">• 列表</button>
+          <button onclick="richCmd('insertOrderedList')" data-cmd="insertOrderedList" title="有序列表">1. 列表</button>
+          <div class="sep"></div>
+          <button onclick="richInsertTable(this)" title="插入表格">表格</button>
+          <button onclick="richInsertImage(this)" title="插入图片">图片</button>
+          <div class="sep"></div>
+          <button onclick="richCmd('formatBlock','<h4>')" title="设为标题">标题</button>
+          <button onclick="richCmd('formatBlock','<p>')" title="还原为正文段落（取消标题/列表格式）">正文</button>
+          <button onclick="richColorPick(this,'foreColor')" title="文字颜色" style="position:relative">A<span style="border-bottom:3px solid #e53e3e;display:inline-block;width:10px"></span></button>
+          <button onclick="richColorPick(this,'backColor')" title="背景颜色" style="position:relative">背景</button>
+          <button onclick="richClearFormat(this)" title="清除所有格式">清除</button>
+        </div>
+              <div class="rich-editor-content" contenteditable="true" data-field="character_action">
+                <p class="fill-placeholder">描述本玩法涉及的角色动作需求…</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- 6.5 系统需求 -->
+    <div id="req-system" class="sub-section" data-section="system">
+      <h3>6.5 系统需求</h3>
+      <div class="section-hidden-hint">本玩法无系统需求，已隐藏。可在需求清单中勾选启用。</div>
+      <div class="section-content">
+
+        <h4>奖励需求</h4>
+        <table>
+          <thead>
+            <tr>
+              <th style="width:160px">需求项</th>
+              <th>需求内容</th>
+              <th>填写说明</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>是否发奖</strong></td>
+              <td contenteditable="true" data-field="reward_yn">不发奖</td>
+              <td style="font-size:12px;color:var(--text-muted)">是否发奖</td>
+            </tr>
+            <tr>
+              <td><strong>发奖节点</strong></td>
+              <td contenteditable="true" data-field="reward_timing">—</td>
+              <td style="font-size:12px;color:var(--text-muted)">如果发奖，请填写发奖节点，如玩法在某个节点时...</td>
+            </tr>
+            <tr>
+              <td><strong>接入区域探索度</strong></td>
+              <td contenteditable="true" data-field="reward_exploration">/</td>
+              <td style="font-size:12px;color:var(--text-muted)">如果玩法接入区域探索度，请填写"接入"；不接入则不用放此条</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div id="req-system-map">
+          <h4>地图系统</h4>
+          <div class="section-hidden-hint">本玩法无地图系统需求，已隐藏。</div>
+          <div class="section-content">
+            <p style="font-size:12px;color:var(--text-muted);margin-bottom:8px">* LD预填写，在合作策划需求对齐阶段，和负责 [地图系统] 的 [系统策划] 进行确认。</p>
+            <table>
+              <thead>
+                <tr>
+                  <th style="width:160px">需求项</th>
+                  <th>需求内容</th>
+                  <th>填写说明</th>
+                </tr>
+              </thead>
+              <tbody id="map-system-body">
+                <tr>
+                  <td><strong>大小地图显示</strong></td>
+                  <td contenteditable="true">—</td>
+                  <td style="font-size:12px;color:var(--text-muted)">请填写"大地图"，"小地图"，或"都显示"</td>
+                </tr>
+                <tr>
+                  <td><strong>迷雾解锁前/后显示</strong></td>
+                  <td contenteditable="true">迷雾解锁后显示</td>
+                  <td style="font-size:12px;color:var(--text-muted)">大/小地图icon是否特定在区域迷雾解锁前/解锁后显示<br><br>一般来说，填充玩法的地图图标应在区域迷雾解锁后显示</td>
+                </tr>
+                <tr>
+                  <td><strong>图标销毁逻辑</strong></td>
+                  <td contenteditable="true">随玩法销毁而销毁</td>
+                  <td style="font-size:12px;color:var(--text-muted)">地图图标的销毁逻辑，例如是否随玩法销毁而销毁</td>
+                </tr>
+                <tr>
+                  <td><strong>是否动态点位</strong></td>
+                  <td contenteditable="true">否</td>
+                  <td style="font-size:12px;color:var(--text-muted)">多数玩法点为静态。一些特殊的点位，比如随机玩法、NPC等，会在游戏中动态生成的单位，则为动态点位</td>
+                </tr>
+                <tr>
+                  <td><strong>显示优先级</strong></td>
+                  <td contenteditable="true">中</td>
+                  <td style="font-size:12px;color:var(--text-muted)">大地图图标：决定图标在何种缩放比例尺中出现，可选需求项包括：<br>&emsp;高：一直显示<br>&emsp;中：0~75%比例尺显示<br>&emsp;低：0~25%比例尺显示<br><br>小地图图标：无显示距离配置，若有需要请提需求</td>
+                </tr>
+                <tr>
+                  <td><strong>允许传送/追踪</strong></td>
+                  <td contenteditable="true">/</td>
+                  <td style="font-size:12px;color:var(--text-muted)">决定了大地图图标选中后，侧边弹窗的功能按钮。可选需求项包括：<br>&emsp;可追踪<br>&emsp;可传送<br>&emsp;自定义：则需要额外写明点位功能</td>
+                </tr>
+                <tr>
+                  <td><strong>大地图筛选类别</strong></td>
+                  <td contenteditable="true">/</td>
+                  <td style="font-size:12px;color:var(--text-muted)">决定了大地图图标在筛选时，出现在哪个筛选项分类下。仅在小地图显示的玩法，无需提此项需求。<br><br>具体分类可与系统组-地图系统的负责策划进行通气，由地图系统策划告知此栏配置项，由LD填写进策划案中。<br><br>可参考："1-Teleport传送点""2-Dungeon副本入口交互物"；没有则不填写。</td>
+                </tr>
+                <tr>
+                  <td><strong>图标资产名</strong></td>
+                  <td contenteditable="true">—</td>
+                  <td style="font-size:12px;color:var(--text-muted)">图标资产名称，eg：icon_main_pick_png</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="req-system-ui">
+          <h4>UIUX需求</h4>
+          <div class="section-hidden-hint">本玩法无UIUX需求，已隐藏。</div>
+          <div class="section-content">
+            <div class="rich-editor">
+              <div class="rich-editor-toolbar">
+          <button onclick="richCmd('bold')" data-cmd="bold" title="加粗"><b>B</b></button>
+          <button onclick="richCmd('italic')" data-cmd="italic" title="斜体"><i>I</i></button>
+          <button onclick="richCmd('underline')" data-cmd="underline" title="下划线"><u>U</u></button>
+          <div class="sep"></div>
+          <button onclick="richCmd('insertUnorderedList')" data-cmd="insertUnorderedList" title="无序列表">• 列表</button>
+          <button onclick="richCmd('insertOrderedList')" data-cmd="insertOrderedList" title="有序列表">1. 列表</button>
+          <div class="sep"></div>
+          <button onclick="richInsertTable(this)" title="插入表格">表格</button>
+          <button onclick="richInsertImage(this)" title="插入图片">图片</button>
+          <div class="sep"></div>
+          <button onclick="richCmd('formatBlock','<h4>')" title="设为标题">标题</button>
+          <button onclick="richCmd('formatBlock','<p>')" title="还原为正文段落（取消标题/列表格式）">正文</button>
+          <button onclick="richColorPick(this,'foreColor')" title="文字颜色" style="position:relative">A<span style="border-bottom:3px solid #e53e3e;display:inline-block;width:10px"></span></button>
+          <button onclick="richColorPick(this,'backColor')" title="背景颜色" style="position:relative">背景</button>
+          <button onclick="richClearFormat(this)" title="清除所有格式">清除</button>
+        </div>
+              <div class="rich-editor-content" contenteditable="true" data-field="uiux_requirement">
+                <p class="fill-placeholder">描述 UI/UX 交互需求…</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- 6.6 任务需求 -->
+    <div id="req-mission" class="sub-section" data-section="mission">
+      <h3>6.6 任务需求</h3>
+      <div class="section-hidden-hint">本玩法无任务需求，已隐藏。可在需求清单中勾选启用。</div>
+      <div class="section-content">
+        <div class="rich-editor">
+        <div class="rich-editor-toolbar">
+          <button onclick="richCmd('bold')" data-cmd="bold" title="加粗"><b>B</b></button>
+          <button onclick="richCmd('italic')" data-cmd="italic" title="斜体"><i>I</i></button>
+          <button onclick="richCmd('underline')" data-cmd="underline" title="下划线"><u>U</u></button>
+          <div class="sep"></div>
+          <button onclick="richCmd('insertUnorderedList')" data-cmd="insertUnorderedList" title="无序列表">• 列表</button>
+          <button onclick="richCmd('insertOrderedList')" data-cmd="insertOrderedList" title="有序列表">1. 列表</button>
+          <div class="sep"></div>
+          <button onclick="richInsertTable(this)" title="插入表格">表格</button>
+          <button onclick="richInsertImage(this)" title="插入图片">图片</button>
+          <div class="sep"></div>
+          <button onclick="richCmd('formatBlock','<h4>')" title="设为标题">标题</button>
+          <button onclick="richCmd('formatBlock','<p>')" title="还原为正文段落（取消标题/列表格式）">正文</button>
+          <button onclick="richColorPick(this,'foreColor')" title="文字颜色" style="position:relative">A<span style="border-bottom:3px solid #e53e3e;display:inline-block;width:10px"></span></button>
+          <button onclick="richColorPick(this,'backColor')" title="背景颜色" style="position:relative">背景</button>
+          <button onclick="richClearFormat(this)" title="清除所有格式">清除</button>
+        </div>
+        <div class="rich-editor-content" contenteditable="true" data-field="mission_requirement">
+          <p class="fill-placeholder">描述与任务系统的配合需求…</p>
+        </div>
+      </div>
+      </div>
+    </div>
+
+    <!-- 6.7 战斗需求 -->
+    <div id="req-combat" class="sub-section" data-section="combat">
+      <h3>6.7 战斗需求</h3>
+      <div class="section-hidden-hint">本玩法无战斗需求，已隐藏。可在需求清单中勾选启用。</div>
+      <div class="section-content">
+        <div class="rich-editor">
+        <div class="rich-editor-toolbar">
+          <button onclick="richCmd('bold')" data-cmd="bold" title="加粗"><b>B</b></button>
+          <button onclick="richCmd('italic')" data-cmd="italic" title="斜体"><i>I</i></button>
+          <button onclick="richCmd('underline')" data-cmd="underline" title="下划线"><u>U</u></button>
+          <div class="sep"></div>
+          <button onclick="richCmd('insertUnorderedList')" data-cmd="insertUnorderedList" title="无序列表">• 列表</button>
+          <button onclick="richCmd('insertOrderedList')" data-cmd="insertOrderedList" title="有序列表">1. 列表</button>
+          <div class="sep"></div>
+          <button onclick="richInsertTable(this)" title="插入表格">表格</button>
+          <button onclick="richInsertImage(this)" title="插入图片">图片</button>
+          <div class="sep"></div>
+          <button onclick="richCmd('formatBlock','<h4>')" title="设为标题">标题</button>
+          <button onclick="richCmd('formatBlock','<p>')" title="还原为正文段落（取消标题/列表格式）">正文</button>
+          <button onclick="richColorPick(this,'foreColor')" title="文字颜色" style="position:relative">A<span style="border-bottom:3px solid #e53e3e;display:inline-block;width:10px"></span></button>
+          <button onclick="richColorPick(this,'backColor')" title="背景颜色" style="position:relative">背景</button>
+          <button onclick="richClearFormat(this)" title="清除所有格式">清除</button>
+        </div>
+        <div class="rich-editor-content" contenteditable="true" data-field="combat_requirement">
+          <p class="fill-placeholder">描述战斗系统相关需求…</p>
+        </div>
+      </div>
+      </div>
+    </div>
+
+    <!-- 6.8 AI需求 -->
+    <div id="req-ai" class="sub-section" data-section="ai">
+      <h3>6.8 AI需求</h3>
+      <div class="section-hidden-hint">本玩法无AI需求，已隐藏。可在需求清单中勾选启用。</div>
+      <div class="section-content">
+        <h4>NPC事件响应</h4>
+        <div class="rich-editor">
+        <div class="rich-editor-toolbar">
+          <button onclick="richCmd('bold')" data-cmd="bold" title="加粗"><b>B</b></button>
+          <button onclick="richCmd('italic')" data-cmd="italic" title="斜体"><i>I</i></button>
+          <button onclick="richCmd('underline')" data-cmd="underline" title="下划线"><u>U</u></button>
+          <div class="sep"></div>
+          <button onclick="richCmd('insertUnorderedList')" data-cmd="insertUnorderedList" title="无序列表">• 列表</button>
+          <button onclick="richCmd('insertOrderedList')" data-cmd="insertOrderedList" title="有序列表">1. 列表</button>
+          <div class="sep"></div>
+          <button onclick="richInsertTable(this)" title="插入表格">表格</button>
+          <button onclick="richInsertImage(this)" title="插入图片">图片</button>
+          <div class="sep"></div>
+          <button onclick="richCmd('formatBlock','<h4>')" title="设为标题">标题</button>
+          <button onclick="richCmd('formatBlock','<p>')" title="还原为正文段落（取消标题/列表格式）">正文</button>
+          <button onclick="richColorPick(this,'foreColor')" title="文字颜色" style="position:relative">A<span style="border-bottom:3px solid #e53e3e;display:inline-block;width:10px"></span></button>
+          <button onclick="richColorPick(this,'backColor')" title="背景颜色" style="position:relative">背景</button>
+          <button onclick="richClearFormat(this)" title="清除所有格式">清除</button>
+        </div>
+        <div class="rich-editor-content" contenteditable="true" data-field="ai_requirement">
+          <p class="fill-placeholder">描述 NPC 事件响应需求，包括 AI 行为、巡逻、反应等…</p>
+        </div>
+      </div>
+      </div>
+    </div>
+
+    <!-- 6.9 载具需求 -->
+    <div id="req-vehicle" class="sub-section" data-section="vehicle">
+      <h3>6.9 载具需求</h3>
+      <div class="section-hidden-hint">本玩法无载具需求，已隐藏。可在需求清单中勾选启用。</div>
+      <div class="section-content">
+        <div class="rich-editor">
+        <div class="rich-editor-toolbar">
+          <button onclick="richCmd('bold')" data-cmd="bold" title="加粗"><b>B</b></button>
+          <button onclick="richCmd('italic')" data-cmd="italic" title="斜体"><i>I</i></button>
+          <button onclick="richCmd('underline')" data-cmd="underline" title="下划线"><u>U</u></button>
+          <div class="sep"></div>
+          <button onclick="richCmd('insertUnorderedList')" data-cmd="insertUnorderedList" title="无序列表">• 列表</button>
+          <button onclick="richCmd('insertOrderedList')" data-cmd="insertOrderedList" title="有序列表">1. 列表</button>
+          <div class="sep"></div>
+          <button onclick="richInsertTable(this)" title="插入表格">表格</button>
+          <button onclick="richInsertImage(this)" title="插入图片">图片</button>
+          <div class="sep"></div>
+          <button onclick="richCmd('formatBlock','<h4>')" title="设为标题">标题</button>
+          <button onclick="richCmd('formatBlock','<p>')" title="还原为正文段落（取消标题/列表格式）">正文</button>
+          <button onclick="richColorPick(this,'foreColor')" title="文字颜色" style="position:relative">A<span style="border-bottom:3px solid #e53e3e;display:inline-block;width:10px"></span></button>
+          <button onclick="richColorPick(this,'backColor')" title="背景颜色" style="position:relative">背景</button>
+          <button onclick="richClearFormat(this)" title="清除所有格式">清除</button>
+        </div>
+        <div class="rich-editor-content" contenteditable="true" data-field="vehicle_requirement">
+          <p class="fill-placeholder">描述载具相关需求…</p>
+        </div>
+      </div>
+      </div>
+    </div>
+
+    <!-- 6.10 动画需求 -->
+    <div id="req-anim" class="sub-section" data-section="anim">
+      <h3>6.10 动画需求</h3>
+      <div class="section-hidden-hint">本玩法无动画需求，已隐藏。可在需求清单中勾选启用。</div>
+      <div class="section-content">
+        <div class="rich-editor">
+        <div class="rich-editor-toolbar">
+          <button onclick="richCmd('bold')" data-cmd="bold" title="加粗"><b>B</b></button>
+          <button onclick="richCmd('italic')" data-cmd="italic" title="斜体"><i>I</i></button>
+          <button onclick="richCmd('underline')" data-cmd="underline" title="下划线"><u>U</u></button>
+          <div class="sep"></div>
+          <button onclick="richCmd('insertUnorderedList')" data-cmd="insertUnorderedList" title="无序列表">• 列表</button>
+          <button onclick="richCmd('insertOrderedList')" data-cmd="insertOrderedList" title="有序列表">1. 列表</button>
+          <div class="sep"></div>
+          <button onclick="richInsertTable(this)" title="插入表格">表格</button>
+          <button onclick="richInsertImage(this)" title="插入图片">图片</button>
+          <div class="sep"></div>
+          <button onclick="richCmd('formatBlock','<h4>')" title="设为标题">标题</button>
+          <button onclick="richCmd('formatBlock','<p>')" title="还原为正文段落（取消标题/列表格式）">正文</button>
+          <button onclick="richColorPick(this,'foreColor')" title="文字颜色" style="position:relative">A<span style="border-bottom:3px solid #e53e3e;display:inline-block;width:10px"></span></button>
+          <button onclick="richColorPick(this,'backColor')" title="背景颜色" style="position:relative">背景</button>
+          <button onclick="richClearFormat(this)" title="清除所有格式">清除</button>
+        </div>
+        <div class="rich-editor-content" contenteditable="true" data-field="anim_requirement">
+          <p class="fill-placeholder">描述引擎动画需求…</p>
+        </div>
+      </div>
+      </div>
+    </div>
+
+    <!-- 6.11 灯光需求 -->
+    <div id="req-light" class="sub-section" data-section="light">
+      <h3>6.11 灯光需求</h3>
+      <div class="section-hidden-hint">本玩法无灯光需求，已隐藏。可在需求清单中勾选启用。</div>
+      <div class="section-content">
+        <div class="rich-editor">
+        <div class="rich-editor-toolbar">
+          <button onclick="richCmd('bold')" data-cmd="bold" title="加粗"><b>B</b></button>
+          <button onclick="richCmd('italic')" data-cmd="italic" title="斜体"><i>I</i></button>
+          <button onclick="richCmd('underline')" data-cmd="underline" title="下划线"><u>U</u></button>
+          <div class="sep"></div>
+          <button onclick="richCmd('insertUnorderedList')" data-cmd="insertUnorderedList" title="无序列表">• 列表</button>
+          <button onclick="richCmd('insertOrderedList')" data-cmd="insertOrderedList" title="有序列表">1. 列表</button>
+          <div class="sep"></div>
+          <button onclick="richInsertTable(this)" title="插入表格">表格</button>
+          <button onclick="richInsertImage(this)" title="插入图片">图片</button>
+          <div class="sep"></div>
+          <button onclick="richCmd('formatBlock','<h4>')" title="设为标题">标题</button>
+          <button onclick="richCmd('formatBlock','<p>')" title="还原为正文段落（取消标题/列表格式）">正文</button>
+          <button onclick="richColorPick(this,'foreColor')" title="文字颜色" style="position:relative">A<span style="border-bottom:3px solid #e53e3e;display:inline-block;width:10px"></span></button>
+          <button onclick="richColorPick(this,'backColor')" title="背景颜色" style="position:relative">背景</button>
+          <button onclick="richClearFormat(this)" title="清除所有格式">清除</button>
+        </div>
+        <div class="rich-editor-content" contenteditable="true" data-field="light_requirement">
+          <p class="fill-placeholder">描述灯光需求…</p>
+        </div>
+      </div>
+      </div>
+    </div>
+
+    <!-- 6.12 特效需求 -->
+    <div id="req-vfx" class="sub-section" data-section="vfx">
+      <h3>6.12 特效需求</h3>
+      <div class="section-hidden-hint">本玩法无特效需求，已隐藏。可在需求清单中勾选启用。</div>
+      <div class="section-content">
+        <div class="rich-editor">
+        <div class="rich-editor-toolbar">
+          <button onclick="richCmd('bold')" data-cmd="bold" title="加粗"><b>B</b></button>
+          <button onclick="richCmd('italic')" data-cmd="italic" title="斜体"><i>I</i></button>
+          <button onclick="richCmd('underline')" data-cmd="underline" title="下划线"><u>U</u></button>
+          <div class="sep"></div>
+          <button onclick="richCmd('insertUnorderedList')" data-cmd="insertUnorderedList" title="无序列表">• 列表</button>
+          <button onclick="richCmd('insertOrderedList')" data-cmd="insertOrderedList" title="有序列表">1. 列表</button>
+          <div class="sep"></div>
+          <button onclick="richInsertTable(this)" title="插入表格">表格</button>
+          <button onclick="richInsertImage(this)" title="插入图片">图片</button>
+          <div class="sep"></div>
+          <button onclick="richCmd('formatBlock','<h4>')" title="设为标题">标题</button>
+          <button onclick="richCmd('formatBlock','<p>')" title="还原为正文段落（取消标题/列表格式）">正文</button>
+          <button onclick="richColorPick(this,'foreColor')" title="文字颜色" style="position:relative">A<span style="border-bottom:3px solid #e53e3e;display:inline-block;width:10px"></span></button>
+          <button onclick="richColorPick(this,'backColor')" title="背景颜色" style="position:relative">背景</button>
+          <button onclick="richClearFormat(this)" title="清除所有格式">清除</button>
+        </div>
+        <div class="rich-editor-content" contenteditable="true" data-field="vfx_requirement">
+          <p class="fill-placeholder">描述特效需求…</p>
+        </div>
+      </div>
+      </div>
+    </div>
+
+    <!-- 6.13 音效需求 -->
+    <div id="req-sfx" class="sub-section" data-section="sfx">
+      <h3>6.13 音效需求</h3>
+      <div class="section-hidden-hint">本玩法无音效需求，已隐藏。可在需求清单中勾选启用。</div>
+      <div class="section-content">
+        <div class="rich-editor">
+        <div class="rich-editor-toolbar">
+          <button onclick="richCmd('bold')" data-cmd="bold" title="加粗"><b>B</b></button>
+          <button onclick="richCmd('italic')" data-cmd="italic" title="斜体"><i>I</i></button>
+          <button onclick="richCmd('underline')" data-cmd="underline" title="下划线"><u>U</u></button>
+          <div class="sep"></div>
+          <button onclick="richCmd('insertUnorderedList')" data-cmd="insertUnorderedList" title="无序列表">• 列表</button>
+          <button onclick="richCmd('insertOrderedList')" data-cmd="insertOrderedList" title="有序列表">1. 列表</button>
+          <div class="sep"></div>
+          <button onclick="richInsertTable(this)" title="插入表格">表格</button>
+          <button onclick="richInsertImage(this)" title="插入图片">图片</button>
+          <div class="sep"></div>
+          <button onclick="richCmd('formatBlock','<h4>')" title="设为标题">标题</button>
+          <button onclick="richCmd('formatBlock','<p>')" title="还原为正文段落（取消标题/列表格式）">正文</button>
+          <button onclick="richColorPick(this,'foreColor')" title="文字颜色" style="position:relative">A<span style="border-bottom:3px solid #e53e3e;display:inline-block;width:10px"></span></button>
+          <button onclick="richColorPick(this,'backColor')" title="背景颜色" style="position:relative">背景</button>
+          <button onclick="richClearFormat(this)" title="清除所有格式">清除</button>
+        </div>
+        <div class="rich-editor-content" contenteditable="true" data-field="sfx_requirement">
+          <p class="fill-placeholder">描述音效需求…</p>
+        </div>
+      </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ============================================================
+     07 多人游玩
+     ============================================================ -->
+<section id="multiplayer">
+  <h2>
+    <span class="sec-num">07</span>多人游玩
+    <button class="collapse-btn" onclick="toggleCollapse(this)">折叠</button>
+  </h2>
+  <div class="section-content">
+    <table>
+      <thead>
+        <tr>
+          <th>角色</th>
+          <th>是否允许交互</th>
+          <th>说明</th>
+        </tr>
+      </thead>
+      <tbody id="multiplayer-body">
+        <tr>
+          <td><strong>主机玩家</strong></td>
+          <td>
+            <div class="option-group">
+              <label><input type="radio" name="mp-host" value="yes" checked> 是</label>
+              <label><input type="radio" name="mp-host" value="no"> 否</label>
+            </div>
+          </td>
+          <td contenteditable="true">—</td>
+        </tr>
+        <tr>
+          <td><strong>非主机玩家</strong></td>
+          <td>
+            <div class="option-group">
+              <label><input type="radio" name="mp-guest" value="yes"> 是</label>
+              <label><input type="radio" name="mp-guest" value="no" checked> 否</label>
+            </div>
+          </td>
+          <td contenteditable="true">—</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================
+     08 配置
+     ============================================================ -->
+<section id="config">
+  <h2>
+    <span class="sec-num">08</span>配置
+    <button class="collapse-btn" onclick="toggleCollapse(this)">折叠</button>
+  </h2>
+  <div class="section-content">
+
+    <h3>表单参数</h3>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:8px">&gt;&gt; 同一玩法的多组参数可拆分到不同分组，便于按"物件 A / 物件 B"组织。</p>
+    <div id="config-form-groups" class="param-group-container"></div>
+    <button class="add-row-btn" onclick="addParamGroup('config-form')">+ 新增分组</button>
+
+    <h3 style="margin-top:24px">场景实例参数</h3>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:8px">&gt;&gt; 同一玩法的多组参数可拆分到不同分组，便于按"物件 A / 物件 B"组织。</p>
+    <div id="config-scene-groups" class="param-group-container"></div>
+    <button class="add-row-btn" onclick="addParamGroup('config-scene')">+ 新增分组</button>
+
+  </div>
+</section>
+
+<!-- ============================================================
+     09 玩法布设规范
+     ============================================================ -->
+<section id="placement">
+  <h2>
+    <span class="sec-num">09</span>玩法布设规范
+    <button class="collapse-btn" onclick="toggleCollapse(this)">折叠</button>
+  </h2>
+  <div class="section-content">
+
+    <h3>白盒图与布设环境</h3>
+    <div class="image-placeholder" onclick="handleImageUpload(this)">
+      <div class="image-actions">
+        <button onclick="event.stopPropagation(); replaceImage(this.closest('.image-placeholder'))">替换</button>
+        <button onclick="event.stopPropagation(); removeImage(this.closest('.image-placeholder'))">删除</button>
+      </div>
+      <div class="placeholder-content">
+        <div class="upload-icon">&#128247;</div>
+        <div class="placeholder-label">白盒布设示意图</div>
+        <div class="placeholder-hint">点击上传、拖拽或粘贴图片到此处</div>
+      </div>
+      <!-- IMAGE_SLOT: {"id":"placement_whitebox","desc":"布设环境白盒图"} -->
+    </div>
+
+    <h3>布设条件与限制</h3>
+    <div class="rich-editor">
+        <div class="rich-editor-toolbar">
+          <button onclick="richCmd('bold')" data-cmd="bold" title="加粗"><b>B</b></button>
+          <button onclick="richCmd('italic')" data-cmd="italic" title="斜体"><i>I</i></button>
+          <button onclick="richCmd('underline')" data-cmd="underline" title="下划线"><u>U</u></button>
+          <div class="sep"></div>
+          <button onclick="richCmd('insertUnorderedList')" data-cmd="insertUnorderedList" title="无序列表">• 列表</button>
+          <button onclick="richCmd('insertOrderedList')" data-cmd="insertOrderedList" title="有序列表">1. 列表</button>
+          <div class="sep"></div>
+          <button onclick="richInsertTable(this)" title="插入表格">表格</button>
+          <button onclick="richInsertImage(this)" title="插入图片">图片</button>
+          <div class="sep"></div>
+          <button onclick="richCmd('formatBlock','<h4>')" title="设为标题">标题</button>
+          <button onclick="richCmd('formatBlock','<p>')" title="还原为正文段落（取消标题/列表格式）">正文</button>
+          <button onclick="richColorPick(this,'foreColor')" title="文字颜色" style="position:relative">A<span style="border-bottom:3px solid #e53e3e;display:inline-block;width:10px"></span></button>
+          <button onclick="richColorPick(this,'backColor')" title="背景颜色" style="position:relative">背景</button>
+          <button onclick="richClearFormat(this)" title="清除所有格式">清除</button>
+        </div>
+        <div class="rich-editor-content" contenteditable="true" data-field="placement_rules">
+          <p class="fill-placeholder">描述玩法布设的条件、限制和规范要求…</p>
+        </div>
+      </div>
+
+  </div>
+</section>
+
+<!-- ============================================================
+     10 补充参考图
+     ============================================================ -->
+<section id="reference">
+  <h2>
+    <span class="sec-num">10</span>补充参考图
+    <button class="collapse-btn" onclick="toggleCollapse(this)">折叠</button>
+  </h2>
+  <div class="section-content">
+
+    <div class="image-placeholder" onclick="handleImageUpload(this)">
+      <div class="image-actions">
+        <button onclick="event.stopPropagation(); replaceImage(this.closest('.image-placeholder'))">替换</button>
+        <button onclick="event.stopPropagation(); removeImage(this.closest('.image-placeholder'))">删除</button>
+      </div>
+      <div class="placeholder-content">
+        <div class="upload-icon">&#128247;</div>
+        <div class="placeholder-label">参考图片</div>
+        <div class="placeholder-hint">点击上传、拖拽或粘贴图片到此处</div>
+      </div>
+    </div>
+    <button class="add-row-btn" onclick="addImagePlaceholder(this.parentElement)">+ 添加参考图</button>
+
+  </div>
+</section>
+
+</main>
+
+<!-- ============================================================
+     JavaScript
+     ============================================================ -->
+<script>
+// -----------------------------------------------------------
+// Mermaid Init
+// -----------------------------------------------------------
+mermaid.initialize({
+  startOnLoad: true,
+  theme: 'default',
+  themeVariables: {
+    primaryColor: '#e8f5f3',
+    primaryBorderColor: '#0d9488',
+    primaryTextColor: '#2d2d2d',
+    lineColor: '#0d9488',
+    secondaryColor: '#f0eeeb',
+    tertiaryColor: '#faf9f7'
+  }
+});
+
+// -----------------------------------------------------------
+// Sidebar Active State (Scroll Spy)
+// -----------------------------------------------------------
+function updateActiveNav() {
+  let current = '';
+  let minDistance = Infinity;
+  const offset = 120;
+  document.querySelectorAll('section[id], .sub-section[id]').forEach(sec => {
+    if (sec.offsetParent === null) return;
+    const rect = sec.getBoundingClientRect();
+    const distance = Math.abs(rect.top - offset);
+    if (rect.top <= offset && distance < minDistance) {
+      minDistance = distance;
+      current = sec.id;
+    }
+  });
+  if (!current) {
+    const first = document.querySelector('section[id]');
+    if (first) current = first.id;
+  }
+  document.querySelectorAll('nav a').forEach(link => {
+    link.classList.toggle('active', link.getAttribute('href') === '#' + current);
+  });
+}
+window.addEventListener('scroll', updateActiveNav, { passive: true });
+updateActiveNav();
+
+// -----------------------------------------------------------
+// Collapse / Expand Sections
+// -----------------------------------------------------------
+function toggleCollapse(btn) {
+  const section = btn.closest('section') || btn.closest('.sub-section');
+  section.classList.toggle('section-collapsed');
+  btn.textContent = section.classList.contains('section-collapsed') ? '展开' : '折叠';
+}
+
+// -----------------------------------------------------------
+// Requirement Checklist → Section Visibility
+// -----------------------------------------------------------
+document.querySelectorAll('.checklist-item input[type="checkbox"]').forEach(chk => {
+  chk.addEventListener('change', function() {
+    const targetId = this.dataset.controls;
+    if (!targetId) return;
+    const target = document.getElementById(targetId);
+    if (!target) return;
+    target.classList.toggle('section-hidden', !this.checked);
+    // Update data-required on fillable elements
+    target.querySelectorAll('[contenteditable]').forEach(el => {
+      el.dataset.required = this.checked ? 'true' : 'false';
+    });
+  });
+  // Initialize: unchecked → hidden
+  if (!chk.checked && chk.dataset.controls) {
+    const target = document.getElementById(chk.dataset.controls);
+    if (target) target.classList.add('section-hidden');
+  }
+});
+
+// -----------------------------------------------------------
+// Add Table Rows
+// -----------------------------------------------------------
+function addTableRow(tbodyId, colCount) {
+  const tbody = document.getElementById(tbodyId);
+  const tr = document.createElement('tr');
+  const isVersionTable = (tbodyId === 'version-table-body');
+  for (let i = 0; i < colCount; i++) {
+    const td = document.createElement('td');
+    if (isVersionTable && i === 0) {
+      // Date picker for version history first column
+      const input = document.createElement('input');
+      input.type = 'date';
+      input.className = 'date-input';
+      input.max = '9999-12-31';
+      input.style.cssText = 'width:100%;border:1px solid var(--border);border-radius:4px;padding:4px 6px;font-size:13px;font-family:var(--font);background:var(--surface);color:var(--text);cursor:pointer';
+      td.appendChild(input);
+    } else {
+      td.contentEditable = 'true';
+      td.textContent = '—';
+    }
+    tr.appendChild(td);
+  }
+  // Add delete button in a separate non-editable cell
+  const opTd = document.createElement('td');
+  opTd.style.textAlign = 'center';
+  const delBtn = document.createElement('button');
+  delBtn.className = 'delete-row-btn';
+  delBtn.textContent = '×';
+  delBtn.title = '删除此行';
+  delBtn.onclick = function() { tr.remove(); };
+  opTd.appendChild(delBtn);
+  tr.appendChild(opTd);
+  tbody.appendChild(tr);
+}
+
+// -----------------------------------------------------------
+// 配置模块 — 参数分组 增删 (v1.4)
+// 序列 seriesKey: 'config-form' (表单参数) | 'config-scene' (场景实例参数)
+// 数据命名: tbody id = `${seriesKey}-${letter}-body`
+//          分组名 data-field = `${seriesKey.replace('-', '_')}_${letter}_name`
+// -----------------------------------------------------------
+const _paramGroupLetters = 'abcdefghijklmnopqrstuvwxyz';
+
+function _paramFieldKey(seriesKey, letter) {
+  return seriesKey.replace(/-/g, '_') + '_' + letter + '_name';
+}
+
+function _buildParamGroupHTML(seriesKey, letter, defaultName) {
+  const tbodyId = seriesKey + '-' + letter + '-body';
+  const fieldKey = _paramFieldKey(seriesKey, letter);
+  return ''
+    + '<div class="param-group" data-series="' + seriesKey + '" data-letter="' + letter + '">'
+    +   '<div class="param-group-header">'
+    +     '<span class="group-letter">' + letter.toUpperCase() + '.</span>'
+    +     '<span class="group-name" contenteditable="true" data-field="' + fieldKey + '">' + defaultName + '</span>'
+    +     '<button class="delete-group-btn" onclick="deleteParamGroup(this)" title="删除此分组">删除分组</button>'
+    +   '</div>'
+    +   '<table>'
+    +     '<thead><tr><th>配置项</th><th>单位</th><th>默认值</th><th>策划合法范围</th><th>配置方式</th><th>编辑器预览需求</th><th>备注</th><th style="width:50px">操作</th></tr></thead>'
+    +     '<tbody id="' + tbodyId + '">'
+    +       '<tr><td contenteditable="true"><span class="param-code">—</span></td><td contenteditable="true">—</td><td contenteditable="true">—</td><td contenteditable="true">—</td><td contenteditable="true">—</td><td contenteditable="true">—</td><td contenteditable="true">—</td><td style="text-align:center"><button class="delete-row-btn" onclick="this.closest(\'tr\').remove()" title="删除此行">&times;</button></td></tr>'
+    +     '</tbody>'
+    +   '</table>'
+    +   '<button class="add-row-btn" onclick="addTableRow(\'' + tbodyId + '\', 7)">+ 添加配置项</button>'
+    + '</div>';
+}
+
+function _nextParamLetter(container) {
+  const used = new Set();
+  Array.from(container.children).forEach(card => {
+    const l = card.getAttribute('data-letter');
+    if (l) used.add(l);
+  });
+  for (const l of _paramGroupLetters) {
+    if (!used.has(l)) return l;
+  }
+  return String(used.size + 1);
+}
+
+function addParamGroup(seriesKey, letterOverride, nameOverride) {
+  const container = document.getElementById(seriesKey + '-groups');
+  if (!container) return;
+  const letter = letterOverride || _nextParamLetter(container);
+  const name = nameOverride || ('物件' + letter.toUpperCase());
+  const wrap = document.createElement('div');
+  wrap.innerHTML = _buildParamGroupHTML(seriesKey, letter, name);
+  container.appendChild(wrap.firstElementChild);
+}
+
+function deleteParamGroup(btn) {
+  const card = btn.closest('.param-group');
+  if (!card) return;
+  const container = card.parentElement;
+  if (container.children.length <= 1) {
+    alert('至少保留一个分组。');
+    return;
+  }
+  if (!confirm('确认删除此分组？分组内的所有配置项将一并删除。')) return;
+  card.remove();
+}
+
+// 默认初始化两组(表单参数 + 场景实例参数,各 物件A/物件B)
+(function() {
+  addParamGroup('config-form', 'a', '物件A');
+  addParamGroup('config-form', 'b', '物件B');
+  addParamGroup('config-scene', 'a', '物件A');
+  addParamGroup('config-scene', 'b', '物件B');
+})();
+
+// -----------------------------------------------------------
+// Image Upload (Local File → Base64 Embed)
+// -----------------------------------------------------------
+function handleImageUpload(container) {
+  // If already has images, don't trigger from the container click (use + button instead)
+  if (container.classList.contains('has-image')) return;
+  triggerImagePicker(container);
+}
+
+function triggerImagePicker(container) {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/png,image/jpeg,image/gif,image/webp';
+  input.multiple = true;
+  input.onchange = function(e) {
+    for (let i = 0; i < e.target.files.length; i++) {
+      processImageFile(e.target.files[i], container);
+    }
+  };
+  input.click();
+}
+
+function createImgWrapper(dataUrl, fileName, sizeClass) {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'img-wrapper';
+  wrapper.style.width = sizeClass || '100%';
+  const imgEl = document.createElement('img');
+  imgEl.src = dataUrl;
+  imgEl.alt = fileName || '';
+  const actions = document.createElement('div');
+  actions.className = 'img-actions';
+  actions.innerHTML =
+    '<button onclick="event.stopPropagation();imgReplace(this.closest(\'.img-wrapper\'))" title="替换">替换</button>' +
+    '<button onclick="event.stopPropagation();imgRemove(this.closest(\'.img-wrapper\'))" title="删除">删除</button>' +
+    '<button onclick="event.stopPropagation();imgResize(this.closest(\'.img-wrapper\'),\'30%\')" title="小图">小</button>' +
+    '<button onclick="event.stopPropagation();imgResize(this.closest(\'.img-wrapper\'),\'50%\')" title="中图">中</button>' +
+    '<button onclick="event.stopPropagation();imgResize(this.closest(\'.img-wrapper\'),\'100%\')" title="大图" class="active">大</button>';
+  wrapper.appendChild(actions);
+  wrapper.appendChild(imgEl);
+  const captionInput = document.createElement('input');
+  captionInput.type = 'text';
+  captionInput.className = 'img-caption';
+  captionInput.placeholder = '图片名称';
+  captionInput.onclick = function(e) { e.stopPropagation(); };
+  wrapper.appendChild(captionInput);
+  return wrapper;
+}
+
+function ensureAddMoreBtn(container) {
+  if (container.querySelector('.img-add-more')) return;
+  const btn = document.createElement('div');
+  btn.className = 'img-add-more';
+  btn.textContent = '+';
+  btn.title = '添加更多图片';
+  btn.onclick = function(e) { e.stopPropagation(); triggerImagePicker(container); };
+  container.appendChild(btn);
+}
+
+function processImageFile(file, container) {
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const img = new Image();
+    img.onload = function() {
+      let dataUrl = e.target.result;
+      if (img.width > 960) {
+        const canvas = document.createElement('canvas');
+        const ratio = 960 / img.width;
+        canvas.width = 960;
+        canvas.height = img.height * ratio;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        dataUrl = canvas.toDataURL(file.type === 'image/png' ? 'image/png' : 'image/jpeg', 0.85);
+      }
+      // Migrate legacy single-image if any
+      const legacyImg = container.querySelector(':scope > img');
+      if (legacyImg) {
+        const w = createImgWrapper(legacyImg.src, legacyImg.alt, '100%');
+        container.insertBefore(w, legacyImg);
+        legacyImg.remove();
+        const legacyActions = container.querySelector(':scope > .image-actions');
+        if (legacyActions) legacyActions.remove();
+      }
+      const wrapper = createImgWrapper(dataUrl, file.name, '100%');
+      const addBtn = container.querySelector('.img-add-more');
+      if (addBtn) container.insertBefore(wrapper, addBtn);
+      else container.appendChild(wrapper);
+      container.classList.add('has-image');
+      ensureAddMoreBtn(container);
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function imgReplace(wrapper) {
+  const container = wrapper.closest('.image-placeholder');
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/png,image/jpeg,image/gif,image/webp';
+  input.onchange = function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+      const img = new Image();
+      img.onload = function() {
+        let dataUrl = ev.target.result;
+        if (img.width > 960) {
+          const canvas = document.createElement('canvas');
+          const ratio = 960 / img.width;
+          canvas.width = 960; canvas.height = img.height * ratio;
+          canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+          dataUrl = canvas.toDataURL(file.type === 'image/png' ? 'image/png' : 'image/jpeg', 0.85);
+        }
+        wrapper.querySelector('img').src = dataUrl;
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  };
+  input.click();
+}
+
+function imgRemove(wrapper) {
+  const container = wrapper.closest('.image-placeholder');
+  wrapper.remove();
+  if (!container.querySelector('.img-wrapper')) {
+    container.classList.remove('has-image');
+    const content = container.querySelector('.placeholder-content');
+    if (content) content.style.display = '';
+    const addBtn = container.querySelector('.img-add-more');
+    if (addBtn) addBtn.remove();
+  }
+}
+
+function imgResize(wrapper, size) {
+  wrapper.style.width = size;
+  // Update active button
+  wrapper.querySelectorAll('.img-actions button').forEach(b => b.classList.remove('active'));
+  const sizeMap = {'30%':'小','50%':'中','100%':'大'};
+  wrapper.querySelectorAll('.img-actions button').forEach(b => {
+    if (b.textContent === sizeMap[size]) b.classList.add('active');
+  });
+}
+
+// Legacy compat
+function replaceImage(container) {
+  const wrapper = container.querySelector('.img-wrapper');
+  if (wrapper) { imgReplace(wrapper); return; }
+  container.classList.remove('has-image');
+  const img = container.querySelector('img');
+  if (img) img.remove();
+  const content = container.querySelector('.placeholder-content');
+  if (content) content.style.display = '';
+  handleImageUpload(container);
+}
+function removeImage(container) {
+  container.querySelectorAll('.img-wrapper').forEach(w => w.remove());
+  container.classList.remove('has-image');
+  const content = container.querySelector('.placeholder-content');
+  if (content) content.style.display = '';
+  const addBtn = container.querySelector('.img-add-more');
+  if (addBtn) addBtn.remove();
+  const img = container.querySelector('img');
+  if (img) img.remove();
+}
+
+// Drag & Drop + Paste support
+document.querySelectorAll('.image-placeholder').forEach(ph => {
+  if (!ph.getAttribute('tabindex')) ph.setAttribute('tabindex', '0');
+  ph.addEventListener('dragover', function(e) { e.preventDefault(); this.style.borderColor = 'var(--accent)'; });
+  ph.addEventListener('dragleave', function() { this.style.borderColor = ''; });
+  ph.addEventListener('drop', function(e) {
+    e.preventDefault();
+    this.style.borderColor = '';
+    for (let i = 0; i < e.dataTransfer.files.length; i++) {
+      const file = e.dataTransfer.files[i];
+      if (file.type.startsWith('image/')) processImageFile(file, this);
+    }
+  });
+  ph.addEventListener('paste', function(e) {
+    const items = (e.clipboardData || window.clipboardData).items;
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.startsWith('image/')) {
+        e.preventDefault();
+        processImageFile(items[i].getAsFile(), this);
+        return;
+      }
+    }
+  });
+});
+
+// -----------------------------------------------------------
+// Add Image Placeholder
+// -----------------------------------------------------------
+function addImagePlaceholder(parent) {
+  const ph = document.createElement('div');
+  ph.className = 'image-placeholder';
+  ph.setAttribute('tabindex', '0');
+  ph.onclick = function() { handleImageUpload(this); };
+  ph.innerHTML = `
+    <div class="placeholder-content">
+      <div class="upload-icon">&#128247;</div>
+      <div class="placeholder-label">参考图片</div>
+      <div class="placeholder-hint">点击上传、拖拽或粘贴图片到此处</div>
+    </div>
+  `;
+  ph.addEventListener('dragover', function(e) { e.preventDefault(); this.style.borderColor = 'var(--accent)'; });
+  ph.addEventListener('dragleave', function() { this.style.borderColor = ''; });
+  ph.addEventListener('drop', function(e) {
+    e.preventDefault(); this.style.borderColor = '';
+    for (let i = 0; i < e.dataTransfer.files.length; i++) {
+      const file = e.dataTransfer.files[i];
+      if (file.type.startsWith('image/')) processImageFile(file, this);
+    }
+  });
+  ph.addEventListener('paste', function(e) {
+    const items = (e.clipboardData || window.clipboardData).items;
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.startsWith('image/')) {
+        e.preventDefault(); processImageFile(items[i].getAsFile(), this); return;
+      }
+    }
+  });
+  const addBtn = parent.querySelector('.add-row-btn');
+  parent.insertBefore(ph, addBtn);
+}
+
+// -----------------------------------------------------------
+// Export Clean HTML
+// -----------------------------------------------------------
+function exportCleanHTML() {
+  // ---- A. Collect all form state into a JSON snapshot ----
+  const snapshot = {};
+
+  // A1. data-field elements
+  document.querySelectorAll('[data-field]').forEach(el => {
+    const f = el.getAttribute('data-field');
+    if (el.tagName === 'INPUT' && el.type === 'date') {
+      snapshot['field:' + f] = el.value;
+    } else if (el.tagName === 'SELECT') {
+      // v1.5: data-field on <select> stores the chosen value (not innerHTML)
+      snapshot['field:' + f] = el.value;
+    } else {
+      snapshot['field:' + f] = el.innerHTML;
+    }
+  });
+
+  // A2. All selects (by id) — skip those already captured via data-field
+  document.querySelectorAll('select[id]').forEach(sel => {
+    if (sel.hasAttribute('data-field')) return;
+    snapshot['select:' + sel.id] = sel.value;
+  });
+  // Selects without id: by name or index within parent section
+  let anonSelIdx = 0;
+  document.querySelectorAll('select:not([id])').forEach(sel => {
+    if (sel.hasAttribute('data-field')) return;
+    const name = sel.getAttribute('name') || ('anon_' + anonSelIdx++);
+    snapshot['select_anon:' + name] = sel.value;
+  });
+
+  // A3. All radios
+  document.querySelectorAll('input[type="radio"]').forEach(radio => {
+    if (radio.checked) {
+      snapshot['radio:' + radio.name] = radio.value;
+    }
+  });
+
+  // A4. All checkboxes (by id)
+  document.querySelectorAll('input[type="checkbox"][id]').forEach(chk => {
+    snapshot['checkbox:' + chk.id] = chk.checked;
+  });
+
+  // A4b. Checklist items (by data-controls)
+  document.querySelectorAll('.checklist-item input[type="checkbox"]').forEach(chk => {
+    const ctrl = chk.getAttribute('data-controls');
+    if (ctrl) snapshot['checklist:' + ctrl] = chk.checked;
+  });
+
+  // A5. All date inputs
+  document.querySelectorAll('input[type="date"]').forEach((input, i) => {
+    const id = input.id || ('date_' + i);
+    snapshot['date:' + id] = input.value;
+  });
+
+  // A6. Table data (all tbody with id) — exclude operation column
+  document.querySelectorAll('tbody[id]').forEach(tbody => {
+    const tbodyId = tbody.id;
+    // Check if this table has an operation column (操作 header)
+    const table = tbody.closest('table');
+    const hasOpCol = table && Array.from(table.querySelectorAll('thead th')).some(th => th.textContent.trim() === '操作');
+    const rows = [];
+    tbody.querySelectorAll('tr').forEach(tr => {
+      const cells = [];
+      const tds = tr.querySelectorAll('td');
+      tds.forEach((td, i) => {
+        // Skip operation column (last td)
+        if (hasOpCol && i === tds.length - 1) return;
+        const dateInput = td.querySelector('input[type="date"]');
+        cells.push(dateInput ? dateInput.value : td.innerHTML);
+      });
+      rows.push(cells);
+    });
+    snapshot['table:' + tbodyId] = rows;
+  });
+
+  // A7. Flow mode
+  const flowImage = document.getElementById('flow-image-mode');
+  snapshot['flow_mode'] = (flowImage && flowImage.style.display !== 'none') ? 'image' : 'mermaid';
+
+  // A8. Images (all images per placeholder, with size)
+  let imgIdx = 0;
+  document.querySelectorAll('.image-placeholder').forEach(ph => {
+    if (!ph.classList.contains('has-image')) { imgIdx++; return; }
+    const slotMatch = ph.innerHTML.match(/IMAGE_SLOT[^{]*(\{[^}]+\})/);
+    const key = slotMatch ? JSON.parse(slotMatch[1]).id : ('img_' + imgIdx);
+    const wrappers = ph.querySelectorAll('.img-wrapper');
+    if (wrappers.length > 0) {
+      const imgs = [];
+      wrappers.forEach(w => {
+        const img = w.querySelector('img');
+        if (img) {
+          const entry = { src: img.src, width: w.style.width || '100%' };
+          const cap = w.querySelector('.img-caption');
+          if (cap && cap.value) entry.caption = cap.value;
+          imgs.push(entry);
+        }
+      });
+      snapshot['image:' + key] = imgs;
+    } else {
+      const img = ph.querySelector('img');
+      if (img) snapshot['image:' + key] = img.src;
+    }
+    imgIdx++;
+  });
+
+  // ---- B. Build the visual-only clone ----
+  const clone = document.documentElement.cloneNode(true);
+
+  // B1. Freeze selects (preserve id/name/data-field for diff)
+  const liveSelects = document.querySelectorAll('select');
+  const cloneSelects = clone.querySelectorAll('select');
+  cloneSelects.forEach((sel, i) => {
+    const liveSel = liveSelects[i];
+    const span = document.createElement('span');
+    span.textContent = liveSel ? liveSel.options[liveSel.selectedIndex]?.text || '' : '';
+    if (sel.id) span.setAttribute('data-select-id', sel.id);
+    if (sel.name) span.setAttribute('data-select-name', sel.name);
+    // v1.5: 保留 data-field(下拉框 + data-field 走 field: 快照通道,diff 需要查到该元素)
+    if (sel.hasAttribute('data-field')) span.setAttribute('data-field', sel.getAttribute('data-field'));
+    if (sel.className) span.className = sel.className;
+    sel.parentNode.replaceChild(span, sel);
+  });
+
+  // B2. Freeze dates
+  const liveDates = document.querySelectorAll('input[type="date"]');
+  const cloneDates = clone.querySelectorAll('input[type="date"]');
+  cloneDates.forEach((input, i) => {
+    const span = document.createElement('span');
+    span.textContent = liveDates[i]?.value || '—';
+    input.parentNode.replaceChild(span, input);
+  });
+
+  // B3. Freeze radios (preserve name and value for diff)
+  clone.querySelectorAll('input[type="radio"]').forEach(radio => {
+    const name = radio.name;
+    const val = radio.value;
+    const isChecked = snapshot['radio:' + name] === val;
+    const label = radio.closest('label');
+    if (label) {
+      label.setAttribute('data-radio-name', name);
+      label.setAttribute('data-radio-value', val);
+      const text = label.textContent.trim();
+      if (isChecked) {
+        label.innerHTML = '<strong>\u2714 ' + text + '</strong>';
+      } else {
+        label.textContent = text;
+        label.style.color = 'var(--text-light)';
+      }
+    }
+  });
+
+  // B4. Freeze checkboxes (preserve id for diff)
+  clone.querySelectorAll('input[type="checkbox"]').forEach(chk => {
+    const isChecked = snapshot['checkbox:' + chk.id] || false;
+    const item = chk.closest('.checklist-item');
+    if (item) {
+      if (chk.id) item.setAttribute('data-chk-id', chk.id);
+      const labelEl = item.querySelector('label');
+      const text = labelEl ? labelEl.textContent.trim() : '';
+      item.innerHTML = isChecked
+        ? '<strong>\u2714 ' + text + '</strong>'
+        : '<span style="color:var(--text-light)">' + text + '</span>';
+    } else {
+      // Non-checklist checkbox: freeze as text with marker
+      const label = chk.closest('label');
+      if (label && chk.id) {
+        const text = label.textContent.trim();
+        const marker = document.createElement('span');
+        marker.setAttribute('data-chk-id', chk.id);
+        marker.innerHTML = isChecked
+          ? '<strong>\u2714 ' + text + '</strong>'
+          : '<span style="color:var(--text-light)">' + text + '</span>';
+        label.parentNode.insertBefore(marker, label);
+        label.remove();
+      }
+    }
+  });
+
+  // B5. Remove edit UI
+  clone.querySelectorAll('.add-row-btn, .delete-row-btn, .collapse-btn, .nav-tools, .checklist-hint, .rich-table-actions, .rich-color-panel').forEach(el => el.remove());
+  // Mark nav links for hidden sections before removing them
+  clone.querySelectorAll('.section-hidden').forEach(sec => {
+    const id = sec.id;
+    if (id) {
+      const navLink = clone.querySelector('nav a[href="#' + id + '"]');
+      if (navLink) {
+        navLink.classList.add('nav-disabled');
+        navLink.textContent += '（无需求）';
+        navLink.removeAttribute('href');
+      }
+    }
+    sec.remove();
+  });
+  clone.querySelectorAll('.section-hidden-hint').forEach(el => el.remove());
+  clone.querySelectorAll('[contenteditable]').forEach(el => el.removeAttribute('contenteditable'));
+  clone.querySelectorAll('.fill-placeholder').forEach(el => { if (el.textContent.includes('\u2026')) el.remove(); });
+
+  // B5b. Remove operation columns (操作) from all tables
+  clone.querySelectorAll('thead th').forEach(th => {
+    if (th.textContent.trim() !== '操作') return;
+    var colIdx = Array.from(th.parentElement.children).indexOf(th);
+    var table = th.closest('table');
+    table.querySelectorAll('tr').forEach(tr => {
+      if (tr.children[colIdx]) tr.children[colIdx].remove();
+    });
+  });
+
+  // B6. Flow mode
+  if (snapshot['flow_mode'] === 'image') {
+    clone.querySelector('#flow-mermaid-mode')?.remove();
+    const fi = clone.querySelector('#flow-image-mode');
+    if (fi) fi.style.display = '';
+  } else {
+    clone.querySelector('#flow-image-mode')?.remove();
+  }
+  clone.querySelectorAll('.flow-mode-btn').forEach(el => { const p = el.parentElement; if (p && p.children.length <= 2) p.remove(); });
+
+  // B7. Remove image upload UI
+  clone.querySelectorAll('.image-actions').forEach(el => el.remove());
+  clone.querySelectorAll('.img-actions').forEach(el => el.remove());
+  clone.querySelectorAll('.img-add-more').forEach(el => el.remove());
+  // Convert img-caption inputs to text spans or remove if empty
+  clone.querySelectorAll('.img-caption').forEach(cap => {
+    if (cap.value && cap.value.trim()) {
+      const span = document.createElement('div');
+      span.className = 'img-caption';
+      span.style.border = 'none';
+      span.textContent = cap.value;
+      cap.parentNode.replaceChild(span, cap);
+    } else {
+      cap.remove();
+    }
+  });
+  clone.querySelectorAll('.image-placeholder').forEach(ph => {
+    ph.style.cursor = 'default';
+    ph.removeAttribute('onclick');
+    if (!ph.classList.contains('has-image')) {
+      ph.querySelector('.placeholder-hint')?.remove();
+      ph.querySelector('.upload-icon')?.remove();
+    }
+  });
+
+  // B7b. Unwrap rich-img-resizer (keep img with width style)
+  clone.querySelectorAll('.rich-img-resizer').forEach(wrapper => {
+    var img = wrapper.querySelector('img');
+    if (img) { wrapper.parentNode.insertBefore(img, wrapper); }
+    wrapper.remove();
+  });
+
+  // B7.5 (v1.4) 清理无需求导航 + 重排 6.X 编号
+  // 注: section 本身的删除已由 B5 处理 (.section-hidden 类的 sub-section 在 B5 步骤被 sec.remove())
+  //     B4 已把 checkbox 替换为 ✔/灰文本视觉, 此步骤无需再处理 checklist 视觉
+  (function trimAndRenumber() {
+    // 1. 删除 B5 留下的"（无需求）"导航链接
+    clone.querySelectorAll('nav a.nav-disabled').forEach(a => a.remove());
+
+    // 2. 重排 #requirements 内 .sub-section[id] 编号
+    const reqSection = clone.querySelector('#requirements');
+    if (!reqSection) return;
+    let parentNum = '6';
+    const reqNav = clone.querySelector('nav a[href="#requirements"] .nav-num');
+    if (reqNav) {
+      const m = reqNav.textContent.trim().match(/^0?(\d+)$/);
+      if (m) parentNum = m[1];
+    }
+    let idx = 1;
+    reqSection.querySelectorAll('.sub-section[id]').forEach(sub => {
+      const sid = sub.getAttribute('id');
+      const newNum = parentNum + '.' + idx;
+      const h3 = sub.querySelector('h3');
+      if (h3) {
+        const firstText = Array.from(h3.childNodes).find(n => n.nodeType === 3 && n.textContent.trim());
+        if (firstText) {
+          firstText.textContent = firstText.textContent.replace(/^\s*\d+(?:\.\d+)?\s*/, newNum + ' ');
+        } else {
+          h3.textContent = h3.textContent.replace(/^\s*\d+(?:\.\d+)?\s*/, newNum + ' ');
+        }
+      }
+      const navNum = clone.querySelector('nav a[href="#' + sid + '"] .nav-num');
+      if (navNum) navNum.textContent = newNum;
+      idx++;
+    });
+  })();
+
+  // B8. Remove scripts + remaining inputs
+  clone.querySelectorAll('script').forEach(el => el.remove());
+  clone.querySelectorAll('input').forEach(el => el.remove());
+
+  // B8b. Inject lightweight scroll spy for exported version
+  const spyScript = clone.querySelector('body').appendChild(document.createElement('script'));
+  spyScript.textContent = `
+(function(){
+  function updateActiveNav(){
+    var current='',minDist=1e9,offset=120;
+    document.querySelectorAll('section[id],.sub-section[id]').forEach(function(s){
+      if(!s.offsetParent)return;
+      var t=s.getBoundingClientRect().top,d=Math.abs(t-offset);
+      if(t<=offset&&d<minDist){minDist=d;current=s.id;}
+    });
+    if(!current){var f=document.querySelector('section[id]');if(f)current=f.id;}
+    document.querySelectorAll('nav a').forEach(function(a){
+      a.classList.toggle('active',a.getAttribute('href')==='#'+current);
+    });
+  }
+  window.addEventListener('scroll',updateActiveNav,{passive:true});
+  updateActiveNav();
+})();
+`;
+
+  // B8c. v1.5: Inject image lightbox for exported version
+  // 覆盖 .img-wrapper > img(占位图片)和 .rich-editor-content img(粘贴图片)
+  const lbStyle = clone.querySelector('head').appendChild(document.createElement('style'));
+  lbStyle.textContent = `
+.lb-overlay{position:fixed;inset:0;background:rgba(0,0,0,.88);display:none;align-items:center;justify-content:center;z-index:99999;cursor:zoom-out;padding:20px;box-sizing:border-box}
+.lb-overlay.active{display:flex}
+.lb-overlay img{max-width:96vw;max-height:96vh;object-fit:contain;box-shadow:0 8px 40px rgba(0,0,0,.5);cursor:zoom-out}
+.lb-close{position:fixed;top:16px;right:24px;color:#fff;font-size:36px;line-height:1;cursor:pointer;font-weight:300;text-shadow:0 2px 8px rgba(0,0,0,.6);user-select:none}
+.lb-trigger{cursor:zoom-in!important}
+`;
+  const lbScript = clone.querySelector('body').appendChild(document.createElement('script'));
+  lbScript.textContent = `
+(function(){
+  var ov=document.createElement('div');ov.className='lb-overlay';
+  var im=document.createElement('img');ov.appendChild(im);
+  var cl=document.createElement('span');cl.className='lb-close';cl.textContent='\\u00D7';ov.appendChild(cl);
+  document.body.appendChild(ov);
+  function close(){ov.classList.remove('active');im.src='';}
+  ov.addEventListener('click',close);
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')close();});
+  // 事件委托覆盖图片占位 + 富文本图片
+  document.addEventListener('click',function(e){
+    var t=e.target;
+    if(!t||t.tagName!=='IMG')return;
+    if(!t.closest('.img-wrapper')&&!t.closest('.rich-editor-content'))return;
+    e.preventDefault();e.stopPropagation();
+    im.src=t.src;ov.classList.add('active');
+  },true);
+  // 标记 cursor:zoom-in
+  document.querySelectorAll('.img-wrapper img, .rich-editor-content img').forEach(function(img){
+    img.classList.add('lb-trigger');
+  });
+})();
+`;
+
+  // B9. Sync title
+  const title = document.querySelector('h1')?.textContent?.trim() || 'gameplay';
+  const cloneTitle = clone.querySelector('title');
+  if (cloneTitle) cloneTitle.textContent = title + ' - 玩法设计文档';
+
+  // ---- C. Version diff annotation (optional) ----
+  if (window._diffBaseline) {
+    var doDiff = confirm('检测到对比基线，是否在导出文件中标注与旧版的差异？\n\n确定 = 标注差异\n取消 = 纯净导出');
+    if (doDiff) {
+      var changes = computeDiff(window._diffBaseline, snapshot);
+      applyDiffToClone(clone, changes);
+    }
+  }
+
+  // ---- D. Embed JSON snapshot as URL-encoded data attribute on <html> ----
+  // Note: snapshot does NOT contain diff info, ensuring clean re-import
+  const jsonStr = JSON.stringify(snapshot);
+  clone.setAttribute('data-snapshot', encodeURIComponent(jsonStr));
+
+  // ---- E. Download ----
+  const htmlStr = '<!DOCTYPE html>\n' + clone.outerHTML;
+  const blob = new Blob([htmlStr], { type: 'text/html;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = title + '_gameplay_export.html';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// -----------------------------------------------------------
+// 3C Description Auto-fill (VLOOKUP-like behavior)
+// -----------------------------------------------------------
+const _3cTypeDescMap = {
+  '玩法模式（Gameplay）': '由角色主动或被动进入的特定玩法或交互。以交互玩法为主要判断维度。',
+  '区域规则（Zone）':     '由角色所处的物理区域施加的行为准则，通常这种类型有一定的空间范围。以物理空间为主要判断维度。',
+  '任务定制（Mission）':  '由任务、剧情、系统等上层指令下达的"命令"或"规则"。通常这种类型具有特定的任务脚本情景。以脚本任务为主要判断维度。'
+};
+
+function update3CDescription() {
+  const type = document.getElementById('sel-3c-type')?.value;
+  const descEl = document.getElementById('3c-type-desc');
+  if (descEl && _3cTypeDescMap[type]) descEl.textContent = _3cTypeDescMap[type];
+}
+
+const _3cTargetDescMap = {
+  '主角（Hero）': '此限制将会影响 Hero 类型的角色身上的能力、或改变 Hero 类型的行为',
+  '非主角（NPC）': '（暂不支持）此限制将会影响 NPC 类型的角色身上的能力、或改变 NPC 类型的行为'
+};
+
+function update3CTargetDesc() {
+  const val = document.getElementById('sel-3c-target')?.value;
+  const descEl = document.getElementById('3c-target-desc');
+  if (descEl && _3cTargetDescMap[val]) descEl.textContent = _3cTargetDescMap[val];
+}
+
+const _3cTriggerDescMap = {
+  'Volume': '策划将其安放在对应关卡、物件中，调整至合适触发范围，当 Hero 进入Volume 时触发，退出 Volume 时解除。',
+  '程序接口': '开发直接调用角色组对应接口，参数为角色组提供的 Key，在特定时机触发和解除。'
+};
+
+function update3CTriggerDesc() {
+  const val = document.getElementById('sel-3c-trigger')?.value;
+  const descEl = document.getElementById('3c-trigger-desc');
+  if (descEl && _3cTriggerDescMap[val]) descEl.textContent = _3cTriggerDescMap[val];
+}
+
+// -----------------------------------------------------------
+// Flow Chart Mode Switch (Mermaid vs Image)
+// -----------------------------------------------------------
+function switchFlowMode(mode) {
+  const mermaidMode = document.getElementById('flow-mermaid-mode');
+  const imageMode = document.getElementById('flow-image-mode');
+  const btnMermaid = document.getElementById('btn-flow-mermaid');
+  const btnImage = document.getElementById('btn-flow-image');
+  if (mode === 'mermaid') {
+    mermaidMode.style.display = '';
+    imageMode.style.display = 'none';
+    btnMermaid.style.background = 'var(--accent)';
+    btnMermaid.style.color = '#fff';
+    btnImage.style.background = 'var(--surface)';
+    btnImage.style.color = 'var(--text-muted)';
+  } else {
+    mermaidMode.style.display = 'none';
+    imageMode.style.display = '';
+    btnImage.style.background = 'var(--accent)';
+    btnImage.style.color = '#fff';
+    btnMermaid.style.background = 'var(--surface)';
+    btnMermaid.style.color = 'var(--text-muted)';
+  }
+}
+
+// Register drag-drop for flow image placeholder
+document.querySelectorAll('#flow-image-mode .image-placeholder').forEach(ph => {
+  ph.addEventListener('dragover', function(e) { e.preventDefault(); this.style.borderColor = 'var(--accent)'; });
+  ph.addEventListener('dragleave', function() { this.style.borderColor = ''; });
+  ph.addEventListener('drop', function(e) {
+    e.preventDefault();
+    this.style.borderColor = '';
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) processImageFile(file, this);
+  });
+});
+
+
+
+// -----------------------------------------------------------
+// Placeholder: clear on focus, restore on blur if empty
+// 使用事件委托(focusin/focusout)以覆盖动态新增的行
+// -----------------------------------------------------------
+document.addEventListener('focusin', function(e) {
+  const el = e.target;
+  if (!el || typeof el.matches !== 'function') return;
+  if (!el.matches('[contenteditable="true"]')) return;
+  const ph = el.querySelector('.fill-placeholder');
+  if (ph) ph.remove();
+  // Also clear if the element itself has placeholder class
+  if (el.classList.contains('fill-placeholder')) {
+    el.textContent = '';
+    el.classList.remove('fill-placeholder');
+  }
+  // Auto-clear default dash
+  if (el.textContent.trim() === '—') {
+    el.textContent = '';
+  }
+});
+document.addEventListener('focusout', function(e) {
+  const el = e.target;
+  if (!el || typeof el.matches !== 'function') return;
+  if (!el.matches('[contenteditable="true"]')) return;
+  // Restore dash on blur if empty (only for info-table fields)
+  if (el.textContent.trim() === '' && el.closest('.info-table')) {
+    el.textContent = '—';
+  }
+});
+
+// -----------------------------------------------------------
+// v1.5: Tab 缩进 — 仅在 .rich-editor-content 内拦截 Tab 插入 4 个 nbsp
+// 其它 contenteditable / 表格 cell 保留浏览器默认 Tab 行为
+// Shift+Tab 反向缩进:删除光标前最多 4 个 nbsp
+// -----------------------------------------------------------
+document.addEventListener('keydown', function(e) {
+  if (e.key !== 'Tab') return;
+  const el = e.target;
+  if (!el || typeof el.closest !== 'function') return;
+  if (!el.closest('.rich-editor-content')) return;
+  e.preventDefault();
+  const sel = window.getSelection();
+  if (!sel || !sel.rangeCount) return;
+  const range = sel.getRangeAt(0);
+  if (e.shiftKey) {
+    // 反向缩进:删除光标前 1~4 个 nbsp(仅光标坤缩在文本节点内时)
+    if (!range.collapsed) return;
+    const node = range.startContainer;
+    if (node.nodeType !== Node.TEXT_NODE) return;
+    const offset = range.startOffset;
+    const text = node.textContent;
+    let n = 0;
+    while (n < 4 && offset - n - 1 >= 0 && text.charCodeAt(offset - n - 1) === 0x00A0) n++;
+    if (n > 0) {
+      node.textContent = text.slice(0, offset - n) + text.slice(offset);
+      range.setStart(node, offset - n);
+      range.collapse(true);
+      sel.removeAllRanges();
+      sel.addRange(range);
+    }
+  } else {
+    // 正向缩进: Range API 直插 4 个 nbsp(execCommand 在某些场景下不可靠)
+    range.deleteContents();
+    const indent = document.createTextNode('    ');
+    range.insertNode(indent);
+    range.setStartAfter(indent);
+    range.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(range);
+  }
+});
+
+// -----------------------------------------------------------
+// Rich Editor Commands
+// -----------------------------------------------------------
+function richCmd(cmd, value) {
+  document.execCommand(cmd, false, value || null);
+}
+
+function richInsertImage(btn) {
+  const editor = btn.closest('.rich-editor').querySelector('.rich-editor-content');
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/png,image/jpeg,image/gif,image/webp';
+  input.onchange = function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+      const img = new Image();
+      img.onload = function() {
+        let dataUrl = ev.target.result;
+        // Compress if too wide
+        if (img.width > 960) {
+          const canvas = document.createElement('canvas');
+          const ratio = 960 / img.width;
+          canvas.width = 960;
+          canvas.height = img.height * ratio;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          dataUrl = canvas.toDataURL(file.type === 'image/png' ? 'image/png' : 'image/jpeg', 0.85);
+        }
+        editor.focus();
+        document.execCommand('insertImage', false, dataUrl);
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  };
+  input.click();
+}
+
+function richInsertTable(btn) {
+  const editor = btn.closest('.rich-editor').querySelector('.rich-editor-content');
+  const input = prompt('请输入表格尺寸（列数×行数），如 3x2', '3x2');
+  if (!input) return;
+  const parts = input.split(/[x×X]/);
+  const cols = parseInt(parts[0]) || 3;
+  const rows = parseInt(parts[1]) || 2;
+  editor.focus();
+  const colW = (100 / cols).toFixed(2);
+  let colgroup = '<colgroup>';
+  for (let c = 0; c < cols; c++) colgroup += '<col style="width:' + colW + '%">';
+  colgroup += '</colgroup>';
+  let headerCells = '';
+  for (let c = 0; c < cols; c++) headerCells += '<th contenteditable="true">列' + (c + 1) + '</th>';
+  let bodyRows = '';
+  for (let r = 0; r < rows; r++) {
+    bodyRows += '<tr>';
+    for (let c = 0; c < cols; c++) bodyRows += '<td contenteditable="true">—</td>';
+    bodyRows += '</tr>';
+  }
+  const html = '<div class="rich-table-wrapper" contenteditable="false">'
+    + '<table style="table-layout:fixed">' + colgroup + '<thead><tr>' + headerCells + '</tr></thead><tbody>' + bodyRows + '</tbody></table>'
+    + '<div class="rich-table-actions">'
+    + '<button onclick="richTableAddRow(this)">+ 行</button>'
+    + '<button onclick="richTableAddCol(this)">+ 列</button>'
+    + '<button onclick="richTableDelRow(this)">- 行</button>'
+    + '<button onclick="richTableDelCol(this)">- 列</button>'
+    + '<button onclick="richTableDelete(this)" style="margin-left:auto;color:#cc0000;border-color:#cc0000">删除表格</button>'
+    + '</div></div><p><br></p>';
+  document.execCommand('insertHTML', false, html);
+}
+
+function richTableAddRow(btn) {
+  const table = btn.closest('.rich-table-wrapper')?.querySelector('table');
+  if (!table) return;
+  const cols = table.rows[0]?.cells.length || 1;
+  const tr = table.querySelector('tbody').insertRow(-1);
+  for (let i = 0; i < cols; i++) {
+    const td = tr.insertCell(-1);
+    td.contentEditable = 'true';
+    td.textContent = '—';
+  }
+}
+
+function richTableAddCol(btn) {
+  const table = btn.closest('.rich-table-wrapper')?.querySelector('table');
+  if (!table) return;
+  const colIdx = table.rows[0]?.cells.length || 0;
+  for (const row of table.rows) {
+    const isHeader = row.parentElement.tagName === 'THEAD';
+    const cell = isHeader ? document.createElement('th') : document.createElement('td');
+    cell.contentEditable = 'true';
+    cell.textContent = isHeader ? '列' + (colIdx + 1) : '—';
+    row.appendChild(cell);
+  }
+  // Sync colgroup: redistribute widths evenly
+  richTableSyncColgroup(table);
+}
+
+function richTableDelRow(btn) {
+  const tbody = btn.closest('.rich-table-wrapper')?.querySelector('tbody');
+  if (!tbody || tbody.rows.length <= 1) return;
+  tbody.deleteRow(tbody.rows.length - 1);
+}
+
+function richTableDelCol(btn) {
+  const table = btn.closest('.rich-table-wrapper')?.querySelector('table');
+  if (!table) return;
+  const cols = table.rows[0]?.cells.length || 0;
+  if (cols <= 1) return;
+  for (const row of table.rows) {
+    row.deleteCell(row.cells.length - 1);
+  }
+  // Sync colgroup: redistribute widths evenly
+  richTableSyncColgroup(table);
+}
+
+function richTableDelete(btn) {
+  var wrapper = btn.closest('.rich-table-wrapper');
+  if (!wrapper) return;
+  if (!confirm('确定删除此表格？')) return;
+  wrapper.remove();
+}
+
+function richTableSyncColgroup(table) {
+  var colCount = table.rows[0]?.cells.length || 1;
+  var cg = table.querySelector('colgroup');
+  if (!cg) {
+    cg = document.createElement('colgroup');
+    table.insertBefore(cg, table.firstChild);
+    table.style.tableLayout = 'fixed';
+  }
+  cg.innerHTML = '';
+  var w = (100 / colCount).toFixed(2);
+  for (var i = 0; i < colCount; i++) {
+    var col = document.createElement('col');
+    col.style.width = w + '%';
+    cg.appendChild(col);
+  }
+}
+
+// --- Column resize drag ---
+(function() {
+  var resizing = null;
+  document.addEventListener('mousedown', function(e) {
+    var th = e.target.closest('.rich-table-wrapper th');
+    if (!th || !th.nextElementSibling) return;
+    var rect = th.getBoundingClientRect();
+    if (e.clientX < rect.right - 5) return;
+    e.preventDefault();
+    var table = th.closest('table');
+    var colIndex = Array.from(th.parentElement.children).indexOf(th);
+    var cg = table.querySelector('colgroup');
+    if (!cg) { richTableSyncColgroup(table); cg = table.querySelector('colgroup'); }
+    var cols = cg.querySelectorAll('col');
+    if (!cols[colIndex]) return;
+    resizing = {
+      table: table, colIndex: colIndex, startX: e.clientX,
+      startLeft: cols[colIndex].getBoundingClientRect().width,
+      startRight: cols[colIndex + 1] ? cols[colIndex + 1].getBoundingClientRect().width : 0,
+      cols: cols
+    };
+    th.classList.add('col-resizing');
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+  });
+  document.addEventListener('mousemove', function(e) {
+    if (!resizing) return;
+    e.preventDefault();
+    var dx = e.clientX - resizing.startX;
+    var tableW = resizing.table.offsetWidth;
+    var newLeft = Math.max(40, resizing.startLeft + dx);
+    var newRight = Math.max(40, resizing.startRight - dx);
+    resizing.cols[resizing.colIndex].style.width = (newLeft / tableW * 100).toFixed(2) + '%';
+    if (resizing.cols[resizing.colIndex + 1]) {
+      resizing.cols[resizing.colIndex + 1].style.width = (newRight / tableW * 100).toFixed(2) + '%';
+    }
+  });
+  document.addEventListener('mouseup', function() {
+    if (!resizing) return;
+    document.querySelectorAll('.col-resizing').forEach(function(el) { el.classList.remove('col-resizing'); });
+    document.body.style.cursor = '';
+    document.body.style.userSelect = '';
+    resizing = null;
+  });
+})();
+
+// --- Rich text image resize drag ---
+(function() {
+  var imgResizing = null;
+
+  // Click image in rich editor → wrap in resizer, activate
+  document.addEventListener('click', function(e) {
+    // Deactivate all resizers first
+    document.querySelectorAll('.rich-img-resizer.active').forEach(function(r) { r.classList.remove('active'); });
+    var img = e.target;
+    if (img.tagName !== 'IMG' || !img.closest('.rich-editor-content')) return;
+    // Wrap if not already wrapped
+    if (!img.parentElement || !img.parentElement.classList.contains('rich-img-resizer')) {
+      var wrapper = document.createElement('span');
+      wrapper.className = 'rich-img-resizer';
+      wrapper.contentEditable = 'false';
+      var handle = document.createElement('span');
+      handle.className = 'rich-img-handle';
+      img.parentNode.insertBefore(wrapper, img);
+      wrapper.appendChild(img);
+      wrapper.appendChild(handle);
+    }
+    img.parentElement.classList.add('active');
+  });
+
+  // Mousedown on handle → start resize
+  document.addEventListener('mousedown', function(e) {
+    if (!e.target.classList.contains('rich-img-handle')) return;
+    e.preventDefault();
+    var wrapper = e.target.closest('.rich-img-resizer');
+    var img = wrapper.querySelector('img');
+    imgResizing = { img: img, startX: e.clientX, startW: img.offsetWidth };
+    document.body.style.cursor = 'nwse-resize';
+    document.body.style.userSelect = 'none';
+  });
+
+  document.addEventListener('mousemove', function(e) {
+    if (!imgResizing) return;
+    e.preventDefault();
+    var dx = e.clientX - imgResizing.startX;
+    var newW = Math.max(50, imgResizing.startW + dx);
+    var editor = imgResizing.img.closest('.rich-editor-content');
+    var maxW = editor ? editor.offsetWidth - 20 : 800;
+    imgResizing.img.style.width = Math.min(newW, maxW) + 'px';
+    imgResizing.img.style.maxWidth = '100%';
+  });
+
+  document.addEventListener('mouseup', function() {
+    if (!imgResizing) return;
+    document.body.style.cursor = '';
+    document.body.style.userSelect = '';
+    imgResizing = null;
+  });
+})();
+
+function richClearFormat(btn) {
+  const editor = btn.closest('.rich-editor').querySelector('.rich-editor-content');
+  editor.focus();
+  const sel = window.getSelection();
+  if (!sel.rangeCount) return;
+  // Save selection
+  const range = sel.getRangeAt(0);
+  document.execCommand('removeFormat', false, null);
+  // Restore focus to editor (prevent toolbar stealing focus)
+  editor.focus();
+  sel.removeAllRanges();
+  sel.addRange(range);
+  // Also reset block format if in a heading
+  const node = sel.anchorNode?.parentElement;
+  if (node && node !== editor && node.closest('.rich-editor-content') === editor && !node.matches('p,li,td,th,div.rich-editor-content')) {
+    document.execCommand('formatBlock', false, '<p>');
+  }
+}
+
+// -----------------------------------------------------------
+// Rich Editor: color picker
+// -----------------------------------------------------------
+const _foreColors = [
+  {name:'黑色',color:'#2d2d2d'},{name:'深灰',color:'#6b7280'},{name:'红色',color:'#dc2626'},
+  {name:'橙色',color:'#d97706'},{name:'绿色',color:'#16a34a'},{name:'蓝色',color:'#2563eb'},
+  {name:'紫色',color:'#7c3aed'}
+];
+const _backColors = [
+  {name:'无',color:'transparent'},{name:'浅黄',color:'#fef9c3'},{name:'浅绿',color:'#dcfce7'},
+  {name:'浅蓝',color:'#dbeafe'},{name:'浅粉',color:'#fce7f3'},{name:'浅橙',color:'#ffedd5'},
+  {name:'浅灰',color:'#f3f4f6'}
+];
+let _activeColorPanel = null;
+function richColorPick(btn, cmdType) {
+  // close existing panel
+  if (_activeColorPanel) { _activeColorPanel.remove(); _activeColorPanel = null; }
+  const editor = btn.closest('.rich-editor').querySelector('.rich-editor-content');
+  // save selection before panel steals focus
+  const sel = window.getSelection();
+  let savedRange = sel.rangeCount ? sel.getRangeAt(0).cloneRange() : null;
+  const colors = cmdType === 'foreColor' ? _foreColors : _backColors;
+  const panel = document.createElement('div');
+  panel.className = 'rich-color-panel';
+  colors.forEach(function(c) {
+    const swatch = document.createElement('div');
+    swatch.className = 'rich-color-swatch';
+    swatch.title = c.name;
+    if (c.color === 'transparent') {
+      swatch.style.background = '#fff';
+      swatch.innerHTML = '<svg viewBox="0 0 28 28" width="28" height="28"><line x1="4" y1="24" x2="24" y2="4" stroke="#dc2626" stroke-width="2"/></svg>';
+    } else {
+      swatch.style.background = c.color;
+    }
+    swatch.onmousedown = function(e) {
+      e.preventDefault();
+      editor.focus();
+      if (savedRange) { sel.removeAllRanges(); sel.addRange(savedRange); }
+      if (c.color === 'transparent') {
+        document.execCommand('removeFormat', false, null);
+      } else {
+        document.execCommand(cmdType, false, c.color);
+      }
+      panel.remove();
+      _activeColorPanel = null;
+    };
+    panel.appendChild(swatch);
+  });
+  btn.style.position = 'relative';
+  btn.appendChild(panel);
+  _activeColorPanel = panel;
+  // close on outside click
+  setTimeout(function() {
+    document.addEventListener('mousedown', function closePanel(e) {
+      if (!panel.contains(e.target) && e.target !== btn) {
+        panel.remove();
+        _activeColorPanel = null;
+        document.removeEventListener('mousedown', closePanel);
+      }
+    });
+  }, 0);
+}
+
+// -----------------------------------------------------------
+// Rich Editor: toolbar active state tracking
+// -----------------------------------------------------------
+document.addEventListener('selectionchange', function() {
+  const activeEditor = document.querySelector('.rich-editor-content:focus');
+  if (!activeEditor) return;
+  const toolbar = activeEditor.closest('.rich-editor')?.querySelector('.rich-editor-toolbar');
+  if (!toolbar) return;
+  toolbar.querySelectorAll('button[data-cmd]').forEach(function(btn) {
+    const cmd = btn.getAttribute('data-cmd');
+    try {
+      if (document.queryCommandState(cmd)) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    } catch(e) { btn.classList.remove('active'); }
+  });
+});
+
+// -----------------------------------------------------------
+// Sync: Header → Nav Sidebar
+// -----------------------------------------------------------
+// Title sync
+const headerTitle = document.getElementById('header-title');
+const navTitle = document.getElementById('nav-title');
+if (headerTitle && navTitle) {
+  headerTitle.addEventListener('input', function() {
+    const name = this.textContent.trim();
+    navTitle.innerHTML = name + '<br>玩法设计';
+    document.title = name + ' - 玩法设计文档';
+  });
+}
+
+// Version + Date sync
+const headerVersion = document.getElementById('header-version');
+const headerDate = document.getElementById('header-date');
+const navVersion = document.getElementById('nav-version');
+
+function syncNavVersion() {
+  const v = headerVersion ? headerVersion.textContent.trim() : 'v1.0';
+  const d = headerDate ? headerDate.value : '';
+  navVersion.textContent = v + ' · ' + (d || 'YYYY-MM-DD');
+}
+
+if (headerVersion) headerVersion.addEventListener('input', syncNavVersion);
+if (headerDate) headerDate.addEventListener('change', syncNavVersion);
+
+// -----------------------------------------------------------
+// Import Clean HTML → Refill Template
+// -----------------------------------------------------------
+function importCleanHTML(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(e.target.result, 'text/html');
+
+    // Try to find JSON snapshot
+    // Try reading snapshot from data-snapshot attribute on <html>
+    let snapshot = null;
+    const htmlEl = doc.querySelector('html');
+    const snapshotAttr = htmlEl?.getAttribute('data-snapshot');
+    if (snapshotAttr) {
+      try {
+        snapshot = JSON.parse(decodeURIComponent(snapshotAttr));
+      } catch(err) {
+        snapshot = null;
+      }
+    }
+    // Also try old format (hidden div)
+    if (!snapshot) {
+      const snapshotEl = doc.getElementById('form-snapshot');
+      if (snapshotEl) {
+        try {
+          snapshot = JSON.parse(snapshotEl.textContent.trim());
+        } catch(err) { snapshot = null; }
+      }
+    }
+
+    // Fallback: if no JSON snapshot, parse from HTML structure
+    if (!snapshot) {
+      snapshot = {};
+      // Extract data-field text from HTML
+      doc.querySelectorAll('[data-field]').forEach(srcEl => {
+        const f = srcEl.getAttribute('data-field');
+        snapshot['field:' + f] = srcEl.innerHTML;
+      });
+      // Extract select values
+      doc.querySelectorAll('[data-select-id]').forEach(el => {
+        snapshot['select:' + el.getAttribute('data-select-id')] = el.getAttribute('data-select-value') || el.textContent.trim();
+      });
+      // Extract radio values
+      doc.querySelectorAll('[data-radio-name]').forEach(el => {
+        snapshot['radio:' + el.getAttribute('data-radio-name')] = el.getAttribute('data-radio-value') || '';
+      });
+      // Extract table data by tbody id
+      doc.querySelectorAll('tbody[id]').forEach(tbody => {
+        const tbodyId = tbody.id;
+        const rows = [];
+        tbody.querySelectorAll('tr').forEach(tr => {
+          const cells = [];
+          tr.querySelectorAll('td').forEach(td => cells.push(td.innerHTML));
+          rows.push(cells);
+        });
+        if (rows.length) snapshot['table:' + tbodyId] = rows;
+      });
+      // Flow mode
+      if (doc.querySelector('[data-flow-mode="image"]')) {
+        snapshot['flow_mode'] = 'image';
+      }
+    }
+
+    // 0b1. v1.5 迁移: subtitle 占位文本清空 + info_level 文本→select value
+    (function migrateV15Fields() {
+      const placeholderMap = {
+        'field:gameplay_name_en': 'Gameplay Name — 一句话描述',
+        'field:prop_name_en':     'Prop Name — 一句话描述'
+      };
+      for (const key in placeholderMap) {
+        if (snapshot[key] !== undefined) {
+          const txt = String(snapshot[key]).replace(/<[^>]*>/g, '').trim();
+          if (txt === placeholderMap[key]) snapshot[key] = '';
+        }
+      }
+      // info_level: v1.4 是 contenteditable 文本(默认"—"),v1.5 是 select value(T0/T1/T2/T3)
+      if (snapshot['field:info_level'] !== undefined) {
+        const v = String(snapshot['field:info_level']).replace(/<[^>]*>/g, '').trim();
+        if (['T0','T1','T2','T3'].includes(v)) {
+          snapshot['field:info_level'] = v;
+        } else {
+          // "—" 或空文本或其它 → 走默认值 T2(restore 时不命中 option,保持 selected 默认)
+          delete snapshot['field:info_level'];
+        }
+      }
+    })();
+
+    // 0c. 重建配置模块分组容器 (v1.4)
+    // - 兼容迁移: v1.3 单表 table:config-form-body / table:config-scene-body → v1.4 a 分组
+    // - 按 snapshot 中 table:{series}-{letter}-body / field:{series}_{letter}_name 的字母集合重建
+    (function recreateConfigGroups() {
+      const seriesList = ['config-form', 'config-scene'];
+      seriesList.forEach(seriesKey => {
+        const container = document.getElementById(seriesKey + '-groups');
+        if (!container) return;
+        const fieldPrefix = seriesKey.replace(/-/g, '_') + '_';
+
+        // 旧版迁移: 单表 → a 分组
+        const legacyTableKey = 'table:' + seriesKey + '-body';
+        if (snapshot[legacyTableKey] !== undefined) {
+          const newKey = 'table:' + seriesKey + '-a-body';
+          if (snapshot[newKey] === undefined) {
+            snapshot[newKey] = snapshot[legacyTableKey];
+          }
+          delete snapshot[legacyTableKey];
+          const nameKey = 'field:' + fieldPrefix + 'a_name';
+          if (snapshot[nameKey] === undefined) snapshot[nameKey] = '物件A';
+        }
+
+        // 收集所有出现的字母
+        const letters = new Set();
+        const tableRe = new RegExp('^table:' + seriesKey + '-([a-z]|\\d+)-body$');
+        const fieldRe = new RegExp('^field:' + fieldPrefix + '([a-z]|\\d+)_name$');
+        for (const key of Object.keys(snapshot)) {
+          let m = key.match(tableRe) || key.match(fieldRe);
+          if (m) letters.add(m[1]);
+        }
+
+        if (letters.size === 0) return; // 保留模板默认 a/b 分组
+
+        container.innerHTML = '';
+        const sortedLetters = Array.from(letters).sort();
+        sortedLetters.forEach(letter => {
+          addParamGroup(seriesKey, letter, '物件' + letter.toUpperCase());
+        });
+      });
+    })();
+
+    // 0. Reset all editable content to defaults before restoring
+    document.querySelectorAll('[data-field]').forEach(el => {
+      if (el.tagName === 'INPUT' && el.type === 'date') { el.value = ''; }
+      else if (el.tagName === 'SELECT') {
+        // 保留 HTML 中带 selected 属性的默认值(如 T2),无 selected 才退回 index 0
+        const def = Array.from(el.options).findIndex(o => o.defaultSelected);
+        el.selectedIndex = def >= 0 ? def : 0;
+      }
+      else { el.innerHTML = ''; }
+    });
+    document.querySelectorAll('input[type="radio"]').forEach(r => { r.checked = false; });
+    document.querySelectorAll('select').forEach(s => {
+      const def = Array.from(s.options).findIndex(o => o.defaultSelected);
+      s.selectedIndex = def >= 0 ? def : 0;
+    });
+    document.querySelectorAll('input[type="date"]').forEach(d => { d.value = ''; });
+    document.querySelectorAll('tbody[id]').forEach(tbody => { tbody.innerHTML = ''; });
+
+    // 1. Restore data-field elements
+    for (const [key, value] of Object.entries(snapshot)) {
+      if (!key.startsWith('field:')) continue;
+      const fieldName = key.slice(6);
+      const el = document.querySelector('[data-field="' + fieldName + '"]');
+      if (!el) continue;
+      if (el.tagName === 'INPUT' && el.type === 'date') {
+        el.value = value;
+      } else if (el.tagName === 'SELECT') {
+        // v1.5: SELECT 走 value 赋值;若 value 不在 options 中则保持默认
+        const has = Array.from(el.options).some(o => o.value === value);
+        if (has) el.value = value;
+      } else {
+        el.innerHTML = value;
+      }
+    }
+
+    // 2. Restore selects
+    for (const [key, value] of Object.entries(snapshot)) {
+      if (key.startsWith('select:')) {
+        const selId = key.slice(7);
+        const sel = document.getElementById(selId);
+        if (sel) {
+          sel.value = value;
+          sel.dispatchEvent(new Event('change'));
+        }
+      }
+    }
+
+    // 3. Restore radios
+    for (const [key, value] of Object.entries(snapshot)) {
+      if (!key.startsWith('radio:')) continue;
+      const name = key.slice(6);
+      const radio = document.querySelector('input[type="radio"][name="' + name + '"][value="' + CSS.escape(value) + '"]');
+      if (radio) radio.checked = true;
+    }
+
+    // 4. Restore checkboxes
+    // First uncheck all, then check the saved ones
+    document.querySelectorAll('.checklist-item input[type="checkbox"]').forEach(chk => {
+      chk.checked = false;
+    });
+    for (const [key, value] of Object.entries(snapshot)) {
+      if (!key.startsWith('checkbox:')) continue;
+      const id = key.slice(9);
+      const chk = document.getElementById(id);
+      if (chk) {
+        chk.checked = !!value;
+        chk.dispatchEvent(new Event('change'));
+      }
+    }
+
+    // 5. Restore dates
+    for (const [key, value] of Object.entries(snapshot)) {
+      if (!key.startsWith('date:')) continue;
+      const id = key.slice(5);
+      const input = document.getElementById(id);
+      if (input) input.value = value;
+    }
+
+    // 6. Restore tables
+    for (const [key, value] of Object.entries(snapshot)) {
+      if (!key.startsWith('table:')) continue;
+      const tbodyId = key.slice(6);
+      const tbody = document.getElementById(tbodyId);
+      if (!tbody || !Array.isArray(value)) continue;
+
+      tbody.innerHTML = '';
+      const isVersionTable = (tbodyId === 'version-table-body');
+
+      value.forEach(cells => {
+        const tr = document.createElement('tr');
+        cells.forEach((cellContent, i) => {
+          const td = document.createElement('td');
+          if (isVersionTable && i === 0) {
+            const dateInput = document.createElement('input');
+            dateInput.type = 'date';
+            dateInput.className = 'date-input';
+            dateInput.max = '9999-12-31';
+            dateInput.value = cellContent;
+            dateInput.style.cssText = 'width:100%;border:1px solid var(--border);border-radius:4px;padding:4px 6px;font-size:13px;font-family:var(--font);background:var(--surface);color:var(--text);cursor:pointer';
+            td.appendChild(dateInput);
+          } else {
+            td.contentEditable = 'true';
+            td.innerHTML = cellContent;
+          }
+          tr.appendChild(td);
+        });
+        // Add operation column with delete button
+        const opTd = document.createElement('td');
+        opTd.style.textAlign = 'center';
+        const delBtn = document.createElement('button');
+        delBtn.className = 'delete-row-btn';
+        delBtn.textContent = '×';
+        delBtn.title = '删除此行';
+        delBtn.onclick = function() { tr.remove(); };
+        opTd.appendChild(delBtn);
+        tr.appendChild(opTd);
+        tbody.appendChild(tr);
+      });
+    }
+
+    // 7. Restore flow mode
+    if (snapshot['flow_mode'] === 'image') {
+      switchFlowMode('image');
+    } else {
+      switchFlowMode('mermaid');
+    }
+
+    // 8. Restore images
+    var imgRestoreIdx = 0;
+    var allPlaceholders = document.querySelectorAll('.image-placeholder');
+    for (const [key, value] of Object.entries(snapshot)) {
+      if (!key.startsWith('image:')) continue;
+      const imgId = key.slice(6);
+      // Find matching placeholder
+      var targetPh = null;
+      allPlaceholders.forEach(ph => {
+        if (targetPh) return;
+        if (ph.innerHTML.includes(imgId)) { targetPh = ph; }
+      });
+      if (!targetPh && imgId.startsWith('img_')) {
+        var idx = parseInt(imgId.split('_')[1]);
+        if (allPlaceholders[idx]) targetPh = allPlaceholders[idx];
+      }
+      if (!targetPh) continue;
+      // Prepare placeholder
+      var content = targetPh.querySelector('.placeholder-content');
+      if (content) content.style.display = 'none';
+      var hint = targetPh.querySelector('.placeholder-hint');
+      if (hint) hint.style.display = 'none';
+      targetPh.classList.add('has-image');
+      // Remove old bare images
+      targetPh.querySelectorAll(':scope > img').forEach(i => i.remove());
+      // Restore images with wrapper structure
+      var imgList = Array.isArray(value) ? value : [{ src: value, width: '100%' }];
+      imgList.forEach(item => {
+        var src = typeof item === 'string' ? item : item.src;
+        var width = typeof item === 'string' ? '100%' : (item.width || '100%');
+        var wrapper = createImgWrapper(src, '', width);
+        // Update active button state
+        wrapper.querySelectorAll('.img-actions button').forEach(b => b.classList.remove('active'));
+        wrapper.querySelectorAll('.img-actions button').forEach(b => {
+          if (b.textContent === '大' && width === '100%') b.classList.add('active');
+          if (b.textContent === '中' && width === '50%') b.classList.add('active');
+          if (b.textContent === '小' && width === '30%') b.classList.add('active');
+        });
+        // Restore caption
+        if (typeof item === 'object' && item.caption) {
+          var capInput = wrapper.querySelector('.img-caption');
+          if (capInput) capInput.value = item.caption;
+        }
+        targetPh.appendChild(wrapper);
+      });
+      ensureAddMoreBtn(targetPh);
+    }
+
+    // 9. Sync nav sidebar
+    const titleEl = document.getElementById('header-title');
+    const navTitleEl = document.getElementById('nav-title');
+    if (titleEl && navTitleEl) {
+      navTitleEl.innerHTML = titleEl.textContent.trim() + '<br>玩法设计';
+      document.title = titleEl.textContent.trim() + ' - 玩法设计文档';
+    }
+    syncNavVersion();
+
+    // Save baseline for version diff
+    window._diffBaseline = JSON.parse(JSON.stringify(snapshot));
+
+    alert('导入成功！已记录为对比基线。');
+    input.value = '';
+  };
+  reader.readAsText(file, 'utf-8');
+}
+
+// --- Load diff baseline manually ---
+function loadDiffBaseline() {
+  document.getElementById('diff-file-input').click();
+}
+function onDiffFileSelected(input) {
+  var file = input.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var parser = new DOMParser();
+    var doc = parser.parseFromString(e.target.result, 'text/html');
+    var htmlEl = doc.querySelector('html');
+    var snapshotAttr = htmlEl ? htmlEl.getAttribute('data-snapshot') : null;
+    var snapshot = null;
+    if (snapshotAttr) {
+      try { snapshot = JSON.parse(decodeURIComponent(snapshotAttr)); } catch(err) {}
+    }
+    if (!snapshot) {
+      var el = doc.getElementById('form-snapshot');
+      if (el) { try { snapshot = JSON.parse(el.textContent.trim()); } catch(err) {} }
+    }
+    if (snapshot) {
+      window._diffBaseline = snapshot;
+      alert('基线已加载，导出时可选择标注差异。');
+    } else {
+      alert('无法从该文件中提取数据，请选择有效的导出文档。');
+    }
+    input.value = '';
+  };
+  reader.readAsText(file, 'utf-8');
+}
+
+// -----------------------------------------------------------
+// Version Diff — compute and annotate
+// -----------------------------------------------------------
+function _toPlainText(val) {
+  if (typeof val !== 'string') return JSON.stringify(val);
+  var tmp = document.createElement('div');
+  tmp.innerHTML = val;
+  return (tmp.textContent || '').replace(/\s+/g, ' ').trim();
+}
+
+function computeDiff(baseline, current) {
+  var changes = {};
+  for (var key in current) {
+    if (!(key in baseline)) {
+      changes[key] = { type: 'added', value: current[key] };
+    } else {
+      var bv = baseline[key], cv = current[key];
+      var isDiff = false;
+      if (key.startsWith('field:')) {
+        // Compare as plain text to avoid HTML normalization false positives
+        isDiff = _toPlainText(bv) !== _toPlainText(cv);
+      } else {
+        isDiff = JSON.stringify(bv) !== JSON.stringify(cv);
+      }
+      if (isDiff) {
+        changes[key] = { type: 'modified', oldValue: bv, newValue: cv };
+      }
+    }
+  }
+  for (var key in baseline) {
+    if (!(key in current)) {
+      changes[key] = { type: 'removed', value: baseline[key] };
+    }
+  }
+  return changes;
+}
+
+var DIFF_CSS = '\n' +
+  '.diff-modified, .diff-added { background: #e6ffe6 !important; border-left: 3px solid #2ecc40; padding-left: 8px; }\n' +
+  '.diff-modified td, .diff-added td { background: #e6ffe6 !important; }\n' +
+  '.diff-modified th, .diff-added th { background: #d4f5d4 !important; }\n' +
+  '.diff-deleted { color: #cc0000; text-decoration: line-through; opacity: 0.6; }\n' +
+  '.diff-label { font-size: 10px; color: #2ecc40; font-weight: 600; margin-left: 6px; vertical-align: super; }\n' +
+  '.diff-deleted-label { font-size: 10px; color: #cc0000; font-weight: 600; }\n' +
+  '.diff-old-content { margin-top: 4px; padding: 4px 8px; border-left: 2px solid #cc0000; background: #fff5f5; }\n' +
+  '.diff-table-deleted td { background: #fff5f5 !important; color: #cc0000; text-decoration: line-through; opacity: 0.6; }\n' +
+  '.diff-img-badge { display:inline-block; font-size:11px; padding:2px 8px; border-radius:3px; margin:4px; font-weight:600; }\n' +
+  '.diff-img-added { background:#2ecc40; color:#fff; }\n' +
+  '.diff-img-removed { background:#cc0000; color:#fff; }\n' +
+  '.diff-img-changed { background:#f39c12; color:#fff; }\n' +
+  '.diff-select-tag { display:inline-block; font-size:10px; padding:1px 6px; border-radius:3px; margin-left:6px; background:#e6ffe6; border:1px solid #2ecc40; color:#2ecc40; font-weight:600; }\n';
+
+function applyDiffToClone(clone, changes) {
+  // Inject diff CSS
+  var styleEl = clone.querySelector('style') || document.createElement('style');
+  if (!styleEl.parentNode) clone.querySelector('head').appendChild(styleEl);
+  styleEl.textContent += DIFF_CSS;
+
+  for (var key in changes) {
+    var ch = changes[key];
+    var prefix = key.split(':')[0];
+    var fieldName = key.slice(prefix.length + 1);
+
+    if (prefix === 'field') {
+      var el = clone.querySelector('[data-field="' + fieldName + '"]');
+      if (!el) continue;
+      if (ch.type === 'modified') {
+        el.classList.add('diff-modified');
+        var oldHtml = typeof ch.oldValue === 'string' ? ch.oldValue : '';
+        var newHtml = typeof ch.newValue === 'string' ? ch.newValue : '';
+        var oldText = oldHtml.replace(/<[^>]*>/g, '').trim();
+        var newText = newHtml.replace(/<[^>]*>/g, '').trim();
+        // Check for deleted images in rich text
+        var oldImgCount = (oldHtml.match(/<img\s/g) || []).length;
+        var newImgCount = (newHtml.match(/<img\s/g) || []).length;
+        if (oldImgCount > newImgCount) {
+          var badge = document.createElement('div');
+          badge.innerHTML = '<span class="diff-img-badge diff-img-removed">已删除 ' + (oldImgCount - newImgCount) + ' 张图片</span>';
+          el.appendChild(badge);
+        }
+        if (oldText && oldText !== newText) {
+          var oldDiv = document.createElement('div');
+          oldDiv.className = 'diff-old-content';
+          oldDiv.innerHTML = '<span class="diff-deleted-label">旧版：</span><span class="diff-deleted">' + escapeHtml(oldText) + '</span>';
+          el.appendChild(oldDiv);
+        }
+      } else if (ch.type === 'added') {
+        el.classList.add('diff-added');
+      }
+
+    } else if (prefix === 'radio') {
+      // Only match labels belonging to this radio group (by data-radio-name)
+      var groupLabels = clone.querySelectorAll('label[data-radio-name="' + fieldName + '"]');
+      if (ch.type === 'modified' || ch.type === 'added') {
+        groupLabels.forEach(function(label) {
+          var labelVal = label.getAttribute('data-radio-value') || '';
+          if (ch.type === 'modified') {
+            if (labelVal === ch.newValue) label.classList.add('diff-modified');
+            if (labelVal === ch.oldValue) {
+              var delSpan = document.createElement('span');
+              delSpan.className = 'diff-label';
+              delSpan.textContent = '(旧)';
+              label.appendChild(delSpan);
+            }
+          } else if (ch.type === 'added' && labelVal === ch.value) {
+            label.classList.add('diff-added');
+          }
+        });
+      }
+
+    } else if (prefix === 'checkbox') {
+      // Find checklist item by preserved data-chk-id
+      var chkItem = clone.querySelector('[data-chk-id="' + fieldName + '"]');
+      if (chkItem) {
+        chkItem.classList.add(ch.type === 'added' ? 'diff-added' : 'diff-modified');
+      }
+
+    } else if (prefix === 'select') {
+      var selSpan = clone.querySelector('[data-select-id="' + fieldName + '"]');
+      if (selSpan && (ch.type === 'modified' || ch.type === 'added')) {
+        selSpan.classList.add(ch.type === 'added' ? 'diff-added' : 'diff-modified');
+        selSpan.style.display = 'inline-block';
+        if (ch.type === 'modified') {
+          var tag = document.createElement('span');
+          tag.className = 'diff-select-tag';
+          tag.textContent = '旧: ' + (ch.oldValue || '—');
+          selSpan.parentNode.insertBefore(tag, selSpan.nextSibling);
+        }
+      }
+
+    } else if (prefix === 'select_anon') {
+      var selSpan2 = clone.querySelector('[data-select-name="' + fieldName + '"]');
+      if (selSpan2 && (ch.type === 'modified' || ch.type === 'added')) {
+        selSpan2.classList.add(ch.type === 'added' ? 'diff-added' : 'diff-modified');
+        selSpan2.style.display = 'inline-block';
+        var tag2 = document.createElement('span');
+        tag2.className = 'diff-select-tag';
+        tag2.textContent = '旧: ' + (ch.oldValue || '—');
+        selSpan2.parentNode.insertBefore(tag2, selSpan2.nextSibling);
+      }
+
+    } else if (prefix === 'table') {
+      var tbody = clone.querySelector('#' + fieldName);
+      if (!tbody) continue;
+      if (ch.type === 'modified') {
+        diffTableRows(tbody, ch.oldValue, ch.newValue);
+      }
+
+    } else if (prefix === 'image') {
+      // Find placeholder by IMAGE_SLOT id or index
+      var placeholders = clone.querySelectorAll('.image-placeholder');
+      var imgIdx = fieldName.startsWith('img_') ? parseInt(fieldName.split('_')[1]) : -1;
+      var targetPh = null;
+      if (imgIdx >= 0 && placeholders[imgIdx]) {
+        targetPh = placeholders[imgIdx];
+      } else {
+        placeholders.forEach(function(ph) {
+          if (!targetPh && ph.innerHTML.includes(fieldName)) targetPh = ph;
+        });
+      }
+      if (targetPh) {
+        if (ch.type === 'modified') {
+          targetPh.classList.add('diff-modified');
+          var badge = document.createElement('span');
+          badge.className = 'diff-img-badge diff-img-changed';
+          badge.textContent = '图片已更新';
+          targetPh.appendChild(badge);
+        } else if (ch.type === 'added') {
+          targetPh.classList.add('diff-added');
+          var badge2 = document.createElement('span');
+          badge2.className = 'diff-img-badge diff-img-added';
+          badge2.textContent = '新增图片';
+          targetPh.appendChild(badge2);
+        } else if (ch.type === 'removed') {
+          targetPh.classList.add('diff-modified');
+          var badge3 = document.createElement('span');
+          badge3.className = 'diff-img-badge diff-img-removed';
+          badge3.textContent = '图片已删除';
+          targetPh.appendChild(badge3);
+        }
+      }
+
+    } else if (prefix === 'date') {
+      // Date inputs are frozen as <span> in B2 — find by matching nearby text
+      // Most dates are also captured via field: or table:, this catches any remaining
+      // No easy DOM target after B2 freeze, skip (covered by field:/table: handlers)
+
+    } else if (prefix === 'checklist') {
+      // checklist: prefix — fieldName is the data-controls value (e.g. "req-3c")
+      // After B4 freeze, data-controls is gone from DOM. But the checkbox that had
+      // data-controls="req-3c" also had an id like "chk-3c", which is preserved as
+      // data-chk-id on the .checklist-item. The same change is also captured under
+      // checkbox:chk-3c, so the checkbox: handler already covers it. Skip here.
+    }
+  }
+
+  // Handle flow_mode separately (not a prefixed key)
+  if (changes['flow_mode']) {
+    var flowSection = clone.querySelector('#flow-mermaid-mode') || clone.querySelector('#flow-image-mode');
+    if (flowSection) {
+      var parent = flowSection.closest('.section') || flowSection.parentElement;
+      if (parent) parent.classList.add('diff-modified');
+    }
+  }
+}
+
+function _cellText(html) {
+  var tmp = document.createElement('div');
+  tmp.innerHTML = html || '';
+  return (tmp.textContent || '').replace(/\s+/g, ' ').trim();
+}
+
+function _trimRow(row) {
+  // Remove trailing empty cells (operation column residue)
+  var arr = row.slice();
+  while (arr.length > 0 && _cellText(arr[arr.length - 1]) === '') arr.pop();
+  return arr;
+}
+
+function diffTableRows(cloneTbody, oldRows, newRows) {
+  if (!Array.isArray(oldRows) || !Array.isArray(newRows)) return;
+  var cloneRows = cloneTbody.querySelectorAll('tr');
+  var maxLen = Math.max(oldRows.length, newRows.length);
+
+  for (var i = 0; i < maxLen; i++) {
+    if (i >= oldRows.length) {
+      if (cloneRows[i]) cloneRows[i].classList.add('diff-added');
+    } else if (i >= newRows.length) {
+      var delTr = document.createElement('tr');
+      delTr.className = 'diff-table-deleted';
+      var trimmed = _trimRow(oldRows[i]);
+      trimmed.forEach(function(cell) {
+        var td = document.createElement('td');
+        td.innerHTML = cell;
+        delTr.appendChild(td);
+      });
+      cloneTbody.appendChild(delTr);
+    } else {
+      // Trim trailing empty cells before comparison
+      var oldTrimmed = _trimRow(oldRows[i]);
+      var newTrimmed = _trimRow(newRows[i]);
+      // Compare plain text of each cell
+      var rowChanged = false;
+      var colCount = Math.max(oldTrimmed.length, newTrimmed.length);
+      for (var c = 0; c < colCount; c++) {
+        if (_cellText(oldTrimmed[c]) !== _cellText(newTrimmed[c])) { rowChanged = true; break; }
+      }
+      if (rowChanged && cloneRows[i]) {
+        var cells = cloneRows[i].querySelectorAll('td, th');
+        for (var ci = 0; ci < colCount && ci < cells.length; ci++) {
+          var ot = ci < oldTrimmed.length ? _cellText(oldTrimmed[ci]) : '';
+          var nt = ci < newTrimmed.length ? _cellText(newTrimmed[ci]) : '';
+          if (ot !== nt) {
+            cells[ci].classList.add(ci >= oldTrimmed.length ? 'diff-added' : 'diff-modified');
+          }
+        }
+      }
+    }
+  }
+}
+
+function escapeHtml(str) {
+  var div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+// -----------------------------------------------------------
+// Save Document (editable version with all controls)
+// -----------------------------------------------------------
+function collectSnapshot() {
+  const snapshot = {};
+  document.querySelectorAll('[data-field]').forEach(el => {
+    const f = el.getAttribute('data-field');
+    if (el.tagName === 'INPUT' && el.type === 'date') {
+      snapshot['field:' + f] = el.value;
+    } else {
+      snapshot['field:' + f] = el.innerHTML;
+    }
+  });
+  document.querySelectorAll('select[id]').forEach(sel => {
+    snapshot['select:' + sel.id] = sel.value;
+  });
+  let anonSelIdx = 0;
+  document.querySelectorAll('select:not([id])').forEach(sel => {
+    const name = sel.getAttribute('name') || ('anon_' + anonSelIdx++);
+    snapshot['select_anon:' + name] = sel.value;
+  });
+  document.querySelectorAll('input[type="radio"]').forEach(radio => {
+    if (radio.checked) snapshot['radio:' + radio.name] = radio.value;
+  });
+  document.querySelectorAll('input[type="checkbox"][id]').forEach(chk => {
+    snapshot['checkbox:' + chk.id] = chk.checked;
+  });
+  document.querySelectorAll('.checklist-item input[type="checkbox"]').forEach(chk => {
+    const ctrl = chk.getAttribute('data-controls');
+    if (ctrl) snapshot['checklist:' + ctrl] = chk.checked;
+  });
+  document.querySelectorAll('input[type="date"]').forEach(d => {
+    if (d.id) snapshot['date:' + d.id] = d.value;
+  });
+  // tables — exclude operation column
+  document.querySelectorAll('tbody[id]').forEach(tbody => {
+    const table = tbody.closest('table');
+    const hasOpCol = table && Array.from(table.querySelectorAll('thead th')).some(th => th.textContent.trim() === '操作');
+    const rows = [];
+    tbody.querySelectorAll('tr').forEach(tr => {
+      const cells = [];
+      const tds = tr.querySelectorAll('td');
+      tds.forEach((td, i) => {
+        if (hasOpCol && i === tds.length - 1) return;
+        const inp = td.querySelector('input,select');
+        cells.push(inp ? inp.value : td.innerHTML);
+      });
+      rows.push(cells);
+    });
+    snapshot['table:' + tbody.id] = rows;
+  });
+  // flow mode
+  const mermaidMode = document.getElementById('flow-mermaid-mode');
+  if (mermaidMode) snapshot['flow_mode'] = mermaidMode.style.display === 'none' ? 'image' : 'mermaid';
+  // images — all images per placeholder with size
+  let csImgIdx = 0;
+  document.querySelectorAll('.image-placeholder').forEach(ph => {
+    if (!ph.classList.contains('has-image')) { csImgIdx++; return; }
+    const slotMatch = ph.innerHTML.match(/IMAGE_SLOT[^{]*(\{[^}]+\})/);
+    const key = slotMatch ? JSON.parse(slotMatch[1]).id : ('img_' + csImgIdx);
+    const wrappers = ph.querySelectorAll('.img-wrapper');
+    if (wrappers.length > 0) {
+      const imgs = [];
+      wrappers.forEach(w => {
+        const img = w.querySelector('img');
+        if (img) {
+          const entry = { src: img.src, width: w.style.width || '100%' };
+          const cap = w.querySelector('.img-caption');
+          if (cap && cap.value) entry.caption = cap.value;
+          imgs.push(entry);
+        }
+      });
+      snapshot['image:' + key] = imgs;
+    } else {
+      const img = ph.querySelector('img');
+      if (img) snapshot['image:' + key] = img.src;
+    }
+    csImgIdx++;
+  });
+  return snapshot;
+}
+
+let _fileHandle = null; // File System Access API handle for direct save
+
+function buildSaveHTML() {
+  const snapshot = collectSnapshot();
+  const clone = document.documentElement.cloneNode(true);
+  clone.setAttribute('data-snapshot', encodeURIComponent(JSON.stringify(snapshot)));
+  // Sync select values
+  const liveSelects = document.querySelectorAll('select');
+  const cloneSelects = clone.querySelectorAll('select');
+  liveSelects.forEach((sel, i) => {
+    if (cloneSelects[i]) {
+      Array.from(cloneSelects[i].options).forEach((opt, j) => { opt.selected = (j === sel.selectedIndex); });
+    }
+  });
+  // Sync radio/checkbox
+  const liveInputs = document.querySelectorAll('input[type="radio"], input[type="checkbox"]');
+  const cloneInputs = clone.querySelectorAll('input[type="radio"], input[type="checkbox"]');
+  liveInputs.forEach((inp, i) => {
+    if (cloneInputs[i]) { if (inp.checked) cloneInputs[i].setAttribute('checked', ''); else cloneInputs[i].removeAttribute('checked'); }
+  });
+  // Sync dates
+  const liveDates = document.querySelectorAll('input[type="date"]');
+  const cloneDates = clone.querySelectorAll('input[type="date"]');
+  liveDates.forEach((d, i) => { if (cloneDates[i]) cloneDates[i].setAttribute('value', d.value); });
+  // Title
+  const titleEl = clone.querySelector('title');
+  if (titleEl) titleEl.textContent = document.title;
+  clone.querySelectorAll('.rich-color-panel').forEach(el => el.remove());
+  return '<!DOCTYPE html>\n<html ' + Array.from(clone.attributes).map(a => a.name + '="' + a.value.replace(/"/g, '&quot;') + '"').join(' ') + '>\n' + clone.innerHTML + '\n</html>';
+}
+
+async function saveDocument() {
+  const html = buildSaveHTML();
+  // Try File System Access API (direct overwrite, no dialog after first save)
+  if (window.showSaveFilePicker) {
+    try {
+      if (!_fileHandle) {
+        _fileHandle = await window.showSaveFilePicker({
+          suggestedName: (document.title || '设计文档') + '.html',
+          types: [{ description: 'HTML 文件', accept: { 'text/html': ['.html'] } }]
+        });
+      }
+      const writable = await _fileHandle.createWritable();
+      await writable.write(html);
+      await writable.close();
+      _hasUnsavedChanges = false;
+      // Brief visual feedback
+      const btn = document.querySelector('.nav-save button');
+      if (btn) { const orig = btn.textContent; btn.textContent = '已保存'; setTimeout(() => { btn.textContent = orig; }, 1500); }
+      return;
+    } catch(e) {
+      if (e.name === 'AbortError') return; // user cancelled
+      // Fall through to download method
+    }
+  }
+  // Fallback: classic download
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = (document.title || '设计文档') + '.html';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  _hasUnsavedChanges = false;
+}
+
+// -----------------------------------------------------------
+// Auto-save to localStorage (every 30s)
+// -----------------------------------------------------------
+const _docId = location.pathname + '_' + (document.title || 'template');
+setInterval(function() {
+  if (!_hasUnsavedChanges) return;
+  try {
+    const snap = collectSnapshot();
+    // Remove large base64 images to stay within localStorage limits
+    for (const key in snap) {
+      if (typeof snap[key] === 'string' && snap[key].length > 50000) {
+        delete snap[key];
+      }
+    }
+    localStorage.setItem('autosave_' + _docId, JSON.stringify(snap));
+    localStorage.setItem('autosave_time_' + _docId, String(Date.now()));
+  } catch(e) { /* silently fail if quota exceeded */ }
+}, 30000);
+
+// Check for autosave on load
+(function() {
+  const saved = localStorage.getItem('autosave_' + _docId);
+  const savedTime = localStorage.getItem('autosave_time_' + _docId);
+  if (saved && savedTime) {
+    const ago = Math.round((Date.now() - Number(savedTime)) / 60000);
+    if (ago < 1440 && confirm('检测到 ' + ago + ' 分钟前的未保存编辑，是否恢复？')) {
+      try {
+        const snap = JSON.parse(saved);
+        // Restore fields
+        for (const key in snap) {
+          if (key.startsWith('field:')) {
+            const f = key.slice(6);
+            const el = document.querySelector('[data-field="' + f + '"]');
+            if (el) {
+              if (el.tagName === 'INPUT' && el.type === 'date') el.value = snap[key];
+              else el.innerHTML = snap[key];
+            }
+          } else if (key.startsWith('select:')) {
+            const sel = document.getElementById(key.slice(7));
+            if (sel) { sel.value = snap[key]; sel.dispatchEvent(new Event('change')); }
+          } else if (key.startsWith('radio:')) {
+            const name = key.slice(6);
+            const radio = document.querySelector('input[type="radio"][name="' + name + '"][value="' + CSS.escape(snap[key]) + '"]');
+            if (radio) radio.checked = true;
+          } else if (key.startsWith('checkbox:')) {
+            const chk = document.getElementById(key.slice(9));
+            if (chk) chk.checked = snap[key];
+          } else if (key.startsWith('checklist:')) {
+            const ctrl = key.slice(10);
+            const chk = document.querySelector('.checklist-item input[data-controls="' + ctrl + '"]');
+            if (chk) { chk.checked = snap[key]; chk.dispatchEvent(new Event('change')); }
+          }
+        }
+      } catch(e) {}
+    }
+    localStorage.removeItem('autosave_' + _docId);
+    localStorage.removeItem('autosave_time_' + _docId);
+  }
+})();
+
+// -----------------------------------------------------------
+// Unsaved changes warning + Ctrl+S
+// -----------------------------------------------------------
+let _hasUnsavedChanges = false;
+document.addEventListener('input', function() { _hasUnsavedChanges = true; });
+document.addEventListener('change', function() { _hasUnsavedChanges = true; });
+window.addEventListener('beforeunload', function(e) {
+  if (_hasUnsavedChanges) { e.preventDefault(); e.returnValue = ''; }
+});
+document.addEventListener('keydown', function(e) {
+  if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+    e.preventDefault();
+    saveDocument();
+  }
+});
+
+</script>
+
+</body>
+</html>

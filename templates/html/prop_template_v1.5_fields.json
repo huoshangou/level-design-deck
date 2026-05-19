@@ -1,0 +1,732 @@
+{
+  "template_kind": "prop",
+  "template_version": "1.5",
+  "source": "prop_template_v1.5.html",
+  "sections": [
+    {
+      "id": "version",
+      "name": "版本记录",
+      "num": "01",
+      "fields": [],
+      "checklist_controlled": false
+    },
+    {
+      "id": "info",
+      "name": "物件信息",
+      "num": "02",
+      "fields": [
+        {
+          "key": "info_version",
+          "label": "info_version",
+          "tag": "td",
+          "type": "text"
+        },
+        {
+          "key": "info_setting",
+          "label": "info_setting",
+          "tag": "td",
+          "type": "text"
+        },
+        {
+          "key": "info_region",
+          "label": "info_region",
+          "tag": "td",
+          "type": "text"
+        },
+        {
+          "key": "info_level",
+          "label": "info_level",
+          "tag": "select",
+          "type": "select"
+        },
+        {
+          "key": "info_name_cn",
+          "label": "info_name_cn",
+          "tag": "td",
+          "type": "text"
+        },
+        {
+          "key": "info_name_en",
+          "label": "info_name_en",
+          "tag": "td",
+          "type": "text"
+        }
+      ],
+      "checklist_controlled": false
+    },
+    {
+      "id": "overview",
+      "name": "设计概述",
+      "num": "03",
+      "fields": [
+        {
+          "key": "prop_description",
+          "label": "prop_description",
+          "tag": "div",
+          "type": "text"
+        },
+        {
+          "key": "gameplay_description",
+          "label": "gameplay_description",
+          "tag": "div",
+          "type": "text"
+        }
+      ],
+      "checklist_controlled": false
+    },
+    {
+      "id": "whitebox",
+      "name": "白盒视频",
+      "num": "04",
+      "fields": [
+        {
+          "key": "whitebox_p4_path",
+          "label": "whitebox_p4_path",
+          "tag": "span",
+          "type": "text"
+        },
+        {
+          "key": "whitebox_filename",
+          "label": "whitebox_filename",
+          "tag": "span",
+          "type": "text"
+        }
+      ],
+      "checklist_controlled": false
+    },
+    {
+      "id": "related-docs",
+      "name": "关联文档",
+      "num": "05",
+      "fields": [
+        {
+          "key": "ip_link",
+          "label": "ip_link",
+          "tag": "span",
+          "type": "text"
+        }
+      ],
+      "checklist_controlled": false
+    },
+    {
+      "id": "requirements",
+      "name": "物件需求",
+      "num": "06",
+      "fields": [],
+      "checklist_controlled": false
+    },
+    {
+      "id": "req-prop-func",
+      "name": "",
+      "num": "",
+      "fields": [
+        {
+          "key": "highlight_part_name",
+          "label": "highlight_part_name",
+          "tag": "span",
+          "type": "text"
+        },
+        {
+          "key": "interact_method_1_name",
+          "label": "interact_method_1_name",
+          "tag": "td",
+          "type": "text"
+        },
+        {
+          "key": "interact_method_1_desc",
+          "label": "interact_method_1_desc",
+          "tag": "td",
+          "type": "text"
+        },
+        {
+          "key": "interact_method_2_name",
+          "label": "interact_method_2_name",
+          "tag": "td",
+          "type": "text"
+        },
+        {
+          "key": "interact_method_2_desc",
+          "label": "interact_method_2_desc",
+          "tag": "td",
+          "type": "text"
+        },
+        {
+          "key": "prop_function_desc",
+          "label": "prop_function_desc",
+          "tag": "div",
+          "type": "text"
+        }
+      ],
+      "checklist_controlled": true
+    },
+    {
+      "id": "req-prop-logic",
+      "name": "",
+      "num": "",
+      "fields": [
+        {
+          "key": "mermaid_flowchart",
+          "label": "mermaid_flowchart",
+          "tag": "div",
+          "type": "text"
+        },
+        {
+          "key": "logic_flowchart_desc",
+          "label": "logic_flowchart_desc",
+          "tag": "div",
+          "type": "text"
+        }
+      ],
+      "checklist_controlled": true
+    },
+    {
+      "id": "req-prop-interact",
+      "name": "",
+      "num": "",
+      "fields": [
+        {
+          "key": "interact_flowchart_desc",
+          "label": "interact_flowchart_desc",
+          "tag": "div",
+          "type": "text"
+        }
+      ],
+      "checklist_controlled": true
+    },
+    {
+      "id": "req-prop-guide",
+      "name": "",
+      "num": "",
+      "fields": [
+        {
+          "key": "guide_ui",
+          "label": "guide_ui",
+          "tag": "td",
+          "type": "text"
+        },
+        {
+          "key": "guide_model",
+          "label": "guide_model",
+          "tag": "td",
+          "type": "text"
+        },
+        {
+          "key": "guide_far",
+          "label": "guide_far",
+          "tag": "td",
+          "type": "text"
+        },
+        {
+          "key": "guide_mid",
+          "label": "guide_mid",
+          "tag": "td",
+          "type": "text"
+        },
+        {
+          "key": "guide_near",
+          "label": "guide_near",
+          "tag": "td",
+          "type": "text"
+        },
+        {
+          "key": "guide_activate",
+          "label": "guide_activate",
+          "tag": "td",
+          "type": "text"
+        },
+        {
+          "key": "guide_state_desc",
+          "label": "guide_state_desc",
+          "tag": "div",
+          "type": "text"
+        },
+        {
+          "key": "guide_custom_desc",
+          "label": "guide_custom_desc",
+          "tag": "div",
+          "type": "text"
+        }
+      ],
+      "checklist_controlled": true
+    },
+    {
+      "id": "req-physics",
+      "name": "",
+      "num": "",
+      "fields": [
+        {
+          "key": "physics_part_name",
+          "label": "physics_part_name",
+          "tag": "span",
+          "type": "text"
+        },
+        {
+          "key": "destruct_subtype_name",
+          "label": "destruct_subtype_name",
+          "tag": "span",
+          "type": "text"
+        },
+        {
+          "key": "physics_requirement",
+          "label": "physics_requirement",
+          "tag": "div",
+          "type": "text"
+        }
+      ],
+      "checklist_controlled": true
+    },
+    {
+      "id": "req-3c",
+      "name": "",
+      "num": "",
+      "fields": [
+        {
+          "key": "3c_background",
+          "label": "3c_background",
+          "tag": "div",
+          "type": "text"
+        },
+        {
+          "key": "3c_area_name",
+          "label": "3c_area_name",
+          "tag": "span",
+          "type": "text"
+        },
+        {
+          "key": "special_camera",
+          "label": "special_camera",
+          "tag": "div",
+          "type": "text"
+        },
+        {
+          "key": "character_action",
+          "label": "character_action",
+          "tag": "div",
+          "type": "text"
+        }
+      ],
+      "checklist_controlled": true
+    },
+    {
+      "id": "req-system",
+      "name": "",
+      "num": "",
+      "fields": [
+        {
+          "key": "reward_yn",
+          "label": "reward_yn",
+          "tag": "td",
+          "type": "text"
+        },
+        {
+          "key": "reward_timing",
+          "label": "reward_timing",
+          "tag": "td",
+          "type": "text"
+        },
+        {
+          "key": "reward_exploration",
+          "label": "reward_exploration",
+          "tag": "td",
+          "type": "text"
+        },
+        {
+          "key": "map_display",
+          "label": "map_display",
+          "tag": "td",
+          "type": "text"
+        },
+        {
+          "key": "map_fog",
+          "label": "map_fog",
+          "tag": "td",
+          "type": "text"
+        },
+        {
+          "key": "map_destroy",
+          "label": "map_destroy",
+          "tag": "td",
+          "type": "text"
+        },
+        {
+          "key": "map_dynamic",
+          "label": "map_dynamic",
+          "tag": "td",
+          "type": "text"
+        },
+        {
+          "key": "map_priority",
+          "label": "map_priority",
+          "tag": "td",
+          "type": "text"
+        },
+        {
+          "key": "map_teleport_track",
+          "label": "map_teleport_track",
+          "tag": "td",
+          "type": "text"
+        },
+        {
+          "key": "map_filter",
+          "label": "map_filter",
+          "tag": "td",
+          "type": "text"
+        },
+        {
+          "key": "map_icon_asset",
+          "label": "map_icon_asset",
+          "tag": "td",
+          "type": "text"
+        },
+        {
+          "key": "uiux_requirement",
+          "label": "uiux_requirement",
+          "tag": "div",
+          "type": "text"
+        }
+      ],
+      "checklist_controlled": true
+    },
+    {
+      "id": "req-mission",
+      "name": "",
+      "num": "",
+      "fields": [
+        {
+          "key": "mission_requirement",
+          "label": "mission_requirement",
+          "tag": "div",
+          "type": "text"
+        }
+      ],
+      "checklist_controlled": true
+    },
+    {
+      "id": "req-ai",
+      "name": "",
+      "num": "",
+      "fields": [
+        {
+          "key": "ai_requirement",
+          "label": "ai_requirement",
+          "tag": "div",
+          "type": "text"
+        }
+      ],
+      "checklist_controlled": true
+    },
+    {
+      "id": "req-vehicle",
+      "name": "",
+      "num": "",
+      "fields": [
+        {
+          "key": "vehicle_requirement",
+          "label": "vehicle_requirement",
+          "tag": "div",
+          "type": "text"
+        }
+      ],
+      "checklist_controlled": true
+    },
+    {
+      "id": "req-anim",
+      "name": "",
+      "num": "",
+      "fields": [
+        {
+          "key": "anim_requirement",
+          "label": "anim_requirement",
+          "tag": "div",
+          "type": "text"
+        }
+      ],
+      "checklist_controlled": true
+    },
+    {
+      "id": "req-light",
+      "name": "",
+      "num": "",
+      "fields": [
+        {
+          "key": "light_requirement",
+          "label": "light_requirement",
+          "tag": "div",
+          "type": "text"
+        }
+      ],
+      "checklist_controlled": true
+    },
+    {
+      "id": "req-vfx",
+      "name": "",
+      "num": "",
+      "fields": [
+        {
+          "key": "vfx_requirement",
+          "label": "vfx_requirement",
+          "tag": "div",
+          "type": "text"
+        }
+      ],
+      "checklist_controlled": true
+    },
+    {
+      "id": "req-sfx",
+      "name": "",
+      "num": "",
+      "fields": [
+        {
+          "key": "sfx_requirement",
+          "label": "sfx_requirement",
+          "tag": "div",
+          "type": "text"
+        }
+      ],
+      "checklist_controlled": true
+    },
+    {
+      "id": "multiplayer",
+      "name": "多人游玩",
+      "num": "07",
+      "fields": [
+        {
+          "key": "mp_host_desc",
+          "label": "mp_host_desc",
+          "tag": "td",
+          "type": "text"
+        },
+        {
+          "key": "mp_guest_desc",
+          "label": "mp_guest_desc",
+          "tag": "td",
+          "type": "text"
+        }
+      ],
+      "checklist_controlled": false
+    },
+    {
+      "id": "config",
+      "name": "配置",
+      "num": "08",
+      "fields": [],
+      "checklist_controlled": false
+    },
+    {
+      "id": "placement",
+      "name": "物件布设规范",
+      "num": "09",
+      "fields": [
+        {
+          "key": "placement_rules",
+          "label": "placement_rules",
+          "tag": "div",
+          "type": "text"
+        }
+      ],
+      "checklist_controlled": false
+    },
+    {
+      "id": "asset-list",
+      "name": "资产列表",
+      "num": "10",
+      "fields": [
+        {
+          "key": "asset_concept_1",
+          "label": "asset_concept_1",
+          "tag": "td",
+          "type": "text"
+        },
+        {
+          "key": "asset_model_1_name",
+          "label": "asset_model_1_name",
+          "tag": "td",
+          "type": "text"
+        },
+        {
+          "key": "asset_model_1_desc",
+          "label": "asset_model_1_desc",
+          "tag": "td",
+          "type": "text"
+        },
+        {
+          "key": "asset_model_1_path",
+          "label": "asset_model_1_path",
+          "tag": "td",
+          "type": "text"
+        },
+        {
+          "key": "asset_bp_1_name",
+          "label": "asset_bp_1_name",
+          "tag": "td",
+          "type": "text"
+        },
+        {
+          "key": "asset_bp_1_desc",
+          "label": "asset_bp_1_desc",
+          "tag": "td",
+          "type": "text"
+        },
+        {
+          "key": "asset_bp_1_path",
+          "label": "asset_bp_1_path",
+          "tag": "td",
+          "type": "text"
+        },
+        {
+          "key": "asset_physics_1",
+          "label": "asset_physics_1",
+          "tag": "td",
+          "type": "text"
+        },
+        {
+          "key": "asset_action_1_desc",
+          "label": "asset_action_1_desc",
+          "tag": "td",
+          "type": "text"
+        },
+        {
+          "key": "asset_action_1_path",
+          "label": "asset_action_1_path",
+          "tag": "td",
+          "type": "text"
+        },
+        {
+          "key": "asset_anim_1",
+          "label": "asset_anim_1",
+          "tag": "td",
+          "type": "text"
+        },
+        {
+          "key": "asset_light_1",
+          "label": "asset_light_1",
+          "tag": "td",
+          "type": "text"
+        },
+        {
+          "key": "asset_vfx_1_name",
+          "label": "asset_vfx_1_name",
+          "tag": "td",
+          "type": "text"
+        },
+        {
+          "key": "asset_vfx_1_desc",
+          "label": "asset_vfx_1_desc",
+          "tag": "td",
+          "type": "text"
+        },
+        {
+          "key": "asset_audio_1",
+          "label": "asset_audio_1",
+          "tag": "td",
+          "type": "text"
+        },
+        {
+          "key": "asset_copy_1",
+          "label": "asset_copy_1",
+          "tag": "td",
+          "type": "text"
+        }
+      ],
+      "checklist_controlled": false
+    },
+    {
+      "id": "vfx-table",
+      "name": "特效需求表",
+      "num": "11",
+      "fields": [],
+      "checklist_controlled": false
+    },
+    {
+      "id": "sfx-table",
+      "name": "音效需求表",
+      "num": "12",
+      "fields": [],
+      "checklist_controlled": false
+    },
+    {
+      "id": "reference",
+      "name": "补充参考图",
+      "num": "13",
+      "fields": [],
+      "checklist_controlled": false
+    }
+  ],
+  "checklist_items": [
+    {
+      "id": "chk-3c",
+      "label": "",
+      "controls": "req-3c"
+    },
+    {
+      "id": "chk-action",
+      "label": "",
+      "controls": "req-3c-action"
+    },
+    {
+      "id": "chk-physics-nondestructive",
+      "label": "",
+      "controls": "req-physics"
+    },
+    {
+      "id": "chk-physics-destructive",
+      "label": "",
+      "controls": "req-physics"
+    },
+    {
+      "id": "chk-system",
+      "label": "",
+      "controls": "req-system"
+    },
+    {
+      "id": "chk-map",
+      "label": "",
+      "controls": "req-system-map"
+    },
+    {
+      "id": "chk-ux",
+      "label": "",
+      "controls": "req-system-ui"
+    },
+    {
+      "id": "chk-lighting",
+      "label": "",
+      "controls": "req-light"
+    },
+    {
+      "id": "chk-vehicle",
+      "label": "",
+      "controls": "req-vehicle"
+    },
+    {
+      "id": "chk-ai",
+      "label": "",
+      "controls": "req-ai"
+    },
+    {
+      "id": "chk-combat",
+      "label": "",
+      "controls": "req-combat"
+    },
+    {
+      "id": "chk-mission",
+      "label": "",
+      "controls": "req-mission"
+    },
+    {
+      "id": "chk-gpp",
+      "label": "",
+      "controls": "req-anim"
+    },
+    {
+      "id": "chk-vfx",
+      "label": "",
+      "controls": "req-vfx"
+    },
+    {
+      "id": "chk-sfx",
+      "label": "",
+      "controls": "req-sfx"
+    }
+  ]
+}

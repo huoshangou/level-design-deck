@@ -113,6 +113,8 @@ class TemplateParser(HTMLParser):
             self._in_h2 = False
             if self._current_section and not self._current_section["name"]:
                 text = re.sub(r"\s+", " ", self._h2_text).strip()
+                # 去掉末尾的 button 文字（"折叠" / "展开"）
+                text = re.sub(r"\s*(折叠|展开)\s*$", "", text).strip()
                 # 提取编号和名称，如 "03设计概述" 或 "6.1 玩法流程图"
                 m = re.match(r"^(\d+(?:\.\d+)?)\s*(.*)", text)
                 if m:

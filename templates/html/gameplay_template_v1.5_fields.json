@@ -1,0 +1,461 @@
+{
+  "template_kind": "gameplay",
+  "template_version": "1.5",
+  "source": "gameplay_template_v1.5.html",
+  "sections": [
+    {
+      "id": "version",
+      "name": "版本记录",
+      "num": "01",
+      "fields": [],
+      "checklist_controlled": false
+    },
+    {
+      "id": "info",
+      "name": "玩法信息",
+      "num": "02",
+      "fields": [
+        {
+          "key": "info_version",
+          "label": "info_version",
+          "tag": "td",
+          "type": "text"
+        },
+        {
+          "key": "info_setting",
+          "label": "info_setting",
+          "tag": "td",
+          "type": "text"
+        },
+        {
+          "key": "info_region",
+          "label": "info_region",
+          "tag": "td",
+          "type": "text"
+        },
+        {
+          "key": "info_level",
+          "label": "info_level",
+          "tag": "select",
+          "type": "select"
+        },
+        {
+          "key": "info_name_cn",
+          "label": "info_name_cn",
+          "tag": "td",
+          "type": "text"
+        },
+        {
+          "key": "info_name_en",
+          "label": "info_name_en",
+          "tag": "td",
+          "type": "text"
+        }
+      ],
+      "checklist_controlled": false
+    },
+    {
+      "id": "overview",
+      "name": "设计概述",
+      "num": "03",
+      "fields": [
+        {
+          "key": "design_goal",
+          "label": "design_goal",
+          "tag": "div",
+          "type": "text"
+        },
+        {
+          "key": "gameplay_description",
+          "label": "gameplay_description",
+          "tag": "div",
+          "type": "text"
+        },
+        {
+          "key": "validation_items",
+          "label": "validation_items",
+          "tag": "div",
+          "type": "text"
+        }
+      ],
+      "checklist_controlled": false
+    },
+    {
+      "id": "whitebox",
+      "name": "白盒视频",
+      "num": "04",
+      "fields": [
+        {
+          "key": "whitebox_p4_path",
+          "label": "whitebox_p4_path",
+          "tag": "span",
+          "type": "text"
+        },
+        {
+          "key": "whitebox_filename",
+          "label": "whitebox_filename",
+          "tag": "span",
+          "type": "text"
+        }
+      ],
+      "checklist_controlled": false
+    },
+    {
+      "id": "related-docs",
+      "name": "关联文档",
+      "num": "05",
+      "fields": [
+        {
+          "key": "ip_link",
+          "label": "ip_link",
+          "tag": "span",
+          "type": "text"
+        }
+      ],
+      "checklist_controlled": false
+    },
+    {
+      "id": "requirements",
+      "name": "玩法需求",
+      "num": "06",
+      "fields": [],
+      "checklist_controlled": false
+    },
+    {
+      "id": "req-flow",
+      "name": "",
+      "num": "",
+      "fields": [
+        {
+          "key": "mermaid_flowchart",
+          "label": "mermaid_flowchart",
+          "tag": "div",
+          "type": "text"
+        },
+        {
+          "key": "flowchart_description",
+          "label": "flowchart_description",
+          "tag": "div",
+          "type": "text"
+        }
+      ],
+      "checklist_controlled": true
+    },
+    {
+      "id": "req-function",
+      "name": "",
+      "num": "",
+      "fields": [
+        {
+          "key": "gameplay_function",
+          "label": "gameplay_function",
+          "tag": "div",
+          "type": "text"
+        }
+      ],
+      "checklist_controlled": true
+    },
+    {
+      "id": "req-physics",
+      "name": "",
+      "num": "",
+      "fields": [
+        {
+          "key": "physics_requirement",
+          "label": "physics_requirement",
+          "tag": "div",
+          "type": "text"
+        }
+      ],
+      "checklist_controlled": true
+    },
+    {
+      "id": "req-3c",
+      "name": "",
+      "num": "",
+      "fields": [
+        {
+          "key": "3c_background",
+          "label": "3c_background",
+          "tag": "div",
+          "type": "text"
+        },
+        {
+          "key": "3c_limit_area_name",
+          "label": "3c_limit_area_name",
+          "tag": "p",
+          "type": "text"
+        },
+        {
+          "key": "special_camera",
+          "label": "special_camera",
+          "tag": "div",
+          "type": "text"
+        },
+        {
+          "key": "character_action",
+          "label": "character_action",
+          "tag": "div",
+          "type": "text"
+        }
+      ],
+      "checklist_controlled": true
+    },
+    {
+      "id": "req-system",
+      "name": "",
+      "num": "",
+      "fields": [
+        {
+          "key": "reward_yn",
+          "label": "reward_yn",
+          "tag": "td",
+          "type": "text"
+        },
+        {
+          "key": "reward_timing",
+          "label": "reward_timing",
+          "tag": "td",
+          "type": "text"
+        },
+        {
+          "key": "reward_exploration",
+          "label": "reward_exploration",
+          "tag": "td",
+          "type": "text"
+        },
+        {
+          "key": "uiux_requirement",
+          "label": "uiux_requirement",
+          "tag": "div",
+          "type": "text"
+        }
+      ],
+      "checklist_controlled": true
+    },
+    {
+      "id": "req-mission",
+      "name": "",
+      "num": "",
+      "fields": [
+        {
+          "key": "mission_requirement",
+          "label": "mission_requirement",
+          "tag": "div",
+          "type": "text"
+        }
+      ],
+      "checklist_controlled": true
+    },
+    {
+      "id": "req-combat",
+      "name": "",
+      "num": "",
+      "fields": [
+        {
+          "key": "combat_requirement",
+          "label": "combat_requirement",
+          "tag": "div",
+          "type": "text"
+        }
+      ],
+      "checklist_controlled": true
+    },
+    {
+      "id": "req-ai",
+      "name": "",
+      "num": "",
+      "fields": [
+        {
+          "key": "ai_requirement",
+          "label": "ai_requirement",
+          "tag": "div",
+          "type": "text"
+        }
+      ],
+      "checklist_controlled": true
+    },
+    {
+      "id": "req-vehicle",
+      "name": "",
+      "num": "",
+      "fields": [
+        {
+          "key": "vehicle_requirement",
+          "label": "vehicle_requirement",
+          "tag": "div",
+          "type": "text"
+        }
+      ],
+      "checklist_controlled": true
+    },
+    {
+      "id": "req-anim",
+      "name": "",
+      "num": "",
+      "fields": [
+        {
+          "key": "anim_requirement",
+          "label": "anim_requirement",
+          "tag": "div",
+          "type": "text"
+        }
+      ],
+      "checklist_controlled": true
+    },
+    {
+      "id": "req-light",
+      "name": "",
+      "num": "",
+      "fields": [
+        {
+          "key": "light_requirement",
+          "label": "light_requirement",
+          "tag": "div",
+          "type": "text"
+        }
+      ],
+      "checklist_controlled": true
+    },
+    {
+      "id": "req-vfx",
+      "name": "",
+      "num": "",
+      "fields": [
+        {
+          "key": "vfx_requirement",
+          "label": "vfx_requirement",
+          "tag": "div",
+          "type": "text"
+        }
+      ],
+      "checklist_controlled": true
+    },
+    {
+      "id": "req-sfx",
+      "name": "",
+      "num": "",
+      "fields": [
+        {
+          "key": "sfx_requirement",
+          "label": "sfx_requirement",
+          "tag": "div",
+          "type": "text"
+        }
+      ],
+      "checklist_controlled": true
+    },
+    {
+      "id": "multiplayer",
+      "name": "多人游玩",
+      "num": "07",
+      "fields": [],
+      "checklist_controlled": false
+    },
+    {
+      "id": "config",
+      "name": "配置",
+      "num": "08",
+      "fields": [],
+      "checklist_controlled": false
+    },
+    {
+      "id": "placement",
+      "name": "玩法布设规范",
+      "num": "09",
+      "fields": [
+        {
+          "key": "placement_rules",
+          "label": "placement_rules",
+          "tag": "div",
+          "type": "text"
+        }
+      ],
+      "checklist_controlled": false
+    },
+    {
+      "id": "reference",
+      "name": "补充参考图",
+      "num": "10",
+      "fields": [],
+      "checklist_controlled": false
+    }
+  ],
+  "checklist_items": [
+    {
+      "id": "chk-3c",
+      "label": "",
+      "controls": "req-3c"
+    },
+    {
+      "id": "chk-action",
+      "label": "",
+      "controls": "req-3c-action"
+    },
+    {
+      "id": "chk-physics-nondestructive",
+      "label": "",
+      "controls": "req-physics"
+    },
+    {
+      "id": "chk-physics-destructive",
+      "label": "",
+      "controls": "req-physics"
+    },
+    {
+      "id": "chk-system",
+      "label": "",
+      "controls": "req-system"
+    },
+    {
+      "id": "chk-map",
+      "label": "",
+      "controls": "req-system-map"
+    },
+    {
+      "id": "chk-ux",
+      "label": "",
+      "controls": "req-system-ui"
+    },
+    {
+      "id": "chk-lighting",
+      "label": "",
+      "controls": "req-light"
+    },
+    {
+      "id": "chk-vehicle",
+      "label": "",
+      "controls": "req-vehicle"
+    },
+    {
+      "id": "chk-ai",
+      "label": "",
+      "controls": "req-ai"
+    },
+    {
+      "id": "chk-combat",
+      "label": "",
+      "controls": "req-combat"
+    },
+    {
+      "id": "chk-mission",
+      "label": "",
+      "controls": "req-mission"
+    },
+    {
+      "id": "chk-gpp",
+      "label": "",
+      "controls": "req-anim"
+    },
+    {
+      "id": "chk-vfx",
+      "label": "",
+      "controls": "req-vfx"
+    },
+    {
+      "id": "chk-sfx",
+      "label": "",
+      "controls": "req-sfx"
+    }
+  ]
+}
