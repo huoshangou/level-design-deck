@@ -158,5 +158,25 @@ export default function MessageBubble({ msg }: Props) {
     );
   }
 
+  if (msg.kind === "hint") {
+    return (
+      <div
+        style={{
+          marginBottom: 8,
+          padding: "10px 12px",
+          border: "1px solid var(--accent)",
+          borderRadius: 6,
+          background: "var(--accent-bg)",
+          fontSize: 12,
+          color: "var(--text)",
+          lineHeight: 1.6,
+          whiteSpace: "pre-line",
+        }}
+      >
+        {msg.text}
+      </div>
+    );
+  }
+
   return null;
 }

@@ -3,6 +3,7 @@
 
 import { create } from "zustand";
 import { setByPath } from "../components/form/pathUtils";
+import { useChatStore } from "./chatStore";
 
 type EditorState = {
   currentSpecId: string | null;
@@ -45,6 +46,11 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   markClean: () => set({ dirty: false }),
   showToast: (kind, msg) => set({ toast: { kind, msg } }),
   clearToast: () => set({ toast: null }),
-  openDocTemplate: (url, label) => set({ docTemplateUrl: url, docTemplateLabel: label }),
+  openDocTemplate: (url, label) => {
+    set({ docTemplateUrl: url, docTemplateLabel: label });
+    // 从 label 推断 kind（label 由 Topbar 构造，如"玩法设计 模板 v1.5"）
+    const kind = label.includes("玩法") ? "gameplay" : label.includes("物件") ? "prop" : "unknown";
+    useChatStore.getState().triggerDocFill(kind, label);
+  },
   closeDocTemplate: () => set({ docTemplateUrl: null, docTemplateLabel: null }),
 }));

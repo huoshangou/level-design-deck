@@ -20,8 +20,10 @@ export default function ChatSidebar() {
     wsState,
     pendingAssistant,
     isStreaming,
+    inputPrefill,
     initSession,
     addUserMessage,
+    clearInputPrefill,
     reset,
     uploadFile,
   } = useChatStore();
@@ -32,11 +34,20 @@ export default function ChatSidebar() {
   const [busy, setBusy] = useState(false);
   const [sidebarDragging, setSidebarDragging] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   // 自动滚到底部
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, pendingAssistant]);
+
+  // 消费预填充指令（点开模板时触发）
+  useEffect(() => {
+    if (!inputPrefill) return;
+    setInput(inputPrefill);
+    clearInputPrefill();
+    inputRef.current?.focus();
+  }, [inputPrefill, clearInputPrefill]);
 
   async function handleNewSession() {
     reset();
@@ -207,6 +218,7 @@ export default function ChatSidebar() {
       >
         <div style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
           <textarea
+            ref={inputRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}

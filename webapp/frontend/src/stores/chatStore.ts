@@ -11,7 +11,8 @@ export type ChatMessage =
   | { kind: "assistant"; text: string; cost_usd?: number; duration_ms?: number; ts: number }
   | { kind: "thinking"; text: string; ts: number }
   | { kind: "tool_use"; tool: string; args: unknown; ts: number }
-  | { kind: "error"; message: string; ts: number };
+  | { kind: "error"; message: string; ts: number }
+  | { kind: "hint"; text: string; ts: number };
 
 export type WsState = "idle" | "connecting" | "open" | "closed";
 
@@ -24,12 +25,15 @@ type ChatState = {
   attachedFiles: AttachedFile[];
   uploadingFiles: string[];
   _lastSendTs: number;
+  inputPrefill: string | null; // 预填充输入框内容，消费后置 null
 
   initSession: () => Promise<void>;
   addUserMessage: (text: string) => void;
   handleEvent: (envelope: WsEnvelope) => void;
   markStreamComplete: () => void;
   setWsState: (state: WsState) => void;
+  triggerDocFill: (kind: string, label: string) => void;
+  clearInputPrefill: () => void;
   reset: () => void;
   uploadFile: (file: File) => Promise<void>;
   removeAttachedFile: (file_id: string) => Promise<void>;
@@ -45,6 +49,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   attachedFiles: [],
   uploadingFiles: [],
   _lastSendTs: 0,
+  inputPrefill: null,
 
   initSession: async () => {
     const record = await api.createSession();
@@ -117,6 +122,25 @@ export const useChatStore = create<ChatState>((set, get) => ({
   },
 
   setWsState: (state) => set({ wsState: state }),
+
+  // 点开模板时调用：在 chat 加引导消息 + 预填充输入框
+  triggerDocFill: (kind, label) => {
+    const kindName = kind === "gameplay" ? "玩法设计" : kind === "prop" ? "物件需求" : "设计";
+    const cmd = `/fill-gamedoc `;
+    set((s) => ({
+      messages: [
+        ...s.messages,
+        {
+          kind: "hint" as const,
+          text: `📄 ${label} 已在预览栏打开\n\n把源文件（group_doc HTML / IR JSON / 设计草稿）拖到附件区，或者直接在输入框里输入 /fill-gamedoc <源文件路径>，cc 会自动填充这份${kindName}文档。`,
+          ts: Date.now(),
+        },
+      ],
+      inputPrefill: cmd,
+    }));
+  },
+
+  clearInputPrefill: () => set({ inputPrefill: null }),
 
   reset: () =>
     set({
