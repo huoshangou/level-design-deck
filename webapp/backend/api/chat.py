@@ -41,18 +41,38 @@ def send_message(
     from backend.api.profile import profile_prompt_block
     profile_block = profile_prompt_block()
 
-    text = body.text
     readable = [a for a in get_attached_files(client_id) if a.get("text_path")]
+    attachments_block = ""
     if readable:
         paths = "\n".join(
             f"- {a['text_path']}  (原文件: {a['original_name']})" for a in readable
         )
-        text = (
+        attachments_block = (
             "以下是用户附带的参考文件，你可以用 Read 工具按需读取这些路径：\n"
-            f"{paths}\n\n用户问题：{body.text}"
+            f"{paths}\n"
         )
-    if profile_block:
-        text = profile_block + text
+
+    stripped = body.text.lstrip()
+    is_slash = stripped.startswith("/") and not stripped.startswith("//")
+
+    if is_slash:
+        suffix_parts = []
+        if attachments_block:
+            suffix_parts.append(attachments_block)
+        if profile_block:
+            suffix_parts.append(profile_block.rstrip())
+        if suffix_parts:
+            text = body.text + "\n\n---\n[补充上下文]\n" + "\n\n".join(suffix_parts)
+        else:
+            text = body.text
+    else:
+        if attachments_block:
+            text = attachments_block + f"\n用户问题：{body.text}"
+        else:
+            text = body.text
+        if profile_block:
+            text = profile_block + text
+
     _queues[client_id].put_nowait(text)
     return {"queued": True}
 

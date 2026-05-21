@@ -21,10 +21,13 @@ export default function ChatSidebar() {
     wsState,
     pendingAssistant,
     isStreaming,
+    awaitingResponse,
+    awaitingStartTs,
     inputPrefill,
     initSession,
     loadHistorySession,
     addUserMessage,
+    markSendFailed,
     clearInputPrefill,
     reset,
     uploadFile,
@@ -90,6 +93,15 @@ export default function ChatSidebar() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, pendingAssistant]);
 
+  // 1Hz tick：等待响应时驱动占位气泡显示流逝秒数
+  const [, setNowTick] = useState(0);
+  useEffect(() => {
+    if (!awaitingResponse) return;
+    const id = setInterval(() => setNowTick((n) => n + 1), 1000);
+    return () => clearInterval(id);
+  }, [awaitingResponse]);
+  const elapsedSec = awaitingStartTs ? Math.max(0, Math.floor((Date.now() - awaitingStartTs) / 1000)) : 0;
+
   // 消费预填充指令（点开模板时触发）
   useEffect(() => {
     if (!inputPrefill) return;
@@ -112,7 +124,7 @@ export default function ChatSidebar() {
 
   async function handleSend() {
     const text = input.trim();
-    if (!text || !clientId || isStreaming || busy) return;
+    if (!text || !clientId || isStreaming || awaitingResponse || busy) return;
     setBusy(true);
     try {
       // WS 没就绪时等一会：常发生在页面刚加载 / React strict mode 重连
@@ -128,7 +140,13 @@ export default function ChatSidebar() {
       }
       addUserMessage(text);
       setInput("");
-      await api.sendMessage(clientId, text);
+      try {
+        await api.sendMessage(clientId, text);
+      } catch (e) {
+        // POST 失败：回滚 awaitingResponse + 把错误塞消息流，避免前端"假死"
+        markSendFailed(String(e));
+        throw e;
+      }
     } catch (e) {
       alert(`发送失败：${String(e)}`);
     } finally {
@@ -143,7 +161,7 @@ export default function ChatSidebar() {
     }
   }
 
-  const disabled = isStreaming || busy || !clientId;
+  const disabled = isStreaming || awaitingResponse || busy || !clientId;
 
   // Sidebar-level drag forwarding — when user drags over message area,
   // we still want the AttachmentArea dropzone to receive it.
@@ -352,6 +370,32 @@ export default function ChatSidebar() {
             </div>
           </div>
         )}
+        {/* awaiting 占位：消息已发出但还没有 streaming 文本时显示 */}
+        {awaitingResponse && !pendingAssistant && (
+          <div style={{ display: "flex", justifyContent: "flex-start", marginBottom: 8 }}>
+            <div
+              style={{
+                maxWidth: "85%",
+                padding: "8px 12px",
+                borderRadius: "12px 12px 12px 2px",
+                background: "var(--panel)",
+                border: "1px dashed var(--border)",
+                fontSize: 12,
+                lineHeight: 1.5,
+                color: "var(--text-faint)",
+                fontFamily: "var(--sans)",
+              }}
+            >
+              <span style={{ marginRight: 4 }}>⏳</span>
+              cc 处理中… {elapsedSec}s
+              {elapsedSec >= 60 && (
+                <div style={{ marginTop: 4, fontSize: 11, color: "var(--review)" }}>
+                  ⚠️ 已等待 {elapsedSec}s，cc 可能卡住，可以点「+ 新建」重试
+                </div>
+              )}
+            </div>
+          </div>
+        )}
         <div ref={bottomRef} />
       </div>
 
@@ -403,7 +447,7 @@ export default function ChatSidebar() {
               alignSelf: "stretch",
             }}
           >
-            {isStreaming ? "…" : "发送"}
+            {(isStreaming || awaitingResponse) ? "…" : "发送"}
           </button>
         </div>
       </div>

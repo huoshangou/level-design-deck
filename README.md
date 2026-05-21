@@ -68,8 +68,10 @@ python3 tools/serve_editor.py --port 8766
 
 ```bash
 mkdir -p ~/.claude/commands
-cp cc-skills/design-deck.md ~/.claude/commands/
+ln -sf ~/Desktop/level-design-deck/cc-skills/*.md ~/.claude/commands/
 ```
+
+用 symlink 不用 cp，这样以后 deck 内更新 skill 立刻生效。详见 [cc-skills/README.md](cc-skills/README.md)。
 
 **（M4 进阶）Web UI + Daemon**：在原 editor 之上新增一层 FastAPI 后端 + React/Vite 前端 + 浏览器内对话生成 spec（可拖文件给 cc 当参考资料）。详见 [webapp/README.md](webapp/README.md)。原 editor 仍可用 — webapp 起来后访问 `http://127.0.0.1:8766/legacy/editor.html`。
 

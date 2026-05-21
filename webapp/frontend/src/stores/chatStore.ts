@@ -22,6 +22,8 @@ type ChatState = {
   wsState: WsState;
   pendingAssistant: string;
   isStreaming: boolean;
+  awaitingResponse: boolean;       // 发出消息后，cc 完整 turn 未结束之前为 true
+  awaitingStartTs: number | null;  // awaitingResponse 起始时刻（ms），用来算耗时
   attachedFiles: AttachedFile[];
   uploadingFiles: string[];
   _lastSendTs: number;
@@ -30,6 +32,7 @@ type ChatState = {
   initSession: () => Promise<void>;
   loadHistorySession: (cc_session_id: string) => Promise<void>;
   addUserMessage: (text: string) => void;
+  markSendFailed: (errMsg: string) => void;
   handleEvent: (envelope: WsEnvelope) => void;
   markStreamComplete: () => void;
   setWsState: (state: WsState) => void;
@@ -47,6 +50,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
   wsState: "idle",
   pendingAssistant: "",
   isStreaming: false,
+  awaitingResponse: false,
+  awaitingStartTs: null,
   attachedFiles: [],
   uploadingFiles: [],
   _lastSendTs: 0,
@@ -59,6 +64,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
       messages: [],
       pendingAssistant: "",
       isStreaming: false,
+      awaitingResponse: false,
+      awaitingStartTs: null,
       wsState: "connecting",
     });
   },
@@ -102,14 +109,28 @@ export const useChatStore = create<ChatState>((set, get) => ({
       ],
       pendingAssistant: "",
       isStreaming: false,
+      awaitingResponse: false,
+      awaitingStartTs: null,
       wsState: "connecting",
     });
   },
 
   addUserMessage: (text) => {
+    const now = Date.now();
     set((s) => ({
-      messages: [...s.messages, { kind: "user", text, ts: Date.now() }],
-      _lastSendTs: Date.now() / 1000, // Unix 秒，和 mtime 对齐
+      messages: [...s.messages, { kind: "user", text, ts: now }],
+      _lastSendTs: now / 1000, // Unix 秒，和 mtime 对齐
+      awaitingResponse: true,
+      awaitingStartTs: now,
+    }));
+  },
+
+  // 发送 POST 失败时回滚：清掉"处理中"状态，并把错误塞进消息流
+  markSendFailed: (errMsg: string) => {
+    set((s) => ({
+      awaitingResponse: false,
+      awaitingStartTs: null,
+      messages: [...s.messages, { kind: "error", message: `发送失败：${errMsg}`, ts: Date.now() }],
     }));
   },
 
@@ -134,6 +155,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
       case "cc_message_complete":
         get().markStreamComplete();
+        set({ awaitingResponse: false, awaitingStartTs: null });
         // cc 完成后检测 docs/ 是否有新生成的文档
         void checkNewDoc(get()._lastSendTs);
         break;
@@ -142,11 +164,13 @@ export const useChatStore = create<ChatState>((set, get) => ({
         set((s) => ({
           messages: [...s.messages, { kind: "error", message: p.message, ts: Date.now() }],
           isStreaming: false,
+          awaitingResponse: false,
+          awaitingStartTs: null,
         }));
         break;
 
       case "session_ended":
-        set({ wsState: "closed", isStreaming: false });
+        set({ wsState: "closed", isStreaming: false, awaitingResponse: false, awaitingStartTs: null });
         break;
 
       // session_started / tool_use_end / spec_updated — no UI action in v1
@@ -193,6 +217,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
       wsState: "idle",
       pendingAssistant: "",
       isStreaming: false,
+      awaitingResponse: false,
+      awaitingStartTs: null,
       attachedFiles: [],
       uploadingFiles: [],
     }),

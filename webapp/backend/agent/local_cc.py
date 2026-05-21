@@ -116,6 +116,13 @@ class LocalCcRunner(AgentRunner):
         env.pop("ANTHROPIC_API_KEY", None)
         env.pop("ANTHROPIC_BASE_URL", None)
         env.pop("ANTHROPIC_CUSTOM_HEADERS", None)
+        # Clash Verge 等代理客户端会调 launchctl setenv 把 *_PROXY 写进全局 launchd env，
+        # 双击 .command 启动的 webapp 会继承。yotta 公司网关只接受国内出口 IP，
+        # 一旦走 clash 国外节点就被网关拒绝、cc 子进程在 kevent64 死等。
+        # 这里整组剥掉，让 cc 子进程一律直连。详见 2026-05-21 调试。
+        for k in ("HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY",
+                  "http_proxy", "https_proxy", "all_proxy"):
+            env.pop(k, None)
 
         try:
             # limit=10MB: cc 的 tool_result 含读到的整个文件，PROJECT.md 这种 50KB+ 文档

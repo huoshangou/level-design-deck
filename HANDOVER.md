@@ -87,6 +87,7 @@ python3 tools/render.py specs/<id>.spec.json templates/lighting_req.html.tmpl ou
 
 | 优先级 | 候选 | 说明 |
 |---|---|---|
+| **P1 🆕待启** | **webapp chat 可读性 + 结构化输入** | 当前 cc 单段大文本回复在一个气泡里刷新，可读性差。两个方向：(a) 按句拆气泡（cc 用 `\n\n` 或显式分隔符切段，前端逐段渲染气泡）；(b) 检测到「需要用户填写」的字段时，在气泡内内联渲染输入框（参照 VS Code AI 插件做法），用户填完点提交直接 send 到 cc。设计要点：schema 让 cc 用结构化标记输出"待填项"（如 `<input field="poi_name" placeholder="..."/>` 或 JSON 块），前端 MessageBubble 识别后渲染表单元素。来源: Steve 直接指示（2026-05-21）|
 | **P1 🔧进行中** | **poi_id / level_id 命名统一** | `lighting_req` 遗留 `poi_id`，其他 module 全用 `level_id`。方案：`lighting_req.schema.json` 将 `poi_id` 移出 required、降为 optional deprecated，`level_id` 成唯一必填链接键。需 schema v0.2→v0.3 + generate_spec.py 更新。影响范围：schema 1 文件 + 3 spec + 1 工具注释 |
 | **P1 🔧进行中** | **cross_check phase 一致性规则** | 同 level 不同 module（如 bubble_diagram 的 phase 命名 vs lighting_req 的描述）phase 字符串不对齐时应 REVIEW 提示。现有装饰器注册框架直接加 1 条规则即可 |
 | **P2** | **Three.js 本地化** | M3.14 留 TODO：spatial_layout template 仍用 CDN Three.js，是目前唯一外网依赖。importmap addons 目录复杂，需单独处理 |
