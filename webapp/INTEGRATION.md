@@ -190,9 +190,10 @@ docx / pptx / xlsx / html 自动调 `~/scripts/*2text.py` 提取为 `.extracted.
 | `DECK_ADD_DIRS` | `~/Desktop` | 逗号分隔，cc `--add-dir` 额外可读目录（local only） |
 | `DECK_DEV_ORIGIN` | `http://localhost:5173` | CORS 允许的前端开发地址 |
 | `DECK_UPLOADS_DIR` | `/tmp/deck-chat-uploads` | 附件临时目录 |
-| `ANTHROPIC_BASE_URL` | 空 | cc gateway 覆盖，走 `webapp/.env` |
-| `ANTHROPIC_API_KEY` | 空 | cc API key |
-| `ANTHROPIC_CUSTOM_HEADERS` | 空 | 公司网关专用 header |
+
+**注意：** webapp **故意不传** `ANTHROPIC_API_KEY` / `ANTHROPIC_BASE_URL` / `ANTHROPIC_CUSTOM_HEADERS` 给 cc 子进程（`local_cc.py` 会主动 `env.pop()`）。**cc 用它自己的认证方式**——可以是 `claude login` 的 OAuth、可以是 `~/.claude/settings.json` 里配的 API key、可以是公司内网 gateway，任何 cc CLI 自己能跑起来的方式 webapp 都跟着能跑。
+
+不要"修复"这个 pop 逻辑——它是有意为之的，目标是让用户用任何方式接入 cc 都能无缝使用 webapp，而不是绑定到某种 gateway 配置上。
 
 `load_settings()` 加载后通过 `get_settings()` DI 注入，`lru_cache` 单例。
 
