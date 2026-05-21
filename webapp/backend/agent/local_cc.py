@@ -135,9 +135,15 @@ class LocalCcRunner(AgentRunner):
 
         env = os.environ.copy()
         env.pop("CLAUDE_CODE_ENTRYPOINT", None)
-        env.pop("ANTHROPIC_API_KEY", None)
-        env.pop("ANTHROPIC_BASE_URL", None)
-        env.pop("ANTHROPIC_CUSTOM_HEADERS", None)
+        # ANTHROPIC_* pop 策略按平台分：
+        # - mac/linux：cc CLI 有 ~/.claude/.credentials.json 兜底，pop 后走 keychain
+        #   认证；不 pop 反而可能被父进程错的 BASE_URL（如老 yotta gateway）污染。
+        # - windows：cc CLI 完全靠 env var 认证（无 keychain 等价物），pop 后直接
+        #   "not logged in"，必须保留继承。
+        if sys.platform != "win32":
+            env.pop("ANTHROPIC_API_KEY", None)
+            env.pop("ANTHROPIC_BASE_URL", None)
+            env.pop("ANTHROPIC_CUSTOM_HEADERS", None)
         # Clash Verge 等代理客户端会调 launchctl setenv 把 *_PROXY 写进全局 launchd env，
         # 双击 .command 启动的 webapp 会继承。yotta 公司网关只接受国内出口 IP，
         # 一旦走 clash 国外节点就被网关拒绝、cc 子进程在 kevent64 死等。
