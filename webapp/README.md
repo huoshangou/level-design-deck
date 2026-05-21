@@ -24,7 +24,7 @@ webapp `start-webapp.command` 跑新 daemon（占用同 8766，自动接管）�
 
 ## Quickstart
 
-**前置：** Python 3.13 + Node 24 / npm 11+ + Claude Code CLI (`claude` 在 PATH 中)
+**前置：** Python 3.13 或 3.14 + Node 24 / npm 11+ + Claude Code CLI (`claude` 在 PATH 中)
 
 支持平台：**macOS arm64** / **Windows 10/11 x64**（Linux 未测，理论可行）
 
@@ -70,7 +70,7 @@ start-webapp.bat
 REM 浏览器自动打开，或手动访问 http://127.0.0.1:8766/
 ```
 
-> **Windows wheels 说明：** `webapp/wheels/` 里同时包含 macOS 和 Windows 的平台包（`win_amd64`），pip 会自动选正确的版本安装。
+> **Wheels 覆盖范围：** `webapp/wheels/` 同时包含 macOS arm64 和 Windows amd64 的平台包，Python 3.13（cp313）和 3.14（cp314）都有，pip 会自动选匹配的版本。如果你装的 Python 不是 3.13/3.14，请装这两个版本之一（推荐 3.13 长期支持）。Windows 没有 uvloop wheel（这个包不支持 Windows，`uvicorn[standard]` 在 Win 上会自动跳过它）。
 
 也可以只跑 backend 不开前端 — `http://127.0.0.1:8766/legacy/editor.html` 是老 editor 兜底。
 
