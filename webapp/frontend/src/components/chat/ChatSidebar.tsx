@@ -5,6 +5,7 @@ import { useChatSocket } from "../../hooks/useChatSocket";
 import { api, type CcHistoryEntry } from "../../api/client";
 import MessageBubble from "./MessageBubble";
 import AttachmentArea from "./AttachmentArea";
+import ProfileButton from "./ProfileButton";
 
 const WS_DOT: Record<string, string> = {
   idle: "var(--text-faint)",
@@ -214,6 +215,7 @@ export default function ChatSidebar() {
           )}
         </h2>
         <div style={{ display: "flex", gap: 4 }}>
+          <ProfileButton />
           <button
             ref={historyBtnRef}
             onClick={() => void openHistory()}

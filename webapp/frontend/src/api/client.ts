@@ -59,6 +59,14 @@ export type WorkspaceTree = {
   tasks: WorkspaceTask[];
 };
 
+export type DesignerProfile = {
+  designer_cn: string;
+  designer_en_short: string;
+  designer_full_en: string;
+  notes: string;
+  updated_at?: number;
+};
+
 export type TaskDetail = {
   name: string;
   path: string;
@@ -164,6 +172,11 @@ export const api = {
     request<{ imported_docs: { filename: string; task_path: string }[]; skipped: { filename: string; reason: string }[] }>(
       "/api/workspace/import-docs", { method: "POST" },
     ),
+
+  // ── Designer profile ─────────────────────────────────────────────────
+  getProfile: () => request<DesignerProfile>("/api/profile"),
+  updateProfile: (body: DesignerProfile) =>
+    request<DesignerProfile>("/api/profile", { method: "PUT", body: JSON.stringify(body) }),
   listSessions: () =>
     request<{ sessions: SessionRecord[] }>("/api/sessions"),
   endSession: (client_id: string) =>

@@ -38,6 +38,9 @@ def send_message(
     if not _ws_connected.get(client_id):
         raise HTTPException(409, "no active websocket connection — connect WS first")
 
+    from backend.api.profile import profile_prompt_block
+    profile_block = profile_prompt_block()
+
     text = body.text
     readable = [a for a in get_attached_files(client_id) if a.get("text_path")]
     if readable:
@@ -48,6 +51,8 @@ def send_message(
             "以下是用户附带的参考文件，你可以用 Read 工具按需读取这些路径：\n"
             f"{paths}\n\n用户问题：{body.text}"
         )
+    if profile_block:
+        text = profile_block + text
     _queues[client_id].put_nowait(text)
     return {"queued": True}
 

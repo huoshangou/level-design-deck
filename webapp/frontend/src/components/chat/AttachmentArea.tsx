@@ -4,12 +4,33 @@ import { useRef, useState } from "react";
 import { useChatStore } from "../../stores/chatStore";
 import type { AttachedFile } from "../../api/chat-types";
 
+const WARN_BYTES = 5 * 1024 * 1024;   // > 5MB 黄色警告
+
+function fmtSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes}B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)}KB`;
+  return `${(bytes / 1024 / 1024).toFixed(1)}MB`;
+}
+
 function FileChip({ file, onRemove }: { file: AttachedFile; onRemove: () => void }) {
   const isBinary = file.kind === "binary";
-  const sizeKB = (file.size_bytes / 1024).toFixed(1);
+  const isLarge = file.size_bytes > WARN_BYTES;
+  const sizeStr = fmtSize(file.size_bytes);
+  const bgColor = isBinary
+    ? "rgba(239,68,68,0.08)"
+    : isLarge
+    ? "var(--review-bg)"
+    : "var(--section-bg)";
+  const borderColor = isBinary ? "var(--error)" : isLarge ? "var(--review)" : "var(--border)";
+  const textColor = isBinary ? "var(--error)" : "var(--text)";
+  const title = isBinary
+    ? "cc 读不了二进制文件"
+    : isLarge
+    ? `${sizeStr} 偏大，AI 处理时可能触发上下文限制；> 20MB 会被服务端拒绝`
+    : file.stored_path;
   return (
     <div
-      title={isBinary ? "cc 读不了二进制文件" : file.stored_path}
+      title={title}
       style={{
         display: "flex",
         alignItems: "center",
@@ -17,9 +38,9 @@ function FileChip({ file, onRemove }: { file: AttachedFile; onRemove: () => void
         padding: "2px 6px",
         borderRadius: 4,
         fontSize: 11,
-        background: isBinary ? "rgba(239,68,68,0.08)" : "var(--section-bg)",
-        border: `1px solid ${isBinary ? "var(--error)" : "var(--border)"}`,
-        color: isBinary ? "var(--error)" : "var(--text)",
+        background: bgColor,
+        border: `1px solid ${borderColor}`,
+        color: textColor,
         maxWidth: "100%",
         minWidth: 0,
       }}
@@ -28,11 +49,14 @@ function FileChip({ file, onRemove }: { file: AttachedFile; onRemove: () => void
       <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>
         {file.original_name}
       </span>
-      <span style={{ color: "var(--text-faint)", flexShrink: 0 }}>
-        ({file.kind}, {sizeKB}KB)
+      <span style={{ color: isLarge ? "var(--review)" : "var(--text-faint)", flexShrink: 0, fontWeight: isLarge ? 600 : 400 }}>
+        ({file.kind}, {sizeStr})
       </span>
       {isBinary && (
         <span style={{ color: "var(--error)", flexShrink: 0, fontSize: 10 }}>⚠</span>
+      )}
+      {isLarge && !isBinary && (
+        <span style={{ color: "var(--review)", flexShrink: 0, fontSize: 10 }}>⚠</span>
       )}
       <button
         onClick={onRemove}

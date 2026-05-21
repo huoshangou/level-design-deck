@@ -10,7 +10,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from backend.api import cc_history, check, chat, doc_templates, docs, files, modules, render, sessions, specs, workspace
+from backend.api import cc_history, check, chat, doc_templates, docs, files, modules, profile, render, sessions, specs, workspace
 from backend.deps import get_settings
 
 
@@ -47,6 +47,7 @@ def create_app() -> FastAPI:
     app.include_router(docs.router)
     app.include_router(cc_history.router)
     app.include_router(workspace.router)
+    app.include_router(profile.router)
 
     @app.get("/api/health")
     def health():

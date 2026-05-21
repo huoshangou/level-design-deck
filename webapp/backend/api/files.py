@@ -22,6 +22,9 @@ from backend.deps import get_agent, get_settings
 
 router = APIRouter(tags=["files"])
 
+MAX_UPLOAD_BYTES = 20 * 1024 * 1024     # 20 MB 硬限制（更大 cc 装不进 context）
+EXTRACT_TRUNCATE_CHARS = 200_000        # 提取产物 > 200K 字符截断（≈ 50K token）
+
 SCRIPTS_DIR = Path.home() / "scripts"
 EXTRACTORS = {
     ".docx": "docx2text.py",
@@ -60,7 +63,6 @@ def _convert(src: Path, dst_dir: Path, suffix: str) -> Path | None:
     if not script.exists():
         return None
     out_path = dst_dir / (src.stem + ".extracted.txt")
-    # python3 on macOS/Linux, python on Windows
     python_cmd = "python3" if shutil.which("python3") else "python"
     try:
         subprocess.run(
@@ -69,7 +71,20 @@ def _convert(src: Path, dst_dir: Path, suffix: str) -> Path | None:
         )
     except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
         return None
-    return out_path if out_path.exists() else None
+    if not out_path.exists():
+        return None
+    # 超 200K 字符截断（防止 cc Read 进去爆 context）
+    try:
+        text = out_path.read_text(encoding="utf-8", errors="replace")
+        if len(text) > EXTRACT_TRUNCATE_CHARS:
+            warning = (
+                f"\n\n[⚠️ 文件已截断：原 {len(text):,} 字符 → 截断至 {EXTRACT_TRUNCATE_CHARS:,} 字符。"
+                f"如需完整内容请拆分文件或在对话中具体指明要看哪段]\n"
+            )
+            out_path.write_text(text[:EXTRACT_TRUNCATE_CHARS] + warning, encoding="utf-8")
+    except OSError:
+        pass
+    return out_path
 
 
 class AttachedFileModel(BaseModel):
@@ -101,8 +116,23 @@ async def upload_file(
     safe = _safe_name(original_name)
     stored = sess_dir / f"{file_id}__{safe}"
 
+    # 流式写入并卡 20MB 上限；超限删半成品 → 413
+    total = 0
     with stored.open("wb") as f:
-        shutil.copyfileobj(file.file, f)
+        while True:
+            chunk = file.file.read(1024 * 1024)
+            if not chunk:
+                break
+            total += len(chunk)
+            if total > MAX_UPLOAD_BYTES:
+                f.close()
+                stored.unlink(missing_ok=True)
+                raise HTTPException(
+                    413,
+                    f"文件过大（>{MAX_UPLOAD_BYTES // (1024*1024)}MB），请拆分后再传。"
+                    f"超大附件会让 AI 处理时上下文爆掉。",
+                )
+            f.write(chunk)
 
     kind, needs_conv = _classify(suffix)
     text_path: Path | None = None
