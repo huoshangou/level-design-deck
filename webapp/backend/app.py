@@ -92,10 +92,35 @@ def create_app() -> FastAPI:
     workspace_dir.mkdir(parents=True, exist_ok=True)
     app.mount("/workspace-file", StaticFiles(directory=str(workspace_dir)), name="workspace-file")
 
-    # frontend build 产物（Phase 1 后期写完前端会有；现在缺也无所谓）
+    # frontend build 产物（prod 模式：单端口 serve dist + API + WS）
+    #
+    # 为什么不用 app.mount("/", StaticFiles(...))：
+    # starlette 1.0.0 + catch-all mount 会吞掉 WebSocket scope，即使 chat.router
+    # 已在 mount 之前 include_router 注册。Mac 走 dev 模式（Vite :5173 + uvicorn :8766
+    # 分离）所以没暴露，Windows 走 prod 模式直接被 WS 404 卡死。
+    # 改用 @app.get catch-all：HTTP route 不会被 WS scope 触发，根治。
+    # 详见 WINDOWS_ISSUES.md / 2026-05-21 同事 Windows 部署调试。
     dist_dir = s.project_root / "webapp" / "frontend" / "dist"
     if dist_dir.exists():
-        app.mount("/", StaticFiles(directory=str(dist_dir), html=True), name="frontend")
+        from fastapi import HTTPException
+        from fastapi.responses import FileResponse
+        index_path = dist_dir / "index.html"
+        dist_root = dist_dir.resolve()
+
+        @app.get("/", include_in_schema=False)
+        async def _spa_root():
+            return FileResponse(index_path)
+
+        @app.get("/{full_path:path}", include_in_schema=False)
+        async def _spa_fallback(full_path: str):
+            candidate = (dist_dir / full_path).resolve()
+            try:
+                candidate.relative_to(dist_root)
+            except ValueError:
+                raise HTTPException(status_code=404)
+            if candidate.is_file():
+                return FileResponse(candidate)
+            return FileResponse(index_path)
 
     return app
 

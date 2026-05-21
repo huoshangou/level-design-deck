@@ -27,25 +27,39 @@ DEFAULT_MODEL = "claude-haiku-4-5"
 # - Edit：原位修改 specs / docs / templates 内容
 # - Write(specs/*) / Write(docs/*)：限制写入目录，防止 cc 写 ~/.claude/memory 等
 # - Bash(python3 tools/*)：跑项目内生成脚本
-# - Bash(python3 ~/scripts/*)：跑用户脚本（pdf2text / xlsx2text 等提取器）
+# - Bash(python3 <DECK_EXTRACTOR_SCRIPTS>/*)：跑用户脚本（pdf2text / xlsx2text 等提取器）
+#   默认 ~/scripts；env var DECK_EXTRACTOR_SCRIPTS 可覆盖（Windows 同事按需配）
 # - Bash(ls *) / Bash(cp *)：列目录、复制模板
 # 若环境变量 DECK_WRITE_TOOLS=0 则退回 Read-only（Phase 2 行为）
-_WRITE_ALLOWED_TOOLS = [
-    "Read", "Glob", "Grep", "Edit",
-    "Write(specs/*)", "Write(docs/*)",
-    "Bash(python3 tools/*)",
-    "Bash(python3 /Users/mofashu/scripts/*)",
-    "Bash(ls *)",
-    "Bash(cp *)",
-]
 _READ_ONLY_TOOLS = ["Read", "Glob", "Grep"]
+
+
+def _resolve_extractor_scripts_dir() -> str:
+    """提取脚本目录（pdf2text 等）。优先 env var，否则 ~/scripts。"""
+    from pathlib import Path
+    v = os.environ.get("DECK_EXTRACTOR_SCRIPTS")
+    if v:
+        return v
+    return str(Path.home() / "scripts")
+
+
+def _build_write_allowed_tools() -> list[str]:
+    extractor_dir = _resolve_extractor_scripts_dir()
+    return [
+        "Read", "Glob", "Grep", "Edit",
+        "Write(specs/*)", "Write(docs/*)",
+        "Bash(python3 tools/*)",
+        f"Bash(python3 {extractor_dir}/*)",
+        "Bash(ls *)",
+        "Bash(cp *)",
+    ]
 
 
 def _resolve_allowed_tools() -> Sequence[str]:
     """读环境变量决定工具白名单。DECK_WRITE_TOOLS=0 → read-only；否则 Phase 3 完整白名单。"""
     if os.environ.get("DECK_WRITE_TOOLS", "1") == "0":
         return _READ_ONLY_TOOLS
-    return _WRITE_ALLOWED_TOOLS
+    return _build_write_allowed_tools()
 
 
 class LocalCcRunner(AgentRunner):
