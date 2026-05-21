@@ -111,8 +111,16 @@ class LocalCcRunner(AgentRunner):
         cc_sid = meta.get("cc_session_id")
         is_first_turn = cc_sid is None
 
+        # Claude Code CLI 跨平台路径解析：
+        # - Linux/macOS：通常 /usr/local/bin/claude（exe），直接 spawn
+        # - Windows：npm shim 是 .cmd / .bat，Python subprocess 默认只搜 .exe，
+        #   且 CreateProcess API 不接受 .cmd —— 必须 cmd.exe /c 包一层
+        import shutil, sys, re
+        claude_bin = shutil.which("claude") or "claude"
+        use_shell = sys.platform == "win32" and claude_bin.lower().endswith((".cmd", ".bat"))
+
         cmd = [
-            "claude", "--print",
+            claude_bin, "--print",
             "--output-format=stream-json",
             "--input-format=stream-json",
             "--verbose",
@@ -141,16 +149,34 @@ class LocalCcRunner(AgentRunner):
         try:
             # limit=10MB: cc 的 tool_result 含读到的整个文件，PROJECT.md 这种 50KB+ 文档
             # 会超 asyncio 默认 64KB readline buffer 抛 LimitOverrunError → 直接吞掉后续事件。
-            proc = await asyncio.create_subprocess_exec(
-                *cmd, cwd=str(self.project_root),
+            common_kwargs = dict(
+                cwd=str(self.project_root),
                 stdin=asyncio.subprocess.PIPE,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
                 env=env,
                 limit=10 * 1024 * 1024,
             )
+            if use_shell:
+                # Windows .cmd shim 走 shell 模式让 cmd.exe 解释。
+                # 给所有非纯 ASCII 字母数字/dash/slash 的 arg 强制 "" 包裹，
+                # 防 cmd.exe 把 `Write(specs/*)` 里的 () * 当 metachar 展开。
+                def _q(a: str) -> str:
+                    if not a:
+                        return '""'
+                    if re.fullmatch(r'[A-Za-z0-9_\-./:=]+', a):
+                        return a
+                    return '"' + a.replace('"', '""') + '"'
+                cmd_str = " ".join(_q(a) for a in cmd)
+                proc = await asyncio.create_subprocess_shell(cmd_str, **common_kwargs)
+            else:
+                proc = await asyncio.create_subprocess_exec(*cmd, **common_kwargs)
         except FileNotFoundError:
-            yield AgentError(code="claude_cli_missing", message="`claude` CLI not in PATH", recoverable=False)
+            yield AgentError(
+                code="claude_cli_missing",
+                message=f"`claude` CLI not in PATH (resolved: {claude_bin}, use_shell={use_shell})",
+                recoverable=False,
+            )
             return
 
         user_msg = {

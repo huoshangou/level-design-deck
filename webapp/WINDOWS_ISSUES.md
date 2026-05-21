@@ -41,6 +41,21 @@
 
 ---
 
+## P4 · Python subprocess 找不到 claude.cmd ✅ 已修
+
+**现象**：Windows 上 chat 发消息后报 "Claude CLI not in PATH"（webapp 后端 `AgentError(code="claude_cli_missing")`），就算 cmd 里直接敲 `claude` 能跑也没用。
+
+**原因**：两层叠加：
+1. Python `asyncio.create_subprocess_exec("claude", ...)` 默认只搜 `claude.exe`，不搜 `claude.cmd`。但 Anthropic 的 Claude Code CLI 通过 npm 装出来是 `claude.cmd`（npm shim）。
+2. 即使用 `shutil.which("claude")` 找到了完整的 `.cmd` 路径，Windows CreateProcess API 也直接拒绝执行 `.cmd` 文件（系统 API 限制，只接受 `.exe`）。
+
+**修复**（`backend/agent/local_cc.py`）：
+- 用 `shutil.which("claude")` 找全路径（会按 PATHEXT 试 `.exe / .cmd / .bat`）
+- Windows + `.cmd` / `.bat` 后缀时，改用 `asyncio.create_subprocess_shell`（Windows 上等于 `cmd.exe /c ...`，能正确解释 shim）
+- 给所有 args 强制 `""` quote，防止 cmd.exe 把 `Write(specs/*)` 这种白名单规则里的 `()` `*` 当 metachar 展开
+
+错误信息也升级了，下次失败会带 resolved 路径，更易诊断。
+
 ## P3 · bat 端口被占时不自动 kill 老进程 ✅ 已修
 
 **现象**：重新双击 `start-webapp.bat` 时，老 uvicorn 还占着 8766，新启的失败。Mac 版（`.command`）一直是自动 kill 老进程重启的，bat 之前只做了"尝试 8767 兜底，两个都占就放弃"，跟 mac 行为不一致。
