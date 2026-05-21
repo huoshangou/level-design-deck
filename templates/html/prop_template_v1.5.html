@@ -2425,6 +2425,13 @@ stateDiagram-v2
 // -----------------------------------------------------------
 // Mermaid Init
 // -----------------------------------------------------------
+// 渲染前备份所有 .mermaid 容器的源码到 data-source，给双击编辑器用
+document.querySelectorAll('.mermaid[data-field="mermaid_flowchart"]').forEach(el => {
+  if (!el.hasAttribute('data-source')) {
+    el.setAttribute('data-source', (el.textContent || '').trim());
+  }
+});
+
 mermaid.initialize({
   startOnLoad: true,
   theme: 'default',
@@ -4948,6 +4955,28 @@ function buildSaveHTML() {
 
 async function saveDocument() {
   const html = buildSaveHTML();
+
+  // 检测 webapp iframe 环境：URL 以 /docs/ 开头 → 走 PUT 回写
+  const inWebapp = /^\/docs\//.test(location.pathname);
+  if (inWebapp) {
+    const filename = decodeURIComponent(location.pathname.split('/').pop());
+    try {
+      const res = await fetch('/api/docs/' + encodeURIComponent(filename), {
+        method: 'PUT',
+        headers: { 'Content-Type': 'text/html;charset=utf-8' },
+        body: html,
+      });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      _hasUnsavedChanges = false;
+      const btn = document.querySelector('.nav-save button');
+      if (btn) { const orig = btn.textContent; btn.textContent = '✓ 已保存到 webapp'; setTimeout(() => { btn.textContent = orig; }, 1800); }
+      return;
+    } catch (e) {
+      alert('保存失败：' + e.message + '\n回退到本地下载');
+      // fall through to local download
+    }
+  }
+
   if (window.showSaveFilePicker) {
     try {
       if (!_fileHandle) {
@@ -5041,6 +5070,180 @@ document.addEventListener('keydown', function(e) {
   }
 });
 
+</script>
+
+<!-- ─── Mermaid Live Editor Modal (双击流程图触发) ─── -->
+<div id="mermaid-editor-modal" style="display:none;position:fixed;inset:0;background:rgba(25,25,25,0.55);z-index:9999;align-items:center;justify-content:center;font-family:-apple-system,'Helvetica Neue','PingFang SC',sans-serif;">
+  <div style="width:92vw;height:88vh;background:#fff;border-radius:8px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,0.25);">
+    <div style="padding:10px 16px;border-bottom:1px solid #E5E2D8;display:flex;align-items:center;gap:10px;background:#FAF8F1;">
+      <strong style="flex:1;font-size:14px;color:#191919;">📊 Mermaid 编辑器 <span style="font-weight:400;color:#6B6B6B;font-size:11px;margin-left:8px;">左侧改源码，右侧实时预览</span></strong>
+      <button id="mermaid-editor-save" style="padding:6px 14px;border:none;border-radius:4px;background:#CC785C;color:#fff;cursor:pointer;font-size:13px;">保存并关闭</button>
+      <button id="mermaid-editor-cancel" style="padding:6px 14px;border:1px solid #D6D2C4;border-radius:4px;background:#fff;color:#191919;cursor:pointer;font-size:13px;">关闭不保存</button>
+    </div>
+    <div style="flex:1;display:flex;overflow:hidden;">
+      <textarea id="mermaid-editor-src" spellcheck="false" style="flex:1;padding:14px;border:none;border-right:1px solid #E5E2D8;font-family:'JetBrains Mono','SF Mono',Menlo,monospace;font-size:13px;resize:none;outline:none;line-height:1.6;color:#191919;background:#FAF8F1;"></textarea>
+      <div id="mermaid-editor-preview" style="flex:1;padding:18px;overflow:auto;background:#fff;display:flex;align-items:center;justify-content:center;"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  let _activeMermaid = null;
+  const modal = document.getElementById('mermaid-editor-modal');
+  const srcArea = document.getElementById('mermaid-editor-src');
+  const previewArea = document.getElementById('mermaid-editor-preview');
+  let renderTimer = null;
+  let renderCounter = 0;
+
+  function closeModal() {
+    modal.style.display = 'none';
+    _activeMermaid = null;
+  }
+
+  async function renderPreview() {
+    const src = srcArea.value.trim();
+    if (!src) { previewArea.innerHTML = '<em style="color:#9C9C9C">空</em>'; return; }
+    try {
+      const id = 'mp_preview_' + (++renderCounter);
+      const { svg } = await mermaid.render(id, src);
+      previewArea.innerHTML = svg;
+      attachNodeDblclick();
+    } catch (e) {
+      previewArea.innerHTML = '<pre style="color:#B33B3B;white-space:pre-wrap;font-family:monospace;font-size:12px;text-align:left;width:100%;">' + ((e && e.message) || String(e)) + '</pre>';
+    }
+  }
+
+  // 给每个渲染出的节点绑定双击编辑（修改文字，自动同步源码）
+  function attachNodeDblclick() {
+    const nodes = previewArea.querySelectorAll('g.node, g.statediagram-state, g.cluster');
+    nodes.forEach(node => {
+      node.style.cursor = 'pointer';
+      node.addEventListener('dblclick', (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        // 提取当前文本：优先 .nodeLabel / foreignObject，fallback textContent
+        let labelEl = node.querySelector('.nodeLabel, foreignObject span, foreignObject p');
+        let currentLabel = (labelEl?.textContent || node.textContent || '').trim();
+        if (!currentLabel) return;
+        showInlineEditor(node, currentLabel);
+      });
+    });
+  }
+
+  function showInlineEditor(targetNode, currentLabel) {
+    const rect = targetNode.getBoundingClientRect();
+    const input = document.createElement('input');
+    input.value = currentLabel;
+    input.style.cssText = [
+      'position:fixed',
+      `left:${rect.left}px`,
+      `top:${rect.top - 4}px`,
+      `width:${Math.max(140, rect.width + 16)}px`,
+      'padding:6px 10px',
+      'font-size:13px',
+      'font-family:-apple-system,Helvetica Neue,sans-serif',
+      'border:2px solid #CC785C',
+      'border-radius:4px',
+      'background:#fff',
+      'color:#191919',
+      'box-shadow:0 4px 12px rgba(0,0,0,0.15)',
+      'z-index:10000',
+      'outline:none',
+    ].join(';');
+    document.body.appendChild(input);
+    input.focus();
+    input.select();
+    let done = false;
+    function commit(save) {
+      if (done) return; done = true;
+      const val = input.value.trim();
+      input.remove();
+      if (!save || !val || val === currentLabel) return;
+      applyLabelEdit(currentLabel, val);
+    }
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); commit(true); }
+      else if (e.key === 'Escape') { e.preventDefault(); commit(false); }
+    });
+    input.addEventListener('blur', () => commit(true));
+  }
+
+  // 在源码里把 currentLabel 改成 newLabel。
+  // 策略：先尝试精确替换（括号内文本），再回退到 textual replace。
+  function applyLabelEdit(currentLabel, newLabel) {
+    const src = srcArea.value;
+    const esc = currentLabel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    // 匹配 mermaid 各种节点形态包裹的 label：[文本] (文本) ((文本)) {文本} >文本] |文本|
+    const wrapped = new RegExp('([\\[\\(\\{\\|>])(\\s*)' + esc + '(\\s*)([\\]\\)\\}\\|])', 'g');
+    let newSrc = src.replace(wrapped, (_m, open, lws, rws, close) => open + lws + newLabel + rws + close);
+    if (newSrc === src) {
+      // 回退：全文 plain 替换（可能误伤同字符串，但 95% 场景下 label 在源码里唯一）
+      newSrc = src.split(currentLabel).join(newLabel);
+    }
+    if (newSrc === src) {
+      alert('未在源码里找到该文本，可能是 mermaid 自动生成的 label，请改源码');
+      return;
+    }
+    srcArea.value = newSrc;
+    renderPreview();
+  }
+
+  function openMermaidEditor(el) {
+    _activeMermaid = el;
+    srcArea.value = (el.getAttribute('data-source') || el.textContent || '').trim();
+    modal.style.display = 'flex';
+    renderPreview();
+    setTimeout(() => srcArea.focus(), 0);
+  }
+
+  srcArea.addEventListener('input', () => {
+    if (renderTimer) clearTimeout(renderTimer);
+    renderTimer = setTimeout(renderPreview, 280);
+  });
+
+  document.getElementById('mermaid-editor-save').addEventListener('click', async () => {
+    if (!_activeMermaid) return closeModal();
+    const newSrc = srcArea.value;
+    _activeMermaid.removeAttribute('data-processed');
+    _activeMermaid.setAttribute('data-source', newSrc);
+    _activeMermaid.textContent = newSrc;
+    try {
+      await mermaid.run({ nodes: [_activeMermaid] });
+    } catch (e) {
+      console.error('Mermaid re-render failed:', e);
+    }
+    if (typeof _hasUnsavedChanges !== 'undefined') {
+      window._hasUnsavedChanges = true;
+    }
+    closeModal();
+  });
+
+  document.getElementById('mermaid-editor-cancel').addEventListener('click', closeModal);
+  modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal.style.display === 'flex') closeModal();
+  });
+
+  // 监听 mermaid 容器双击
+  document.addEventListener('dblclick', (e) => {
+    const m = e.target.closest('.mermaid[data-field="mermaid_flowchart"]');
+    if (m) openMermaidEditor(m);
+  });
+
+  // 给 mermaid 容器加视觉提示（hover 时显示"双击编辑"）
+  const style = document.createElement('style');
+  style.textContent = `
+    .mermaid[data-field="mermaid_flowchart"] { position:relative; cursor:pointer; transition:outline 0.15s; }
+    .mermaid[data-field="mermaid_flowchart"]:hover { outline:2px dashed #CC785C; outline-offset:4px; }
+    .mermaid[data-field="mermaid_flowchart"]:hover::after {
+      content:"双击编辑"; position:absolute; top:4px; right:8px;
+      background:#CC785C; color:#fff; padding:2px 8px; border-radius:3px;
+      font-size:11px; font-family:-apple-system,sans-serif; pointer-events:none;
+    }
+  `;
+  document.head.appendChild(style);
+})();
 </script>
 
 </body>

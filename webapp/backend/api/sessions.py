@@ -15,6 +15,7 @@ router = APIRouter(prefix="/api/sessions", tags=["sessions"])
 class StartSessionRequest(BaseModel):
     client_id: str | None = None
     namespace: str = "default"
+    cc_session_id: str | None = None  # 恢复历史 session 时传
 
 
 class SessionResponse(BaseModel):
@@ -35,7 +36,7 @@ def start_session(
 ):
     client_id = body.client_id or str(uuid.uuid4())
     try:
-        meta = agent.start_session(client_id, body.namespace)
+        meta = agent.start_session(client_id, body.namespace, body.cc_session_id)
     except ValueError:
         raise HTTPException(409, f"session already exists: {client_id}")
     return SessionResponse(**meta)

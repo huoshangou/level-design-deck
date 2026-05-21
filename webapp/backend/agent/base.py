@@ -13,10 +13,12 @@ from backend.agent.events import AgentEvent
 
 class AgentRunner(ABC):
     @abstractmethod
-    def start_session(self, client_id: str, namespace: str = "default") -> dict:
+    def start_session(self, client_id: str, namespace: str = "default", cc_session_id: str | None = None) -> dict:
         """注册新 session。立刻返回（不调 cc），cc session_id 在第一次 send_message 时 lazy 拿到。
 
-        Returns: {client_id, namespace, started_at, cc_session_id: None}
+        若传入 cc_session_id，下次 send_message 用 --resume 恢复该历史会话。
+
+        Returns: {client_id, namespace, started_at, cc_session_id: str | None}
         """
 
     @abstractmethod

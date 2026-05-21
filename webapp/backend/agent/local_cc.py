@@ -23,13 +23,22 @@ from backend.agent.events import (
 DEFAULT_MODEL = "claude-haiku-4-5"
 
 # Phase 3 工具白名单：
-# - Read：读任何文件
-# - Write(specs/*)：只允许写 specs/ 目录（防止 cc 写 ~/.claude/memory 等）
-# - Bash(python3 tools/*)：允许跑 tools/ 下的生成脚本
-# - Bash(ls *)：允许列目录
+# - Read / Glob / Grep：探索文件
+# - Edit：原位修改 specs / docs / templates 内容
+# - Write(specs/*) / Write(docs/*)：限制写入目录，防止 cc 写 ~/.claude/memory 等
+# - Bash(python3 tools/*)：跑项目内生成脚本
+# - Bash(python3 ~/scripts/*)：跑用户脚本（pdf2text / xlsx2text 等提取器）
+# - Bash(ls *) / Bash(cp *)：列目录、复制模板
 # 若环境变量 DECK_WRITE_TOOLS=0 则退回 Read-only（Phase 2 行为）
-_WRITE_ALLOWED_TOOLS = ["Read", "Write(specs/*)", "Write(docs/*)", "Bash(python3 tools/*)", "Bash(ls *)"]
-_READ_ONLY_TOOLS = ["Read"]
+_WRITE_ALLOWED_TOOLS = [
+    "Read", "Glob", "Grep", "Edit",
+    "Write(specs/*)", "Write(docs/*)",
+    "Bash(python3 tools/*)",
+    "Bash(python3 /Users/mofashu/scripts/*)",
+    "Bash(ls *)",
+    "Bash(cp *)",
+]
+_READ_ONLY_TOOLS = ["Read", "Glob", "Grep"]
 
 
 def _resolve_allowed_tools() -> Sequence[str]:
@@ -52,13 +61,13 @@ class LocalCcRunner(AgentRunner):
         self._sessions: dict[str, dict] = {}
         self._allowed_tools: Sequence[str] = _resolve_allowed_tools()
 
-    def start_session(self, client_id: str, namespace: str = "default") -> dict:
+    def start_session(self, client_id: str, namespace: str = "default", cc_session_id: str | None = None) -> dict:
         if client_id in self._sessions:
             raise ValueError(f"session already exists: {client_id}")
         meta = {
             "client_id": client_id,
             "namespace": namespace,
-            "cc_session_id": None,
+            "cc_session_id": cc_session_id,
             "started_at": time.time(),
             "last_active": None,
             "turn_count": 0,
@@ -94,6 +103,7 @@ class LocalCcRunner(AgentRunner):
             "--input-format=stream-json",
             "--verbose",
             "--model", self.default_model,
+            "--permission-mode", "acceptEdits",
             "--allowed-tools", *self._allowed_tools,
         ]
         for d in self.add_dirs:
@@ -103,6 +113,9 @@ class LocalCcRunner(AgentRunner):
 
         env = os.environ.copy()
         env.pop("CLAUDE_CODE_ENTRYPOINT", None)
+        env.pop("ANTHROPIC_API_KEY", None)
+        env.pop("ANTHROPIC_BASE_URL", None)
+        env.pop("ANTHROPIC_CUSTOM_HEADERS", None)
 
         try:
             # limit=10MB: cc 的 tool_result 含读到的整个文件，PROJECT.md 这种 50KB+ 文档

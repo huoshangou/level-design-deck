@@ -45,7 +45,7 @@ export default function ArrayField({ schema, value, path, onChange, registerRef 
         border: "1px solid var(--border)",
         borderRadius: 3,
         padding: "10px 14px",
-        background: "#fcfcfa",
+        background: "var(--section-bg)",
       }}
     >
       <legend style={{ padding: "0 6px", fontSize: 12, fontWeight: 600 }}>

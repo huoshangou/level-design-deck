@@ -188,7 +188,7 @@ function DocTemplatesBtn() {
               background: "var(--panel)",
               border: "1px solid var(--border)",
               borderRadius: 4,
-              boxShadow: "0 4px 12px rgba(0,0,0,0.12)",
+              boxShadow: "var(--shadow)",
               minWidth: 220,
               padding: "4px 0",
             }}

@@ -28,6 +28,7 @@ type ChatState = {
   inputPrefill: string | null; // 预填充输入框内容，消费后置 null
 
   initSession: () => Promise<void>;
+  loadHistorySession: (cc_session_id: string) => Promise<void>;
   addUserMessage: (text: string) => void;
   handleEvent: (envelope: WsEnvelope) => void;
   markStreamComplete: () => void;
@@ -56,6 +57,49 @@ export const useChatStore = create<ChatState>((set, get) => ({
     set({
       clientId: record.client_id,
       messages: [],
+      pendingAssistant: "",
+      isStreaming: false,
+      wsState: "connecting",
+    });
+  },
+
+  loadHistorySession: async (cc_session_id: string) => {
+    // 1. 并行拉消息 + 产物文档
+    const [historyMsgs, generatedDocs] = await Promise.all([
+      api.getCcHistoryMessages(cc_session_id),
+      api.getCcHistoryGeneratedDocs(cc_session_id).catch(() => []),
+    ]);
+    // 2. 创建新 webapp session，cc_session_id 复用旧的（下次发消息 cc CLI 会 --resume）
+    const record = await api.createSession({ cc_session_id });
+    const now = Date.now();
+    const messages: ChatMessage[] = historyMsgs
+      .map((m): ChatMessage | null => {
+        const ts = m.ts ?? now;
+        if (m.kind === "user") return { kind: "user", text: m.text, ts };
+        if (m.kind === "assistant") return { kind: "assistant", text: m.text, ts };
+        if (m.kind === "thinking") return { kind: "thinking", text: m.text, ts };
+        if (m.kind === "tool_use") return { kind: "tool_use", tool: m.tool ?? "?", args: m.text, ts };
+        return null;
+      })
+      .filter((x): x is ChatMessage => x !== null);
+
+    // 3. 自动打开最新的、还存在的产物文档
+    const aliveDocs = generatedDocs.filter((d) => d.exists);
+    const newest = aliveDocs[0]; // backend 已按 last_touched 倒序
+    let hintText = `📜 已恢复历史会话（${historyMsgs.length} 条消息），继续输入即可接力对话`;
+    if (newest) {
+      hintText += `\n📄 已在预览栏打开当时生成的：${newest.filename}`;
+      useEditorStore.getState().openDocTemplate(newest.url, `📄 ${newest.filename}`);
+    } else if (generatedDocs.length > 0) {
+      hintText += `\n⚠️ 当时生成过 ${generatedDocs.length} 个文档，但当前 docs/ 下已找不到`;
+    }
+
+    set({
+      clientId: record.client_id,
+      messages: [
+        { kind: "hint" as const, text: hintText, ts: now },
+        ...messages,
+      ],
       pendingAssistant: "",
       isStreaming: false,
       wsState: "connecting",

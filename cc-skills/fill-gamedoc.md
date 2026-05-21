@@ -1,19 +1,49 @@
-# /fill-gamedoc — 从结构化数据填充 prop / gameplay 设计文档
+# /fill-gamedoc — 对话式引导填充物件/玩法需求文档
 
-将已有的结构化设计数据（group_doc HTML、IR JSON、字段表等）批量填入 v1.5 物件/玩法需求文档模板中，输出可在 webapp 预览栏直接查看的填充版 HTML。
+通过对话引导用户填写 prop 或 gameplay v1.5 模板，输出落盘到 `docs/`，webapp 自动预览。
 
-> **deck 适配版**（原版来自同事 fenlier，已修改路径和环境配置）
+支持三种入口：
+- **从零对话**：用户说"我要写一个 XX 物件文档"，AI 主动引导
+- **已有材料**：用户拖文件/聊天记录/图片，AI 提取后补问缺口
+- **接力修改**：基于 `docs/` 里已有的文档继续改
+
+填好的 HTML 顶部含**可点击锚点摘要框**，不确定字段用 `ai-flag` span 高亮标注。
+
+---
+
+## 工具使用纪律（最重要 · 必须遵守）
+
+本 skill 在 webapp 沙箱内运行，**只允许这些工具组合**：
+
+| 操作 | 必须用 | 禁止 |
+|------|--------|------|
+| 读模板 / fields.json / 用户文件 | `Read` | ❌ `cat` / `head` |
+| 搜字段位置 | `Grep` / `Glob` | ❌ Bash 的 grep / find |
+| 复制模板到 docs/ | `Read` 原模板 → `Write` 到 docs/ | ❌ `cp` 命令、❌ 写 Python 脚本 |
+| 替换字段内容 | `Edit`（精确字符串替换） | ❌ `sed` / `awk` / 自写 Python |
+| 提取 PDF/DOCX/XLSX | `Bash(python3 /Users/mofashu/scripts/*2text.py <path>)` | ❌ 自己写新提取脚本 |
+| 增量改字段 | `Edit`（找到唯一 old_string → 替换） | ❌ 用 `Write` 重写整文件 |
+
+**绝对禁止**：
+- ❌ 写任何临时 Python 脚本（`/tmp/*.py` 之类）
+- ❌ 用 heredoc / sed / awk 操作文件
+- ❌ 调用 `cp` / `mv` 之类的 Bash 文件操作
+- ❌ 试图改 `.claude/settings.json` 自救加权限
+- ❌ 用 `Write` 覆盖整个 docs/ 已有文件（除了首次创建）
+
+**如果需要的工具不在白名单**：直接告诉用户"当前 webapp 沙箱不允许此操作，需要扩展白名单"，**不要反复试**。
 
 ---
 
 ## 环境路径
 
 ```
-模板目录:     ~/Desktop/level-design-deck/templates/html/
-prop 模板:    templates/html/prop_template_v1.5.html
-gameplay 模板: templates/html/gameplay_template_v1.5.html
-mermaid.js:  ~/Desktop/level-design-deck/lib/mermaid.min.js
-输出目录:     ~/Desktop/level-design-deck/docs/
+模板目录:      ~/Desktop/level-design-deck/templates/html/
+prop 模板:     templates/html/prop_template_v1.5.html      (5046 行)
+gameplay 模板: templates/html/gameplay_template_v1.5.html  (4518 行)
+字段定义:      templates/html/prop_template_v1.5_fields.json
+              templates/html/gameplay_template_v1.5_fields.json
+输出目录:      ~/Desktop/level-design-deck/docs/  ← 用 Write 直接落盘
 ```
 
 ---
@@ -23,332 +53,345 @@ mermaid.js:  ~/Desktop/level-design-deck/lib/mermaid.min.js
 $ARGUMENTS
 
 支持形式：
-- `/fill-gamedoc <源文件路径> [--kind=prop|gameplay]` — 从单个源文件生成
-- `/fill-gamedoc <源文件路径> --output=<文件名>` — 指定输出文件名
+- `/fill-gamedoc` — 从零对话开始
+- `/fill-gamedoc <文件路径>` — 从已有材料开始
+- `/fill-gamedoc --kind=prop|gameplay` — 跳过类型确认
+- `/fill-gamedoc --resume docs/<已有文档>.html` — 接力修改已有文档
 
 ---
 
-## Phase 0 — 前置检查
+## Phase 0 — 类型确认 + 基础信息
 
-### 0.1 验证路径
+### 0.1 文档类型
 
-启动时验证以下路径存在，任一缺失则报错并停止：
+若用户未通过 `--kind` 声明：
+- 询问："是物件需求文档（prop）还是玩法设计文档（gameplay）？"
+- 不要两个都做
+
+若从材料提取，按关键词自动判断：
+- 含「物件分类」/「可交互」/「碰撞处理」/「物件功能」 → **prop**
+- 含「玩法流程」/「核心循环」/「设计目标」/「玩法判定」 → **gameplay**
+- 模糊时仍询问用户
+
+### 0.2 基础信息（一次性问完）
 
 ```
-~/Desktop/level-design-deck/templates/html/prop_template_v1.5.html
-~/Desktop/level-design-deck/templates/html/gameplay_template_v1.5.html
-~/Desktop/level-design-deck/lib/mermaid.min.js
-~/Desktop/level-design-deck/docs/   ← 自动创建，不报错
+1. 物件/玩法的中文名 + 英文名
+2. 所属场景/区域（如 LittleTokyo、商业区）
+3. 设计师英文缩写（用于文件命名，例：FNR）
+4. 优先级（T0/T1/T2/T3，不知道则跳过）
 ```
 
-### 0.2 源文件格式识别
+一次性问，不要分四次问。
+
+### 0.3 材料提取（如有）
 
 | 格式 | 处理方式 |
-|---|---|
-| `.html`（group_doc 等） | 正则解析 tab-content |
-| `.json`（IR / manifest） | JSON.parse 读字段 |
-| `.pdf` / `.pptx` / `.xlsx` / `.docx` | `python3 ~/scripts/*2text.py` 提取文本 → 进 Phase 1 |
-| 图片 | 视觉读取后进文本流程 |
-| 纯文本 / 对话 | 直接进 Phase 1 |
+|------|---------|
+| `.html`（旧填充版 / group_doc） | `Read` → 正则解析 `data-field` 和 `<span class="value">` |
+| `.txt` / `.md` / 聊天记录 | `Read` 直接读 |
+| `.pdf` / `.docx` / `.pptx` / `.xlsx` | `Bash(python3 /Users/mofashu/scripts/<格式>2text.py <路径>)` |
+| `.json`（IR 等结构化数据） | `Read` + `JSON.parse` |
+| 图片 | 视觉读取后进文本流程，否则告诉用户先描述 |
 
-### 0.3 文档类型确认
-
-未通过 `--kind` 声明时：
-- 源文件含「物件分类」/「可交互」/「碰撞处理」等字段 → **prop**
-- 源文件含「玩法流程」/「核心循环」/「设计目标」等字段 → **gameplay**
-- 不确定 → 询问用户
+提取后：用一段话总结已知信息（不超过 200 字），列出已知/未知字段清单，进入 Phase 1。
 
 ### 0.4 输出文件名
 
-- prop：`{物件名}-设计文档-{设计师英文缩写}.html`
-- gameplay：`【玩法】{玩法名}-设计文档-{设计师英文缩写}.html`
-- 设计师英文缩写从用户确认获取，不要假设
+```
+prop：     {物件英文名}-设计文档-{设计师缩写}.html
+gameplay：【玩法】{玩法名}-设计文档-{设计师缩写}.html
+```
+
+如不确定，问用户确认后再用。
 
 ---
 
-## Phase 1 — 数据提取
+## Phase 1 — Checklist 对话（决定哪些组介入）
 
-### 1.1 从 group_doc HTML 提取
+`Read` `templates/html/{kind}_template_v1.5_fields.json`，按 `checklist_items` 的 `group` 字段分组询问。
 
-每个 entity 数据在 `<div id="tab-{key}" class="tab-content">` 块内：
+**询问原则：一组一问，不逐条问。每轮最多 3 个问题，编号列出。**
 
-```javascript
-function extractTabContent(html, key) {
-  const re = new RegExp(`id="tab-${key}"[^>]*>([\\s\\S]*?)(?=<div\\s+id="tab-\\w+"|$)`, 'i');
-  const m = html.match(re);
-  return m ? m[1] : '';
-}
+按顺序逐组确认（材料里已明确的跳过）：
+
+```
+文案组：    "需要提文案包装需求吗？（玩法包装 / 物件包装）"
+角色组：    "涉及角色动作或3C需求吗？"
+物理组：    "有物理表现需求吗？（非破坏类物理 / 可破坏物）"
+系统组：    "需要系统组介入吗？（系统合作 / 地图系统 / UIUX）"
+           ↳ 若 UIUX=是，追问："需要地图icon吗？功能交互提示？"
+地图组：    "需要专门的灯光需求吗？"
+载具/AI/战斗/任务组：按物件特性一次列出，"以下哪些组需要介入？"
+GPP：      "有引擎动画需求吗？"
+美术：     "原画/模型默认需要，特效和音效呢？骨骼动画？"
 ```
 
-### 1.2 字段提取函数
+**硬性门槛（不能跳过）：**
 
-| 函数 | 用途 |
-|---|---|
-| `extractPreField(tab, label)` | 从 `<pre>` 标签提取多行文本 |
-| `extractField(tab, label)` | 从 `<span class="value">` 提取单行文本 |
-| `extractSelectedOptions(tab, label)` | 提取所有 `class="opt on"` 的选中项 |
-| `extractMermaid(tab)` | 提取 `<pre class="mermaid">` 中的 mermaid 源码 |
-| `extractImages(tab)` | 提取所有 base64 图片（按 section 分类） |
-| `extractSoundRows(tab)` | 提取音效需求表格行 |
-| `extractConfigRows(tab)` | 提取配置参数表格行 |
+- **prop**：询问"有白盒视频吗？" — 非极度简单的物件必须提供
+- **gameplay**：3C需求是强制模块，直接激活，不询问
+- **两类共用**：可配置项必须区分"模板参数"vs"动态实例参数"
 
-**关键**：所有提取结果必须调用 `unescapeHtml()` 反转义：
-
-```javascript
-function unescapeHtml(str) {
-  return str.replace(/&amp;/g, '&').replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'");
-}
-```
+记录激活的 checklist items → 进入 Phase 2。
 
 ---
 
-## Phase 2 — 模板填充
+## Phase 2 — 内容整理（脑子里，不动文件）
 
-### 2.0 核心原则
+对每个激活的 section（`checklist_controlled: true` 的按 Phase 1 激活，`false` 的全部激活），整理填充内容。
 
-**直接修改 HTML 字符串**，不走 snapshot 注入。
+### 三档置信度
 
-原因（来自附录 C.3）：v1.5 模板的 `data-snapshot` 属性只在手动导入（importCleanHTML）和版本对比（onDiffFileSelected）时被读取。页面加载时**不会自动 hydrate**。
+| 置信度 | 条件 | 输出格式 |
+|--------|------|---------|
+| 高 | 信息明确无歧义 | 直接填入 |
+| 中 | 有信息但存在推断 | 填入内容 + `【待确认】` |
+| 低/缺 | 无相关信息 | `【待填写：<原因/需要什么>】` |
 
-### 2.1 注入顺序
+### 分组批量补问
 
-按以下顺序操作，避免正则重叠被前面的替换破坏：
+如果多个 section 都缺核心信息，一次性汇总问，不要逐 section 拷问：
 
-1. **标题区**：`<title>`, `nav-title`, `header-title`, `prop_name_en` / `gameplay_name_en`
-2. **Header meta**：version, date, status, designer
-3. **版本记录表**（version-table-body）
-4. **基本信息表**：info_version, info_setting, info_region, info_level, info_name_cn, info_name_en
-5. **设计概述**（rich editor 字段）
-6. **白盒视角**：whitebox_p4_path
-7. **Radio / Checkbox 选中状态**
-8. **功能描述**（prop_function_desc / gameplay_function）
-9. **Mermaid 流程图**
-10. **系统需求各子字段**
-11. **其他 rich editor 字段**（mission, anim, light, placement 等）
-12. **图片嵌入**（参考图区域）
-13. **Init script 注入**（动态模块数据：音效/配置/资产）
+```
+以下信息我还需要：
+1. 物件尺寸（影响模型精度和资产命名）
+2. 是否有交互行为及方式
+3. 破坏物的破碎方式（Single / Cumulative / StageDeductions）
 
-### 2.2 注入函数
-
-#### 文本字段
-
-```javascript
-// data-field 容器替换（单行文本）
-function replaceContentEditable(html, dataField, newContent) {
-  const re = new RegExp(`(data-field="${dataField}"[^>]*>)[\\s\\S]*?(</)`, 'i');
-  return html.replace(re, `$1${escapeHtml(newContent)}$2`);
-}
-
-// 可富文本 rich editor（多段落，用 <p> 包裹）
-function replaceRichEditor(html, dataField, newContent) {
-  const re = new RegExp(
-    `(data-field="${dataField}"[^>]*>)[\\s\\S]*?(<\\/div>\\s*<\\/div>\\s*(?:<\\/div>|<h[34]))`, 'i'
-  );
-  const paragraphs = newContent.split('\n').filter(l => l.trim())
-    .map(l => `<p>${escapeHtml(l)}</p>`).join('\n          ');
-  return html.replace(re, `$1\n          ${paragraphs}\n        $2`);
-}
+以上哪些你能给？没有的跳过，我会标注待确认。
 ```
 
-#### Radio / Checkbox
+### gameplay 强制校验
 
-```javascript
-function setRadio(html, radioName, value) {
-  // 先清除所有该 name 的 checked
-  html = html.replace(
-    new RegExp(`(name="${radioName}"\\s+value="[^"]*")(\\s+checked)?`, 'gi'),
-    (m, prefix) => prefix
-  );
-  // 再设置目标值
-  return html.replace(
-    new RegExp(`(name="${radioName}"\\s+value="${escapeRegex(value)}")`),
-    `$1 checked`
-  );
-}
+- 玩法判定四字段（触发区域 / 执行范围 / 完成条件 / 中止条件）**必须全部填写**
+- 3C需求 section 必须激活
 
-function setCheckbox(html, checkboxId, checked) {
-  const re = new RegExp(`(id="${checkboxId}")(\\s+checked)?`, 'i');
-  return html.replace(re, checked ? `$1 checked` : `$1`);
-}
+### prop 强制校验
+
+- 激活 `chk-physics-destructive` → 必须询问破碎方式
+- 可配置项 → 强制区分"全类一致→模板参数"vs"实例变化→动态实例参数"
+
+整理完，对每个字段记录：`{key, value, confidence, flag_id?}`，进入 Phase 3 落盘。
+
+---
+
+## Phase 3 — 落盘生成（纯 Read / Write / Edit 流程）
+
+### 3.1 复制模板到 docs/（仅首次）
+
+**Step A：** `Read` 模板原文件
+```
+Read: ~/Desktop/level-design-deck/templates/html/{kind}_template_v1.5.html
 ```
 
-**警告**：字符串匹配的否定前缀先检查（见附录 C.1）：
-```javascript
-// 正确：先检查否定形式
-if (has(opts, '不可破坏')) return '不可破坏';
-if (has(opts, '可破坏')) return '可破坏';
-```
+**Step B：** `Write` 整个模板内容到 docs/ 目标路径
+（白名单允许 Write 任意路径）
 
-#### Mermaid 流程图
+**Step C：** 一次性 `Grep -n 'data-field' docs/<文件名>` 拿到所有字段位置，记在脑子里备用。
+**不要每改一个字段就重新 Read 一遍**——这非常浪费 token。
 
-```javascript
-// prop 模板默认是 stateDiagram-v2，gameplay 默认是 flowchart TD
-// 两种都兼容替换
-doc = doc.replace(
-  /data-field="mermaid_flowchart">\s*(stateDiagram-v2|flowchart TD|flowchart LR)[\s\S]*?<\/div>\s*<\/div>\s*<\/div>/,
-  `data-field="mermaid_flowchart">\n${mermaidCode}\n          </div>\n        </div>\n      </div>`
-);
-```
+### 3.2 用 Edit 逐字段替换
 
-#### 动态模块（Init Script 注入）
+对每个待填字段，用 `Edit` 工具找到模板原占位（通常是空 `<td></td>`、`<div contenteditable="true"></div>` 或 `<span class="fill-placeholder">...</span>`），原位替换成内容。
 
-配置参数、音效表、资产列表等由模板 JS 动态建，不能静态替换。在 `</body>` 前注入 `<script>`：
+**定位锚点技巧：**
+- `_fields.json` 的字段 `key` 对应模板内 `data-field="<key>"` 属性
+- 在模板里 `Grep` 字段相邻的 label 文本（如「中文名」「英文名」），保证 `old_string` 唯一
+- 富文本字段用 `<p>` 包裹多段内容
 
-```javascript
-const initScript = `<script>
-document.addEventListener('DOMContentLoaded', function() {
-  // 音效行
-  var soundRows = ${JSON.stringify(soundData)};
-  soundRows.forEach(function(row) { addTableRow('sfx-table-body', 9); /* 填行数据 */ });
-  // 配置参数组
-  // ... 调用模板的 addParamGroup() 等函数
-});
-</script>`;
-doc = doc.replace('</body>', initScript + '\n</body>');
-```
-
-### 2.3 版本记录
-
-每次生成必须填写：
+**置信度标注用 span 包裹：**
 
 ```html
-<tr>
-  <td><input type="date" value="YYYY-MM-DD" ...></td>
-  <td contenteditable="true">从 [源文件名] 自动生成</td>
-  <td contenteditable="true">[设计师英文缩写]</td>
-  <td></td>
-</tr>
+<!-- 待确认字段（中置信） -->
+<span class="ai-flag ai-uncertain" id="flag-1">推断内容 <sup style="color:#856404;font-size:0.75em">⚠ 待确认</sup></span>
+
+<!-- 待填写字段（低置信/缺信息） -->
+<span class="ai-flag ai-missing" id="flag-2"><em style="color:#721c24">【待填写：请补充物件尺寸，影响资产命名】</em></span>
 ```
 
-**设计师英文缩写从用户确认获取，不要假设。**
+`flag-N` 按出现顺序从 1 递增。
+
+### 3.3 Radio / Checkbox 状态
+
+根据 Phase 1 / Phase 2 的结果，用 `Edit` 把对应 `<input type="checkbox" id="chk-xxx">` 加 `checked`，对应 radio 加 `checked`。
+
+**陷阱（来自附录 C.1）：字符串匹配先检测否定形式**
+
+```
+'不可破坏'.includes('可破坏') === true！
+所以先判断 '不可破坏'，再判断 '可破坏'
+（不可移动/可移动、不可交互/可交互 同理）
+```
+
+### 3.4 Mermaid 流程图
+
+模板默认有 mermaid 占位：
+- prop：`stateDiagram-v2` 默认骨架
+- gameplay：`flowchart TD` 默认骨架
+
+如果用户提供了 mermaid 源码，用 `Edit` 替换 `data-field="mermaid_flowchart"` 容器内的内容。
+
+如果未提供，标 `【待填写：请提供 Mermaid 流程图源码，可在预览栏双击图直接编辑】`。
+
+### 3.5 注入 ai-flag 摘要框
+
+在 `<body>` 标签后用 `Edit` 插入：
+
+```html
+<body>
+<div id="ai-review-box" style="position:sticky;top:0;z-index:999;background:#FAF3E8;border-bottom:2px solid #CC785C;padding:12px 20px;font-size:13px;line-height:1.8;display:flex;gap:24px;align-items:flex-start;font-family:-apple-system,'Helvetica Neue',sans-serif;">
+  <div style="flex:0 0 auto">
+    <strong>📋 AI 填充摘要</strong><br>
+    <span style="color:#888;font-size:11px">检视完成后删除此框</span>
+  </div>
+  <div>
+    ✅ 自动填入 <strong>N</strong> 项 &nbsp;
+    ⚠️ 待确认：<a href="#flag-1" style="color:#856404">字段名</a> &nbsp;
+    ❌ 待填写：<a href="#flag-2" style="color:#B33B3B">字段名</a>
+  </div>
+</div>
+<style>@media print { #ai-review-box { display:none } }</style>
+```
+
+把 N 替换成实际数量，锚点列表按实际 flag-N 全部列出。
+
+### 3.6 完成报告
+
+```
+✅ 文档已生成：docs/{文件名}
+
+摘要：
+- 自动填入 N 项
+- 待确认 M 项（点摘要框锚点跳转）
+- 待填写 K 项（点摘要框锚点跳转）
+
+⚠️ 以下动态模块无法静态注入，需在预览栏手动添加：
+- 音效需求表
+- 配置参数组
+- 资产列表（如有多条）
+
+webapp 应已自动在预览栏打开新文档。
+```
 
 ---
 
-## Phase 3 — 验证
+## Phase 4 — 增量修改（用户提"改一下 XX"时）
 
-### 3.1 必填字段检查
+**绝对原则：用 `Edit` 精确替换，不要 `Write` 重写整文件。**
 
-生成完成后，扫描 HTML 检查以下字段是否仍为默认空值：
+### 4.1 定位
 
-| 字段 | 默认空值标志 |
-|---|---|
-| `prop_name_cn` / `gameplay_name_cn` | `XXX物件` / `XXX玩法` |
-| `prop_name_en` / `gameplay_name_en` | `Prop Name — 一句话描述` / `Gameplay Name — 一句话描述` |
-| `designer` | `—` |
-| `header-date` | 无 `value` 属性 |
-| `prop_description` / `design_goal` | 含 `fill-placeholder` class |
-| `mermaid_flowchart` | 仍为默认模板内容 |
+用户说"把 6.6 字段改成 XX"或"流程图回退一下"时：
+1. `Grep -n` 字段相邻 label 或字段名定位
+2. 用 `Edit` 找到唯一的 `old_string`（带足够上下文确保唯一）
+3. 替换为新内容
 
-### 3.2 缺失报告
+### 4.2 ai-flag 的处理
 
-生成后向用户汇报：
-1. 哪些字段成功填充
-2. 哪些字段无法从源数据推断（标注 `[待确认]`）
-3. 哪些动态模块需要在浏览器中手动补填
+如果用户修改的是已标 ai-flag 的字段，**一并去掉 flag span 包裹**：
+
+```html
+<!-- 修改前 -->
+<span class="ai-flag ai-uncertain" id="flag-3">推断的尺寸 <sup>⚠ 待确认</sup></span>
+
+<!-- 修改后（用户确认了实际值） -->
+90×10×270cm
+```
+
+### 4.3 摘要框更新
+
+修改完成后，如果调整了 ai-flag 数量，用 `Edit` 同步更新顶部摘要框的统计数字和锚点列表。
 
 ---
 
-## Phase 4 — 写入与展示
+## 行为约束
 
-### 4.1 写入 docs/
-
-```
-输出路径：~/Desktop/level-design-deck/docs/{文件名}.html
-```
-
-写入后 webapp 会自动检测并在预览栏展示。
-
-### 4.2 完成后告知用户
-
-```
-✅ 文档已生成：docs/{文件名}.html
-📄 webapp 预览栏应自动打开，如未打开可点 Topbar「📄 文档模板」手动选择
-
-⚠️ 以下字段需手动补填（在预览栏内直接点击编辑）：
-- [字段列表]
-
-💾 编辑完成后在模板内按 Ctrl+S 保存为本地工作文件
-```
+- **不要一次问太多**：每轮最多 3 个问题，编号列出
+- **不要重复已知信息**：材料里已提取到的字段不再询问
+- **不要自创字段**：只填 `_fields.json` 中存在的字段
+- **不要假设资产路径**：白盒视频路径、p4 路径、归档路径等没明确就标 `【待填写】`
+- **命名不要猜**：资产命名（模型名、BP名、特效名）必须用户确认或标 `【待确认】`
+- **不要跳过硬性门槛**：白盒视频（prop）、3C需求+判定四字段（gameplay）是必填
+- **绝不写 Python**：所有文件操作走 Read/Edit/Write
+- **绝不重写整文件**：增量修改一律用 Edit 精确替换
 
 ---
 
-## 附录 A — Prop 模板字段 Schema
+## 参考规范（填写时内化，不向用户输出）
 
-### 静态字段（直接 HTML 替换）
+**资产命名格式：**
+- 模型：`功能物件名_布设环境大类_尺寸_编号_拆分部件`（如 `ElectronicDoor_Residential_90×10×270_01_Frame`）
+- BP：`BP_物件英文名`
+- 特效：`NS_Level_Gadget_特效名`（前缀不能新增下划线）
 
-```
-field:prop_name_cn          物件中文名
-field:prop_name_en          英文名 — 一句话描述
-field:version_num           v1.0
-field:status                设计中
-field:designer              设计师英文缩写
-field:info_version          1.0版本
-field:info_setting          设定描述
-field:info_region           Los Angeles
-field:info_level            T0 | T1 | T2 | T3
-field:info_name_cn          物件中文名
-field:info_name_en          物件英文名
-field:whitebox_p4_path      P4路径
-field:prop_description      物件描述（富文本）
-field:gameplay_description  玩法描述（富文本）
-field:prop_function_desc    功能描述（富文本）
-field:mermaid_flowchart     Mermaid 源码
-field:reward_yn             不奖励 | 奖励
-field:reward_timing         奖励节点
-field:map_display           — | 大地图 | 小地图 | 都显示 | 不上地图
-field:map_fog               迷雾解除后显示 | 迷雾解除前显示
-field:map_destroy           随物件销毁而销毁 | [自定义]
-field:map_dynamic           是 | 否
-field:map_priority          高 | 中 | 低
-field:mission_requirement   任务需求（富文本）
-field:anim_requirement      动画需求（富文本）
-field:light_requirement     灯光需求（富文本）
-field:placement_rules       布设规范（富文本）
-```
+**参数类型判断：**
+- 全类一致、不频繁修改 → 模板参数（Template Params）
+- 按实例单独调整 → 动态实例参数（Dynamic Instance Params）
 
-### Radio 枚举（严格匹配）
+**特效/音效**：初次提需简写表现意图即可，详细 sheet 可后补
+
+**资产路径：** 不允许外组复用的路径归 `/ALL/Game/Props/Level/物件文件夹/MeshAndPhysics`
+
+---
+
+## 附录 A — Prop 模板核心字段速查（v1.5）
+
+### 静态字段（`data-field="<key>"`）
 
 ```
-radio:collision             有碰撞体 | 无碰撞体
-radio:art-precision         细精度 | 一般精度
-radio:interactable          可交互 | 不可交互
-radio:scan-highlight        全部高亮 | 局部高亮 | 不用高亮
-radio:destructible          可破坏 | 不可破坏        ← 先检否定形式
-radio:movable               可移动 | 不可移动        ← 先检否定形式
-radio:impulse-response      单次冲击 | 累计冲击
-radio:mp-host               yes | no
-radio:mp-guest              yes | no
+prop_name_cn / prop_name_en       物件名（中英）
+version_num / status / designer   header 区
+info_version / info_setting / info_region / info_level / info_name_cn / info_name_en
+whitebox_p4_path                  白盒视频 p4 路径
+prop_description / gameplay_description / prop_function_desc  富文本三件套
+mermaid_flowchart                 Mermaid 源码
+reward_yn / reward_timing         奖励
+map_display / map_fog / map_destroy / map_dynamic / map_priority  地图配置
+mission_requirement / anim_requirement / light_requirement / placement_rules  富文本
+```
+
+### Radio 枚举（**先检否定形式**）
+
+```
+collision           有碰撞体 | 无碰撞体
+art-precision       细精度 | 一般精度
+interactable        可交互 | 不可交互       ← 先检 "不可交互"
+scan-highlight      全部高亮 | 局部高亮 | 不用高亮
+destructible        可破坏 | 不可破坏        ← 先检 "不可破坏"
+movable             可移动 | 不可移动        ← 先检 "不可移动"
+impulse-response    单次冲击 | 累计冲击
+mp-host / mp-guest  yes | no
 ```
 
 ### Checkbox（ID）
 
 ```
-checkbox:col-no-stand       不可站立
-checkbox:col-no-climb       不可攀爬
-checkbox:col-see-through    视线可穿透
-checkbox:col-shoot-through  可射穿（精确匹配，不能匹配到 shoot-vfx）
-checkbox:col-shoot-vfx      可射穿-特效
-checkbox:col-no-cover       不可作为掩体
-checkbox:chk-sfx            音效需求
-checkbox:chk-mission        任务需求
-checkbox:chk-map            地图系统
-checkbox:chk-system         系统需求
-checkbox:chk-physics-destructive  可破坏物
-checkbox:chk-ux             UIUX（默认勾选）
-checkbox:chk-concept        概念（默认勾选）
-checkbox:chk-model          模型（默认勾选）
+col-no-stand         不可站立
+col-no-climb         不可攀爬
+col-see-through      视线可穿透
+col-shoot-through    可射穿（精确匹配，注意别匹配 col-shoot-vfx）
+col-shoot-vfx        可射穿-特效
+col-no-cover         不可作为掩体
+chk-sfx              音效需求
+chk-mission          任务需求
+chk-map              地图系统
+chk-system           系统需求
+chk-physics-destructive  可破坏物
+chk-ux               UIUX（默认勾选）
+chk-concept          原画（默认勾选）
+chk-model            模型（默认勾选）
 ```
 
-### 动态模块（init script 注入，不能静态替换）
+### 动态模块（无法静态注入，标 `【待填写】` 让用户预览栏内手填）
 
 ```
-interact-method-body        交互方式表格行
-config-form-groups          模板参数分组
-config-scene-groups         动态实例参数分组
-art-items-container         概念/模型需求条目
-sfx-table-body              音效需求表格行
-stim-items-container        刺激源列表
+interact-method-body    交互方式表格行
+config-form-groups      模板参数分组
+config-scene-groups     动态实例参数分组
+art-items-container     概念/模型需求条目
+sfx-table-body          音效需求表格行
+stim-items-container    刺激源列表
 ```
 
 ---
@@ -358,40 +401,39 @@ stim-items-container        刺激源列表
 与 Prop 共用大部分字段，差异：
 
 ```
-field:gameplay_name_cn      玩法中文名（代替 prop_name_cn）
-field:gameplay_name_en      英文名 — 一句话描述
-field:design_goal           设计目标与体验（富文本）
-field:gameplay_description  玩法描述（富文本）
-field:validation_items      校验项（富文本）← 填审核维度，不是真实测试点
-field:flowchart_description 流程图补充说明（富文本）
-field:gameplay_function     玩法功能（富文本）
+gameplay_name_cn        玩法中文名（替代 prop_name_cn）
+gameplay_name_en        英文名 — 一句话描述
+design_goal             设计目标与体验（富文本）
+gameplay_description    玩法描述（富文本）
+validation_items        校验项（富文本）← 填审核维度，不是真实测试点
+flowchart_description   流程图补充说明（富文本）
+gameplay_function       玩法功能（富文本）
 ```
 
-Mermaid 默认内容不同：prop 用 `stateDiagram-v2`，gameplay 用 `flowchart TD`。替换正则兼容两种。
+Mermaid 默认：prop 用 `stateDiagram-v2`，gameplay 用 `flowchart TD`。
 
 ---
 
 ## 附录 C — 已知陷阱
 
-### C.1 字符串匹配陷阱
-
-`'不可破坏'.includes('可破坏')` 为 `true`。映射函数必须**先检测否定形式**：
+### C.1 字符串否定前缀
 
 ```javascript
-if (has(opts, '不可破坏')) return '不可破坏';
-if (has(opts, '可破坏'))   return '可破坏';
+'不可破坏'.includes('可破坏')  // true
 ```
 
-同理：不可移动/可移动，不可交互/可交互。
+填 radio 时必须**先检否定形式**：「不可破坏」→「可破坏」→「未提及」。
 
 ### C.2 HTML 实体反转义
 
-group_doc 源文件中 mermaid 箭头 `-->` 会被编码为 `--&gt;`。所有提取结果必须调用 `unescapeHtml()`，否则 mermaid 渲染失败。
+提取 group_doc HTML 时，mermaid 箭头 `-->` 被编码为 `--&gt;`。
+所有提取结果必须反转义 `&amp; &lt; &gt; &quot; &#39;` 才能放回 mermaid 容器，否则渲染失败。
 
-### C.3 Snapshot 注入无效
+### C.3 v1.5 模板的 hydrate 机制
 
-v1.5 模板的 `data-snapshot` 属性只在手动导入（importCleanHTML）时被读取，页面加载时**不会自动 hydrate**。必须用直接 HTML 修改方式填充。
+`data-snapshot` 属性只在用户**手动**点「导入纯净 HTML」时被读取，**页面加载时不会自动 hydrate**。所以填充必须**直接修改 HTML 字符串**，不能寄希望于 snapshot 注入。
 
-### C.4 动态模块的 radio name 是运行时生成的
+### C.4 动态生成的 radio name
 
-v1.5 模板的交互属性 section（交互方式/交互朝向/重复交互等）的 radio name 格式为 `interact-type-{序号}`，由 JS 动态创建。无法通过静态 HTML 设置这些 radio 状态——需要通过 init script 在 DOM ready 后操作。
+v1.5 模板的交互属性 section（交互方式 1/2/3）的 radio name 格式为 `interact-type-{序号}`，由 JS 在 DOM ready 时动态创建。**这些状态无法通过静态 HTML 设置**，必须由用户在预览栏内手动点选。
+

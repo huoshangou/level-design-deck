@@ -1,65 +1,76 @@
 #!/bin/bash
-# level-design-deck webapp 启动脚本（M4 / B 阶段）
+# level-design-deck webapp 一键启动（后端 + 前端）
 #
-# 与根目录 ../start.command（老 serve_editor.py）并存，端口不同：
-#   ../start.command     → :8766 跑老 editor.html
-#   ./start-webapp.command → :8766 跑新 FastAPI（如老的已停）/ 8767 兜底
-#
-# 用法：
-#   - macOS：Finder 双击此文件
-#   - 终端：./start-webapp.command 或 bash start-webapp.command
+# 双击启动，自动处理端口冲突，打开浏览器
 
 set -e
 WEBAPP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$WEBAPP_DIR"
 
-PRIMARY_PORT=8766
-FALLBACK_PORT=8767
+BACKEND_PORT=8766
+FRONTEND_PORT=5173
 
-if [ ! -x ".venv/bin/uvicorn" ]; then
-  echo "❌ 缺 .venv/bin/uvicorn。请先建 venv 并装依赖："
-  echo "   cd $WEBAPP_DIR"
-  echo "   python3 -m venv .venv"
-  echo "   .venv/bin/pip install --no-index --find-links wheels/ fastapi 'uvicorn[standard]' pydantic python-multipart watchfiles"
-  echo "按任意键退出..."; read -n 1
-  exit 1
-fi
-
-# 选端口：优先 8766，被占就 8767
-PORT=$PRIMARY_PORT
-if lsof -ti:$PORT >/dev/null 2>&1; then
-  echo "⚠️  端口 $PRIMARY_PORT 被占用（可能老 serve_editor.py 在跑），改用 $FALLBACK_PORT"
-  PORT=$FALLBACK_PORT
-  if lsof -ti:$PORT >/dev/null 2>&1; then
-    echo "❌ 端口 $FALLBACK_PORT 也被占。手动 kill 旧进程后再试：lsof -ti:$PRIMARY_PORT,$FALLBACK_PORT | xargs kill"
-    read -n 1; exit 1
+# -- 杀旧进程 --
+for p in $BACKEND_PORT $FRONTEND_PORT; do
+  if lsof -ti:$p >/dev/null 2>&1; then
+    echo "🔧 释放端口 $p ..."
+    lsof -ti:$p | xargs kill 2>/dev/null || true
+    sleep 0.5
   fi
+done
+
+# -- 启动后端 --
+if [ ! -x ".venv/bin/uvicorn" ]; then
+  echo "❌ 缺 .venv/bin/uvicorn"
+  echo "   cd $WEBAPP_DIR && python3 -m venv .venv && .venv/bin/pip install --no-index --find-links wheels/ fastapi 'uvicorn[standard]' pydantic python-multipart watchfiles"
+  read -n 1; exit 1
 fi
 
-echo "🚀 启动 webapp (port $PORT) ..."
-nohup .venv/bin/uvicorn backend.app:app --host 127.0.0.1 --port $PORT \
+echo "🚀 启动后端 (port $BACKEND_PORT) ..."
+nohup .venv/bin/uvicorn backend.app:app --host 127.0.0.1 --port $BACKEND_PORT \
   > /tmp/level-design-deck-webapp.log 2>&1 &
-SERVER_PID=$!
-echo "   PID=$SERVER_PID  日志=/tmp/level-design-deck-webapp.log"
+BACKEND_PID=$!
 
 for i in 1 2 3 4 5; do
   sleep 1
-  if curl -sf -o /dev/null "http://127.0.0.1:$PORT/api/health"; then
-    echo "✅ Server 已就绪"
+  if curl -sf -o /dev/null "http://127.0.0.1:$BACKEND_PORT/api/health"; then
+    echo "✅ 后端就绪 (PID=$BACKEND_PID)"
     break
   fi
 done
 
-URL="http://127.0.0.1:$PORT/api/health"
-echo "🌐 健康检查: $URL"
+# -- 启动前端 --
+FRONTEND_DIR="$WEBAPP_DIR/frontend"
+if [ ! -d "$FRONTEND_DIR/node_modules" ]; then
+  echo "❌ 前端依赖未安装，请先: cd $FRONTEND_DIR && npm install"
+  read -n 1; exit 1
+fi
+
+echo "🚀 启动前端 (port $FRONTEND_PORT) ..."
+nohup bash -c "cd '$FRONTEND_DIR' && npx vite --host 127.0.0.1 --port $FRONTEND_PORT --strictPort" \
+  > /tmp/level-design-deck-frontend.log 2>&1 &
+FRONTEND_PID=$!
+
+for i in 1 2 3 4 5; do
+  sleep 1
+  if curl -sf -o /dev/null "http://127.0.0.1:$FRONTEND_PORT"; then
+    echo "✅ 前端就绪 (PID=$FRONTEND_PID)"
+    break
+  fi
+done
+
+# -- 打开浏览器 --
+URL="http://localhost:$FRONTEND_PORT"
+echo "🌐 打开 $URL"
 if command -v open >/dev/null 2>&1; then
   open "$URL"
 fi
 
 echo ""
 echo "─────────────────────────────────────────"
-echo "webapp 在后台运行（PID=$SERVER_PID, port=$PORT）"
-echo "前端 dev：cd frontend && pnpm dev → http://localhost:5173"
-echo "老 editor：http://127.0.0.1:$PORT/legacy/editor.html"
-echo "停止：kill $SERVER_PID  或  lsof -ti:$PORT | xargs kill"
+echo "后端: http://127.0.0.1:$BACKEND_PORT (PID=$BACKEND_PID)"
+echo "前端: $URL (PID=$FRONTEND_PID)"
+echo "日志: /tmp/level-design-deck-webapp.log"
+echo "      /tmp/level-design-deck-frontend.log"
+echo "停止: kill $BACKEND_PID $FRONTEND_PID"
 echo "─────────────────────────────────────────"

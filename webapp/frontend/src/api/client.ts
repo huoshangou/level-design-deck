@@ -15,6 +15,62 @@ import type {
 } from "./types";
 import type { AttachedFile, MessageQueued, SessionRecord } from "./chat-types";
 
+export type CcHistoryEntry = {
+  cc_session_id: string;
+  mtime: number;
+  size_bytes: number;
+  first_user: string;
+  user_turns: number;
+  assistant_turns: number;
+};
+
+export type HistoryMessage = {
+  kind: "user" | "assistant" | "tool_use" | "thinking";
+  text: string;
+  ts?: number | null;
+  tool?: string | null;
+};
+
+export type GeneratedDoc = {
+  filename: string;
+  url: string;
+  exists: boolean;
+  last_touched: number;
+};
+
+export type TaskKind = "poi" | "gameplay" | "prop";
+
+export type WorkspaceTask = {
+  name: string;
+  path: string;
+  kind: TaskKind;
+  desc: string;
+  status: string;
+  created_at: number;
+  doc_count: number;
+  material_count: number;
+  session_count: number;
+  children: WorkspaceTask[];
+};
+
+export type WorkspaceTree = {
+  root: string;
+  initialized: boolean;
+  tasks: WorkspaceTask[];
+};
+
+export type TaskDetail = {
+  name: string;
+  path: string;
+  kind: TaskKind;
+  desc: string;
+  status: string;
+  created_at: number;
+  docs: { filename: string; size_bytes: number; mtime: number }[];
+  materials: { filename: string; size_bytes: number; mtime: number }[];
+  sessions: { cc_session_id: string; note: string; linked_at: number }[];
+};
+
 class ApiError extends Error {
   constructor(public status: number, message: string) {
     super(message);
@@ -72,8 +128,42 @@ export const api = {
     request<RenderDeckResult>("/api/render-deck", { method: "POST", body: JSON.stringify({ level_id }) }),
 
   // ── Chat / Sessions ────────────────────────────────────────────────────
-  createSession: (opts?: { client_id?: string; namespace?: string }) =>
+  createSession: (opts?: { client_id?: string; namespace?: string; cc_session_id?: string }) =>
     request<SessionRecord>("/api/sessions", { method: "POST", body: JSON.stringify(opts ?? {}) }),
+
+  // ── CC history ────────────────────────────────────────────────────────
+  listCcHistory: (limit = 30) =>
+    request<CcHistoryEntry[]>(`/api/cc-history?limit=${limit}`),
+  getCcHistoryMessages: (cc_session_id: string) =>
+    request<HistoryMessage[]>(`/api/cc-history/${encodeURIComponent(cc_session_id)}/messages`),
+  getCcHistoryGeneratedDocs: (cc_session_id: string) =>
+    request<GeneratedDoc[]>(`/api/cc-history/${encodeURIComponent(cc_session_id)}/generated-docs`),
+
+  // ── Workspace ─────────────────────────────────────────────────────────
+  getWorkspace: () =>
+    request<WorkspaceTree>("/api/workspace"),
+  createTask: (body: { name: string; kind: "poi" | "gameplay" | "prop"; desc?: string; parent_path?: string }) =>
+    request<{ path: string; abs_path: string }>("/api/workspace/tasks", {
+      method: "POST", body: JSON.stringify(body),
+    }),
+  deleteTask: (task_path: string) =>
+    request<{ ok: true; deleted: string }>(`/api/workspace/tasks/${task_path.split("/").map(encodeURIComponent).join("/")}`, {
+      method: "DELETE",
+    }),
+  getTask: (task_path: string) =>
+    request<TaskDetail>(`/api/workspace/tasks/${task_path.split("/").map(encodeURIComponent).join("/")}`),
+  linkDocToTask: (task_path: string, src_filename: string, move = true) =>
+    request<{ ok: true }>(`/api/workspace/tasks/${task_path.split("/").map(encodeURIComponent).join("/")}/link-doc`, {
+      method: "POST", body: JSON.stringify({ src_filename, move }),
+    }),
+  importSpecs: () =>
+    request<{ created_tasks: string[]; imported_specs: { spec_id: string; task_path: string }[]; skipped: { spec_id: string; reason: string }[] }>(
+      "/api/workspace/import-specs", { method: "POST" },
+    ),
+  importDocs: () =>
+    request<{ imported_docs: { filename: string; task_path: string }[]; skipped: { filename: string; reason: string }[] }>(
+      "/api/workspace/import-docs", { method: "POST" },
+    ),
   listSessions: () =>
     request<{ sessions: SessionRecord[] }>("/api/sessions"),
   endSession: (client_id: string) =>

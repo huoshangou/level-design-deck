@@ -112,8 +112,8 @@ export default function MessageBubble({ msg }: Props) {
               alignItems: "center",
               gap: 4,
               padding: "4px 8px",
-              background: "#fffbe6",
-              border: "1px solid #d68b00",
+              background: "var(--review-bg)",
+              border: "1px solid var(--review)",
               borderRadius: 4,
             }}
           >
@@ -123,7 +123,7 @@ export default function MessageBubble({ msg }: Props) {
             style={{
               margin: "4px 0 0",
               padding: "6px 10px",
-              background: "#fffbe6",
+              background: "var(--review-bg)",
               borderRadius: "0 0 4px 4px",
               fontSize: 11,
               fontFamily: "var(--mono)",
@@ -148,7 +148,7 @@ export default function MessageBubble({ msg }: Props) {
           padding: "8px 10px",
           border: "1px solid var(--error)",
           borderRadius: 4,
-          background: "#fef2f2",
+          background: "var(--error-bg)",
           fontSize: 12,
           color: "var(--error)",
         }}

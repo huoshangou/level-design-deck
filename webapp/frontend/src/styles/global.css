@@ -1,17 +1,45 @@
+/* Design tokens — Anthropic-inspired warm minimalist (奶油底 + 焦糖橙) */
 :root {
-  --bg: #fafaf6;
-  --panel: #ffffff;
-  --border: #e0e0e0;
-  --text: #222;
-  --text-dim: #666;
-  --text-faint: #aaa;
-  --accent: #1a73e8;
-  --accent-bg: #eef4fc;
-  --error: #c0392b;
-  --review: #d68b00;
-  --section-bg: #f4f4f0;
+  /* 背景层 */
+  --bg: #F0EEE6;            /* 主底色：奶油白 */
+  --panel: #FFFFFF;         /* 主面板 */
+  --surface: #F7F5EE;       /* 次面板（卡片底） */
+  --section-bg: #FAF8F1;    /* 区块背景（更柔） */
+
+  /* 边框层（暖灰系，由细到强） */
+  --border: #E5E2D8;
+  --border-strong: #D6D2C4;
+  --border-faint: #EFECE3;
+
+  /* 文字层 */
+  --text: #191919;          /* 主文字 */
+  --text-dim: #6B6B6B;
+  --text-faint: #9C9C9C;
+
+  /* 强调色（焦糖橙 / 陶土） */
+  --accent: #CC785C;
+  --accent-hover: #B86B50;
+  --accent-bg: #FAF3E8;     /* 高亮米黄 */
+
+  /* 状态色（暖调谱系，避免霓虹感） */
+  --success: #1F7A4D;
+  --success-bg: #EDF5EF;
+  --error: #B33B3B;
+  --error-bg: #FBEDEC;
+  --review: #C4862E;        /* 警示橙棕 */
+  --review-bg: #FAF1DC;
+
+  /* 字体 */
+  --sans: "Inter", "Helvetica Neue", "Noto Sans SC", "PingFang SC", sans-serif;
+  --serif: "Source Serif Pro", "Iowan Old Style", "Noto Serif SC", "Songti SC", serif;
   --mono: "JetBrains Mono", "SF Mono", Menlo, monospace;
-  --sans: -apple-system, "Helvetica Neue", "Noto Sans SC", sans-serif;
+
+  /* 间距 / 圆角 / 阴影 */
+  --radius-sm: 4px;
+  --radius: 6px;
+  --radius-lg: 8px;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 * {
@@ -28,7 +56,9 @@ body {
   background: var(--bg);
   color: var(--text);
   font-size: 13px;
-  line-height: 1.5;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 button {
@@ -47,4 +77,10 @@ a:hover {
 
 input, textarea, select {
   font: inherit;
+}
+
+/* 选择高亮（焦糖色弱化版） */
+::selection {
+  background: rgba(204, 120, 92, 0.18);
+  color: var(--text);
 }

@@ -6,6 +6,7 @@ import SchemaForm, { type SchemaFormHandle } from "../components/form/SchemaForm
 import BubbleDiagramView from "../components/BubbleDiagramView";
 import SpatialLayoutView from "../components/SpatialLayoutView";
 import ChatSidebar from "../components/chat/ChatSidebar";
+import WorkspacePanel from "../components/WorkspacePanel";
 import { useEditorStore } from "../stores/editorStore";
 import { useSpec, useSpecList, useModuleSchema } from "../hooks/useSpec";
 import { useChecks } from "../hooks/useChecks";
@@ -68,6 +69,7 @@ export default function EditorPage() {
   const [alertsW, setAlertsW] = useState(280);
   const [previewW, setPreviewW] = useState(320);
   const [chatW, setChatW] = useState(300);
+  const [workspaceW, setWorkspaceW] = useState(280);
 
   // URL hash 同步
   useEffect(() => {
@@ -96,76 +98,98 @@ export default function EditorPage() {
         onToggleChat={() => setChatOpen((v) => !v)}
       />
       <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
-        {/* 告警栏 */}
-        <AlertsSidebar
-          alerts={alerts}
-          isLoading={checksLoading}
-          onJump={(p) => formRef.current?.jumpTo(p)}
-          width={alertsW}
-        />
-        <HDivider onDrag={(dx) => setAlertsW((w) => Math.max(160, Math.min(520, w + dx)))} />
-
-        {/* 主编辑区 */}
-        <main style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", minWidth: 200 }}>
-          {!currentSpecId ? (
-            <Empty />
-          ) : module === "bubble_diagram" ? (
-            <BubbleDiagramSplit
-              nodes={(localContent?.nodes as Parameters<typeof BubbleDiagramView>[0]["nodes"]) ?? []}
-              edges={(localContent?.edges as Parameters<typeof BubbleDiagramView>[0]["edges"]) ?? []}
-              schema={schema ?? null}
-              value={localContent}
-              onChange={updateField}
-              formRef={formRef}
-            />
-          ) : module === "spatial_layout" ? (
-            <SpatialLayoutView
-              specId={currentSpecId}
-              layout={localContent?.layout ?? null}
-              onSaved={() => {
-                void queryClient.invalidateQueries({ queryKey: ["spec", currentSpecId] });
-                setPreviewKey((k) => k + 1);
-              }}
-            />
-          ) : (
-            <div style={{ flex: 1, overflow: "auto" }}>
-              <SchemaForm
-                ref={formRef}
-                schema={schema ?? null}
-                value={localContent}
-                onChange={updateField}
-              />
-            </div>
-          )}
-        </main>
-
-        <HDivider onDrag={(dx) => setPreviewW((w) => Math.max(160, Math.min(600, w - dx)))} />
-
-        {/* 预览栏 */}
-        <section
-          style={{
-            width: previewW,
-            flexShrink: 0,
-            display: "flex",
-            flexDirection: "column",
-          }}
-        >
-          <h2 style={SECTION_TITLE}>
-            {docTemplateUrl
-              ? `📄 ${docTemplateLabel ?? "文档模板"}`
-              : `预览 · /outputs/${currentSpecId ?? "—"}.html`}
-          </h2>
-          <div style={{ flex: 1, overflow: "hidden" }}>
-            <PreviewPane specId={currentSpecId} refreshKey={previewKey} />
-          </div>
-        </section>
-
-        {chatOpen && (
+        {/* 模板模式：用 Workspace 面板替代告警栏 + spec 编辑区，预览栏占满 */}
+        {docTemplateUrl ? (
           <>
-            <HDivider onDrag={(dx) => setChatW((w) => Math.max(200, Math.min(560, w - dx)))} />
-            <div style={{ width: chatW, flexShrink: 0 }}>
-              <ChatSidebar />
-            </div>
+            <WorkspacePanel width={workspaceW} />
+            <HDivider onDrag={(dx) => setWorkspaceW((w) => Math.max(200, Math.min(520, w + dx)))} />
+            <section style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 200 }}>
+              <h2 style={SECTION_TITLE}>📄 {docTemplateLabel ?? "文档模板"}</h2>
+              <div style={{ flex: 1, overflow: "hidden" }}>
+                <PreviewPane specId={currentSpecId} refreshKey={previewKey} />
+              </div>
+            </section>
+            {chatOpen && (
+              <>
+                <HDivider onDrag={(dx) => setChatW((w) => Math.max(200, Math.min(560, w - dx)))} />
+                <div style={{ width: chatW, flexShrink: 0 }}>
+                  <ChatSidebar />
+                </div>
+              </>
+            )}
+          </>
+        ) : (
+          <>
+            {/* 告警栏 */}
+            <AlertsSidebar
+              alerts={alerts}
+              isLoading={checksLoading}
+              onJump={(p) => formRef.current?.jumpTo(p)}
+              width={alertsW}
+            />
+            <HDivider onDrag={(dx) => setAlertsW((w) => Math.max(160, Math.min(520, w + dx)))} />
+
+            {/* 主编辑区 */}
+            <main style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", minWidth: 200 }}>
+              {!currentSpecId ? (
+                <Empty />
+              ) : module === "bubble_diagram" ? (
+                <BubbleDiagramSplit
+                  nodes={(localContent?.nodes as Parameters<typeof BubbleDiagramView>[0]["nodes"]) ?? []}
+                  edges={(localContent?.edges as Parameters<typeof BubbleDiagramView>[0]["edges"]) ?? []}
+                  schema={schema ?? null}
+                  value={localContent}
+                  onChange={updateField}
+                  formRef={formRef}
+                />
+              ) : module === "spatial_layout" ? (
+                <SpatialLayoutView
+                  specId={currentSpecId}
+                  layout={localContent?.layout ?? null}
+                  onSaved={() => {
+                    void queryClient.invalidateQueries({ queryKey: ["spec", currentSpecId] });
+                    setPreviewKey((k) => k + 1);
+                  }}
+                />
+              ) : (
+                <div style={{ flex: 1, overflow: "auto" }}>
+                  <SchemaForm
+                    ref={formRef}
+                    schema={schema ?? null}
+                    value={localContent}
+                    onChange={updateField}
+                  />
+                </div>
+              )}
+            </main>
+
+            <HDivider onDrag={(dx) => setPreviewW((w) => Math.max(160, Math.min(600, w - dx)))} />
+
+            {/* 预览栏 */}
+            <section
+              style={{
+                width: previewW,
+                flexShrink: 0,
+                display: "flex",
+                flexDirection: "column",
+              }}
+            >
+              <h2 style={SECTION_TITLE}>
+                预览 · /outputs/{currentSpecId ?? "—"}.html
+              </h2>
+              <div style={{ flex: 1, overflow: "hidden" }}>
+                <PreviewPane specId={currentSpecId} refreshKey={previewKey} />
+              </div>
+            </section>
+
+            {chatOpen && (
+              <>
+                <HDivider onDrag={(dx) => setChatW((w) => Math.max(200, Math.min(560, w - dx)))} />
+                <div style={{ width: chatW, flexShrink: 0 }}>
+                  <ChatSidebar />
+                </div>
+              </>
+            )}
           </>
         )}
       </div>
@@ -178,9 +202,9 @@ export default function EditorPage() {
             padding: "10px 16px",
             fontSize: 12,
             color: "#fff",
-            background: toast.kind === "ok" ? "#1a73e8" : "var(--error)",
+            background: toast.kind === "ok" ? "var(--success)" : "var(--error)",
             borderRadius: 4,
-            boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+            boxShadow: "var(--shadow)",
             zIndex: 100,
           }}
         >

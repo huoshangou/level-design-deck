@@ -10,7 +10,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from backend.api import check, chat, doc_templates, docs, files, modules, render, sessions, specs
+from backend.api import cc_history, check, chat, doc_templates, docs, files, modules, render, sessions, specs, workspace
 from backend.deps import get_settings
 
 
@@ -45,6 +45,8 @@ def create_app() -> FastAPI:
     app.include_router(files.router)
     app.include_router(doc_templates.router)
     app.include_router(docs.router)
+    app.include_router(cc_history.router)
+    app.include_router(workspace.router)
 
     @app.get("/api/health")
     def health():
@@ -82,6 +84,12 @@ def create_app() -> FastAPI:
     docs_dir = s.project_root / "docs"
     docs_dir.mkdir(exist_ok=True)
     app.mount("/docs", StaticFiles(directory=str(docs_dir)), name="docs")
+
+    # 用户 workspace 资源文件（docs/材料/任务下文件）
+    from pathlib import Path as _Path
+    workspace_dir = _Path.home() / "Documents" / "level-design-workspace"
+    workspace_dir.mkdir(parents=True, exist_ok=True)
+    app.mount("/workspace-file", StaticFiles(directory=str(workspace_dir)), name="workspace-file")
 
     # frontend build 产物（Phase 1 后期写完前端会有；现在缺也无所谓）
     dist_dir = s.project_root / "webapp" / "frontend" / "dist"
