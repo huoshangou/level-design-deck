@@ -41,6 +41,12 @@
 
 ---
 
+## P3 · bat 端口被占时不自动 kill 老进程 ✅ 已修
+
+**现象**：重新双击 `start-webapp.bat` 时，老 uvicorn 还占着 8766，新启的失败。Mac 版（`.command`）一直是自动 kill 老进程重启的，bat 之前只做了"尝试 8767 兜底，两个都占就放弃"，跟 mac 行为不一致。
+
+**修复**：用 `for /f "tokens=5" %%P in ('netstat -ano ^| findstr ":PORT " ^| findstr LISTENING') do taskkill /F /PID %%P` 把占用 8766 的进程全部 kill，再 sleep 1s 给 TIME_WAIT 缓冲，然后正常启动。行为对齐 mac 版 `.command`。
+
 ## P2 · local_cc.py 硬编码 Mac 路径 ✅ 已修
 
 **位置**：`backend/agent/local_cc.py`
