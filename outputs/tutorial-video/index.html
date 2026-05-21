@@ -14,9 +14,10 @@ body{
 .scene{
   position:absolute;top:0;left:0;width:1920px;height:1080px;overflow:hidden;
 }
-#s1,#s2,#s3,#s4,#s5,#s6,#s7,#s8{background:#100D0A;opacity:0;}
+#s1,#s2,#s3,#s4,#s5,#s6,#s7,#s8,#s9,#s10,#s11{background:#100D0A;opacity:0;}
 #s1{z-index:1;}#s2{z-index:2;}#s3{z-index:3;}#s4{z-index:4;}
 #s5{z-index:5;}#s6{z-index:6;}#s7{z-index:7;}#s8{z-index:8;}
+#s9{z-index:9;}#s10{z-index:10;}#s11{z-index:11;}
 
 /* ── 三段式固定布局 ──────────────────────────────────────
    top-bar (80px)  → 暗色 header：章节编号 + 标题
@@ -316,10 +317,124 @@ body{
   box-shadow:0 0 0 4px rgba(217,119,87,0.3);z-index:100;
   pointer-events:none;
 }
+
+/* ── 新场景 S9-S11 专用样式 ── */
+
+/* 历史会话下拉面板 */
+.history-dropdown{
+  position:absolute;
+  background:#fff;border:1px solid var(--border);
+  border-radius:8px;box-shadow:0 8px 32px rgba(0,0,0,0.18);
+  width:320px;overflow:hidden;z-index:200;
+}
+.history-dropdown-head{
+  padding:8px 14px;background:var(--panel);border-bottom:1px solid var(--border);
+  font-size:11px;font-weight:700;color:var(--dim);letter-spacing:1px;
+  display:flex;align-items:center;gap:6px;
+}
+.history-item{
+  padding:9px 14px;border-bottom:1px solid #f0ede8;cursor:pointer;
+  display:flex;flex-direction:column;gap:2px;
+  transition:background 0.15s;
+}
+.history-item.active{background:#fff8f4;border-left:3px solid #D97757;}
+.history-item.hover-state{background:#fff3ec;}
+.history-item-title{font-size:12px;color:var(--text);font-weight:600;}
+.history-item-meta{font-size:10px;color:var(--faint);font-family:var(--mono);}
+.history-item-doc{font-size:10px;color:var(--acc);font-family:var(--mono);}
+
+/* Workspace 面板 */
+.workspace-panel{
+  width:240px;flex-shrink:0;background:var(--panel);
+  border-right:1px solid var(--border);display:flex;flex-direction:column;
+}
+.workspace-head{
+  padding:10px 14px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:6px;
+}
+.workspace-head-title{
+  font-size:11px;font-weight:700;color:var(--dim);letter-spacing:1px;flex:1;
+}
+.ws-add-btn{
+  font-size:11px;color:var(--acc);cursor:pointer;padding:2px 6px;
+  border:1px solid rgba(26,115,232,0.3);border-radius:3px;
+  background:var(--acc-bg);
+}
+.poi-group{padding:8px 10px;border-bottom:1px solid #f0ede8;}
+.poi-label{
+  font-size:10px;font-weight:700;color:#D97757;letter-spacing:0.5px;
+  display:flex;align-items:center;gap:4px;margin-bottom:6px;
+}
+.poi-label-icon{font-size:12px;}
+.task-item{
+  padding:5px 8px;margin-bottom:3px;border-radius:3px;
+  background:#fff;border:1px solid #e8e4de;font-size:10px;
+  color:var(--text);display:flex;align-items:center;gap:6px;cursor:pointer;
+}
+.task-item.gameplay{border-left:3px solid #1a73e8;}
+.task-item.prop{border-left:3px solid #0d9488;}
+.task-badge{
+  font-size:9px;padding:1px 5px;border-radius:2px;color:#fff;flex-shrink:0;
+}
+.task-badge-gp{background:#1a73e8;}
+.task-badge-pr{background:#0d9488;}
+.import-btn{
+  margin:10px 12px;padding:7px 12px;background:rgba(217,119,87,0.1);
+  border:1px solid rgba(217,119,87,0.35);border-radius:5px;
+  font-size:11px;color:#D97757;text-align:center;cursor:pointer;
+  font-family:var(--mono);letter-spacing:0.5px;
+}
+.import-success{
+  margin:4px 12px;padding:5px 10px;background:rgba(22,163,74,0.08);
+  border:1px solid rgba(22,163,74,0.28);border-radius:4px;
+  font-size:10px;color:#16a34a;font-family:var(--mono);
+}
+
+/* Mermaid 编辑器 modal */
+.mermaid-modal{
+  position:absolute;inset:42px 0 0 0;
+  background:rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;
+  z-index:200;
+}
+.mermaid-modal-box{
+  background:#fff;border-radius:10px;
+  box-shadow:0 16px 64px rgba(0,0,0,0.32);
+  width:860px;height:540px;display:flex;flex-direction:column;overflow:hidden;
+}
+.mermaid-modal-bar{
+  height:40px;background:#f4f2ef;border-bottom:1px solid #e0ddd8;
+  display:flex;align-items:center;padding:0 16px;gap:10px;flex-shrink:0;
+}
+.mermaid-modal-title{font-size:12px;font-weight:700;color:#374151;flex:1;}
+.mermaid-modal-hint{font-size:10px;color:#9ca3af;font-family:var(--mono);}
+.mermaid-close{font-size:11px;color:#6b7280;cursor:pointer;padding:2px 8px;border:1px solid #e0ddd8;border-radius:3px;}
+.mermaid-body{display:flex;flex:1;overflow:hidden;}
+.mermaid-code{
+  width:360px;flex-shrink:0;border-right:1px solid #e0ddd8;
+  background:#1e1e1e;padding:16px;font-family:"IBM Plex Mono",monospace;
+  font-size:11px;color:#d4d4d4;line-height:1.7;overflow-y:auto;
+}
+.mermaid-preview{flex:1;background:#fafaf8;padding:20px;display:flex;flex-direction:column;gap:10px;}
+.mermaid-preview-label{font-size:10px;color:#9ca3af;font-family:var(--mono);margin-bottom:4px;}
+
+/* inline node 编辑 input */
+.node-inline-input{
+  position:absolute;border:2px solid #1a73e8;border-radius:4px;
+  background:#fff;padding:3px 8px;font-size:11px;color:#1e293b;
+  font-family:"IBM Plex Mono",monospace;z-index:300;
+  box-shadow:0 0 0 3px rgba(26,115,232,0.2);min-width:64px;text-align:center;
+}
+
+/* 代码高亮色 */
+.code-key{color:#9cdcfe;}
+.code-str{color:#ce9178;}
+.code-kw{color:#c586c0;}
+.code-comment{color:#6a9955;}
+.code-changed{color:#4ec9b0;background:rgba(78,201,176,0.12);border-radius:2px;padding:0 2px;}
 </style>
 </head>
 <body>
-<div id="root" data-composition-id="webapp-tutorial" data-width="1920" data-height="1080" data-start="0" data-duration="62">
+<div id="root" data-composition-id="webapp-tutorial" data-width="1920" data-height="1080" data-start="0" data-duration="102">
 
 <!-- ══════════════════════════════════════════════════════════
      S1 · 标题卡 (0–8s)
@@ -949,6 +1064,284 @@ start-webapp.bat              :: 或双击此文件</pre>
   <div id="s8-url" style="position:absolute;top:896px;left:0;width:1920px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:14px;color:#D97757;white-space:nowrap;letter-spacing:1px;">github.com/huoshangou/level-design-deck</div>
 </div>
 
+<!-- ══════════════════════════════════════════════════════════
+     S9 · 历史会话恢复 (62 – 75s)
+════════════════════════════════════════════════════════════ -->
+<div id="s9" class="scene">
+  <div class="top-bar">
+    <div class="ch-badge mono">07 · 新功能</div>
+    <div class="scene-title">历史会话恢复 · Chat 顶部下拉选择过去对话</div>
+  </div>
+
+  <div class="browser" id="s9-browser" style="top:88px;left:120px;width:1680px;height:812px;">
+    <div class="browser-bar">
+      <div class="browser-dot b-red"></div><div class="browser-dot b-yellow"></div><div class="browser-dot b-green"></div>
+      <div class="browser-url">127.0.0.1:5173/</div>
+    </div>
+    <div class="topbar">
+      <span class="topbar-brand">level-design-deck</span>
+      <div class="spec-picker">bubble_diagram_test_warehouse ▾</div>
+      <span style="flex:1"></span>
+      <div class="tb-btn">💾 保存</div><div class="tb-btn">🎨 渲染</div>
+    </div>
+    <div style="display:flex;height:calc(100% - 90px);">
+      <!-- 主区简化 -->
+      <div style="flex:1;background:#f4f2ef;display:flex;align-items:center;justify-content:center;">
+        <div style="text-align:center;color:#9ca3af;font-size:13px;">
+          <div style="font-size:28px;margin-bottom:8px;">⬝⬝⬝</div>
+          Spec 表单编辑区
+        </div>
+      </div>
+      <!-- Chat 栏放大 -->
+      <div style="width:480px;flex-shrink:0;border-left:1px solid #e0ddd8;display:flex;flex-direction:column;position:relative;">
+        <!-- Chat header with history dropdown trigger -->
+        <div class="chat-header" style="position:relative;">
+          <div class="ws-dot"></div>
+          <div style="display:flex;flex-direction:column;flex:1;gap:1px;">
+            <span class="chat-session mono" style="font-size:11px;">📜 仓库夜袭 · 2026-05-19 14:32</span>
+            <span style="font-size:9px;color:#9ca3af;font-family:var(--mono);">点击切换历史会话 ▾</span>
+          </div>
+          <span style="font-size:11px;color:#1a73e8;cursor:pointer;">+ 新建</span>
+        </div>
+        <!-- History dropdown (overlaid, triggered by click) -->
+        <div class="history-dropdown" id="s9-dropdown" style="top:56px;left:0;right:0;width:auto;opacity:0;">
+          <div class="history-dropdown-head">📜 历史会话</div>
+          <div class="history-item active">
+            <div class="history-item-title">仓库夜袭 · 分析节点结构</div>
+            <div class="history-item-meta">2026-05-19 14:32 · bubble_diagram_test_warehouse</div>
+            <div class="history-item-doc">→ docs/【玩法】仓库夜袭-设计文档.html</div>
+          </div>
+          <div class="history-item" id="s9-hist2">
+            <div class="history-item-title">废弃神庙 · 灯光需求审查</div>
+            <div class="history-item-meta">2026-05-18 10:15 · lighting_req_abandoned_temple</div>
+            <div class="history-item-doc">→ docs/【灯光】废弃神庙-灯光需求.html</div>
+          </div>
+          <div class="history-item">
+            <div class="history-item-title">大厦顶层 · 空间拓扑生成</div>
+            <div class="history-item-meta">2026-05-17 16:44 · spatial_layout_rooftop</div>
+            <div class="history-item-doc">→ docs/【空间】大厦顶层-布局.html</div>
+          </div>
+        </div>
+        <!-- Chat messages (after restore) -->
+        <div style="flex:1;overflow:hidden;padding:12px;display:flex;flex-direction:column;gap:6px;">
+          <div class="msg-tool" id="s9-restore-msg" style="opacity:0;font-size:11px;border-color:#D97757;background:rgba(217,119,87,0.06);color:#D97757;">
+            ✦ 已恢复历史会话 · 废弃神庙 · 灯光需求审查
+          </div>
+          <div class="msg-user" id="s9-msg1" style="opacity:0;font-size:12px;">分析一下废弃神庙的灯光节点结构是否合理？</div>
+          <div class="msg-tool" id="s9-msg2" style="opacity:0;font-size:11px;">🔧 Read · specs/lighting_req_abandoned_temple.spec.json</div>
+          <div class="msg-assistant" id="s9-msg3" style="opacity:0;font-size:12px;line-height:1.6;">神庙主殿 intent.mood 字段仍为占位符，regions[0].color 缺失。建议先补填这两个字段再渲染…</div>
+        </div>
+        <!-- Doc auto-open hint -->
+        <div id="s9-doc-hint" style="opacity:0;padding:8px 12px;border-top:1px solid #e0ddd8;background:#fff8f4;">
+          <div style="font-size:10px;color:#D97757;font-family:var(--mono);">📄 自动打开关联文档 → docs/【灯光】废弃神庙-灯光需求.html</div>
+        </div>
+        <div class="chat-input-row">
+          <div class="chat-input" style="font-size:12px;">输入消息，Enter 发送</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cursor-dot" id="s9-cursor" style="opacity:0;top:300px;left:1380px;"></div>
+  <div class="bottom-strip">
+    <div class="caption">Chat 顶部下拉 · 选择历史会话 → 自动恢复消息列表 + 打开当时生成的文档</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     S10 · Workspace 设计资产管理 (75 – 88s)
+════════════════════════════════════════════════════════════ -->
+<div id="s10" class="scene">
+  <div class="top-bar">
+    <div class="ch-badge mono">08 · 新功能</div>
+    <div class="scene-title">Workspace 面板 · POI 嵌套任务 + 一键导入归档</div>
+  </div>
+
+  <div class="browser" id="s10-browser" style="top:88px;left:120px;width:1680px;height:812px;">
+    <div class="browser-bar">
+      <div class="browser-dot b-red"></div><div class="browser-dot b-yellow"></div><div class="browser-dot b-green"></div>
+      <div class="browser-url">127.0.0.1:5173/?mode=template</div>
+    </div>
+    <div class="topbar">
+      <span class="topbar-brand">level-design-deck</span>
+      <div class="spec-picker">level_overview_abandoned_temple ▾</div>
+      <span style="flex:1"></span>
+      <span style="font-size:10px;color:#D97757;font-family:var(--mono);background:rgba(217,119,87,0.1);padding:3px 8px;border-radius:3px;">📁 模板模式</span>
+      <div class="tb-btn">💾 保存</div><div class="tb-btn tb-btn-doc">📄 文档模板</div>
+    </div>
+    <div style="display:flex;height:calc(100% - 90px);">
+      <!-- Workspace 面板（替代告警栏） -->
+      <div class="workspace-panel" id="s10-workspace">
+        <div class="workspace-head">
+          <div class="workspace-head-title">WORKSPACE</div>
+          <div class="ws-add-btn">+ POI</div>
+        </div>
+        <!-- POI 组：废弃神庙 -->
+        <div class="poi-group">
+          <div class="poi-label"><span class="poi-label-icon">📍</span>废弃神庙</div>
+          <div class="task-item gameplay">
+            <span class="task-badge task-badge-gp">玩法</span>
+            <span style="flex:1;">仓库夜袭设计文档</span>
+          </div>
+          <div class="task-item gameplay">
+            <span class="task-badge task-badge-gp">玩法</span>
+            <span style="flex:1;">boss 战设计文档</span>
+          </div>
+          <div class="task-item prop">
+            <span class="task-badge task-badge-pr">物件</span>
+            <span style="flex:1;">神庙道具需求</span>
+          </div>
+        </div>
+        <!-- POI 组：大厦顶层 -->
+        <div class="poi-group">
+          <div class="poi-label"><span class="poi-label-icon">📍</span>大厦顶层</div>
+          <div class="task-item gameplay">
+            <span class="task-badge task-badge-gp">玩法</span>
+            <span style="flex:1;">狙击阻截设计文档</span>
+          </div>
+          <div class="task-item prop" id="s10-prop-item">
+            <span class="task-badge task-badge-pr">物件</span>
+            <span style="flex:1;">屋顶物件需求</span>
+          </div>
+        </div>
+        <!-- 导入按钮 -->
+        <div style="flex:1;"></div>
+        <div class="import-btn" id="s10-import-btn">📥 导入 specs/docs</div>
+        <div class="import-success" id="s10-import-ok" style="opacity:0;margin-bottom:10px;">
+          ✓ 5 个文档按 level_id 自动归档完成
+        </div>
+      </div>
+      <!-- 主区 -->
+      <div style="flex:1;background:#f4f2ef;display:flex;flex-direction:column;padding:20px;overflow-y:auto;">
+        <div class="fieldset-box">
+          <div class="fieldset-legend">meta</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <div><div class="form-label">level_id</div><div class="field-input mono" style="font-size:11px;">abandoned_temple</div></div>
+            <div><div class="form-label">version</div><div class="field-input mono" style="font-size:11px;">0.2.1</div></div>
+          </div>
+        </div>
+        <div class="fieldset-box">
+          <div class="fieldset-legend">workspace · 已关联资产</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <div style="padding:4px 10px;background:#dbeafe;border:1px solid #93c5fd;border-radius:12px;font-size:10px;color:#1d4ed8;">玩法×2</div>
+            <div style="padding:4px 10px;background:#ccfbf1;border:1px solid #5eead4;border-radius:12px;font-size:10px;color:#0f766e;">物件×1</div>
+            <div style="padding:4px 10px;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:12px;font-size:10px;color:#475569;">灯光×0</div>
+          </div>
+        </div>
+      </div>
+      <!-- 预览 -->
+      <div style="width:360px;flex-shrink:0;border-left:1px solid #e0ddd8;display:flex;flex-direction:column;">
+        <div class="col-preview-title">预览 · level_overview</div>
+        <div style="flex:1;padding:14px;font-size:11px;color:#9ca3af;display:flex;align-items:center;justify-content:center;">
+          <div style="text-align:center;line-height:1.8;">
+            模板模式<br/>选择文档模板<br/>Chat 引导填充
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cursor-dot" id="s10-cursor" style="opacity:0;top:640px;left:250px;"></div>
+  <div class="bottom-strip">
+    <div class="caption">模板模式左侧 WORKSPACE 面板 · 建 POI → 嵌套玩法/物件任务 · 📥 导入一键按 level_id 自动归档</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     S11 · Mermaid 双击改字 (88 – 100s)
+════════════════════════════════════════════════════════════ -->
+<div id="s11" class="scene">
+  <div class="top-bar">
+    <div class="ch-badge mono">09 · 新功能</div>
+    <div class="scene-title">Mermaid 双击改字 · inline 编辑自动同步源码</div>
+  </div>
+
+  <div class="browser" id="s11-browser" style="top:88px;left:120px;width:1680px;height:812px;">
+    <div class="browser-bar">
+      <div class="browser-dot b-red"></div><div class="browser-dot b-yellow"></div><div class="browser-dot b-green"></div>
+      <div class="browser-url">127.0.0.1:5173/#spec=bubble_diagram_test_warehouse</div>
+    </div>
+    <div class="topbar">
+      <span class="topbar-brand">level-design-deck</span>
+      <div class="spec-picker">bubble_diagram_test_warehouse ▾</div>
+      <span style="flex:1"></span>
+      <div class="tb-btn">💾 保存</div><div class="tb-btn">🎨 渲染</div>
+    </div>
+    <!-- Mermaid 编辑器 modal 覆盖整个浏览器内容区 -->
+    <div class="mermaid-modal">
+      <div class="mermaid-modal-box">
+        <div class="mermaid-modal-bar">
+          <span class="mermaid-modal-title">Mermaid 编辑器 · bubble_diagram_test_warehouse</span>
+          <span class="mermaid-modal-hint">双击节点直接改名</span>
+          <span class="mermaid-close">✕ 关闭</span>
+        </div>
+        <div class="mermaid-body">
+          <!-- 左：代码区 -->
+          <div class="mermaid-code">
+            <div><span class="code-kw">graph</span> LR</div>
+            <div>&nbsp;&nbsp;<span class="code-comment">%% Phase I 潜入</span></div>
+            <div>&nbsp;&nbsp;<span class="code-key">entry</span>[<span class="code-str">"入库"</span>]</div>
+            <div>&nbsp;&nbsp;<span class="code-key">patrol</span>[<span class="code-str">"巡逻规避"</span>]</div>
+            <div>&nbsp;&nbsp;<span class="code-comment">%% Phase II 行窃</span></div>
+            <div>&nbsp;&nbsp;<span class="code-key">vault</span>[<span class="code-str">"金库"</span>]</div>
+            <div id="s11-code-line" style="transition:color 0.3s;">&nbsp;&nbsp;<span class="code-key">safe</span>{<span class="code-str" id="s11-code-str">"保险柜"</span>}</div>
+            <div>&nbsp;&nbsp;<span class="code-comment">%% Phase III 撤离</span></div>
+            <div>&nbsp;&nbsp;<span class="code-key">exit_node</span>[<span class="code-str">"撤退"</span>]</div>
+            <div>&nbsp;&nbsp;<span class="code-key">entry</span> --&gt; <span class="code-key">patrol</span></div>
+            <div>&nbsp;&nbsp;<span class="code-key">patrol</span> --&gt; <span class="code-key">vault</span></div>
+            <div>&nbsp;&nbsp;<span class="code-key">vault</span> --&gt; <span class="code-key">safe</span></div>
+            <div>&nbsp;&nbsp;<span class="code-key">safe</span> --&gt; <span class="code-key">exit_node</span></div>
+          </div>
+          <!-- 右：预览区（SVG 模拟图） -->
+          <div class="mermaid-preview">
+            <div class="mermaid-preview-label">预览 · 双击节点可直接改名</div>
+            <!-- 模拟 Mermaid 渲染结果 -->
+            <svg viewBox="0 0 500 160" style="width:100%;max-height:160px;">
+              <defs>
+                <marker id="am" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                  <path d="M0,0 L6,3 L0,6 Z" fill="#94a3b8"/>
+                </marker>
+              </defs>
+              <!-- nodes -->
+              <rect x="10" y="60" width="64" height="32" rx="16" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.5"/>
+              <text x="42" y="80" text-anchor="middle" font-size="11" fill="#0369a1">入库</text>
+
+              <rect x="98" y="60" width="76" height="32" rx="4" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.5"/>
+              <text x="136" y="80" text-anchor="middle" font-size="11" fill="#1e293b">巡逻规避</text>
+
+              <rect x="198" y="60" width="52" height="32" rx="4" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.5"/>
+              <text x="224" y="80" text-anchor="middle" font-size="11" fill="#1e293b">金库</text>
+
+              <!-- 保险柜节点 - 双击目标，先正常 -->
+              <g id="s11-safe-node">
+                <polygon points="294,56 330,56 346,76 330,96 294,96 278,76" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.5"/>
+                <text id="s11-safe-text" x="312" y="80" text-anchor="middle" font-size="11" fill="#92400e">保险柜</text>
+              </g>
+
+              <rect x="366" y="60" width="64" height="32" rx="16" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+              <text x="398" y="80" text-anchor="middle" font-size="11" fill="#15803d">撤退</text>
+
+              <!-- edges -->
+              <line x1="74" y1="76" x2="96" y2="76" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#am)"/>
+              <line x1="174" y1="76" x2="196" y2="76" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#am)"/>
+              <line x1="250" y1="76" x2="276" y2="76" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#am)"/>
+              <line x1="348" y1="76" x2="364" y2="76" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#am)"/>
+            </svg>
+            <!-- inline input 覆盖在节点上（初始隐藏） -->
+            <div class="node-inline-input" id="s11-inline-input"
+                 style="opacity:0;top:128px;left:234px;position:absolute;">密码柜</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cursor-dot" id="s11-cursor" style="opacity:0;top:388px;left:776px;"></div>
+  <div class="bottom-strip">
+    <div class="caption">Mermaid 编辑器 modal · 双击节点弹出 inline input 直接改名 · 自动同步左侧源码并重新渲染</div>
+  </div>
+</div>
+
 </div><!-- /root -->
 
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
@@ -1078,6 +1471,98 @@ tl.from("#s8-tagline", { y: 18, opacity: 0, duration: 0.55, ease: "power3.out" }
 tl.from("#s8-url",     { y: 14, opacity: 0, duration: 0.45, ease: "power2.out" }, 56.3);
 // 最终柔和淡出
 hide("#s8", 61.2);
+
+/* ── S9 · 历史会话恢复 (62.0 – 74.5s) ─────────────────── */
+show("#s9", 62.0); hide("#s8", 62.0);
+tl.from("#s9 .ch-badge",    { x: -28, opacity: 0, duration: 0.5, ease: "power3.out" }, 62.4);
+tl.from("#s9 .scene-title", { x: -18, opacity: 0, duration: 0.5, ease: "power2.out" }, 62.65);
+tl.from("#s9-browser",      { y: 36,  opacity: 0, duration: 0.7, ease: "expo.out"   }, 62.9);
+tl.from("#s9 .caption",     { y: 18,  opacity: 0, duration: 0.5, ease: "power2.out" }, 63.5);
+// 光标移到 Chat header 下拉处
+tl.to("#s9-cursor", { opacity: 1, duration: 0.25 }, 64.4);
+tl.to("#s9-cursor", { top: 196, left: 1350, duration: 0.55, ease: "power2.inOut" }, 64.65);
+// 双击
+tl.to("#s9-cursor", { scale: 0.7, duration: 0.08 }, 65.3);
+tl.to("#s9-cursor", { scale: 1,   duration: 0.15, ease: "back.out(3)" }, 65.38);
+tl.to("#s9-cursor", { scale: 0.7, duration: 0.08 }, 65.55);
+tl.to("#s9-cursor", { scale: 1,   duration: 0.15, ease: "back.out(3)" }, 65.63);
+// 下拉面板出现
+tl.fromTo("#s9-dropdown", { opacity: 0, y: -12 }, { opacity: 1, y: 0, duration: 0.35, ease: "power3.out" }, 65.8);
+// 光标移到第二条历史
+tl.to("#s9-cursor", { top: 272, left: 1250, duration: 0.5, ease: "power2.inOut" }, 66.5);
+// 悬停高亮
+tl.to("#s9-hist2", { backgroundColor: "#fff3ec", duration: 0.2 }, 67.0);
+// 点击选中
+tl.to("#s9-cursor", { scale: 0.7, duration: 0.1 }, 67.5);
+tl.to("#s9-cursor", { scale: 1,   duration: 0.2, ease: "back.out(3)" }, 67.6);
+// 下拉收起，恢复消息出现
+tl.to("#s9-dropdown", { opacity: 0, y: -8, duration: 0.3, ease: "power2.in" }, 67.85);
+tl.to("#s9-cursor",   { opacity: 0, duration: 0.3 }, 68.2);
+tl.to("#s9-restore-msg", { opacity: 1, duration: 0.4, ease: "power2.out" }, 68.5);
+tl.to("#s9-msg1",        { opacity: 1, duration: 0.4, ease: "power2.out" }, 69.1);
+tl.to("#s9-msg2",        { opacity: 1, duration: 0.35, ease: "power2.out" }, 69.65);
+tl.to("#s9-msg3",        { opacity: 1, duration: 0.5, ease: "power3.out" }, 70.15);
+// 底部文档自动打开提示
+tl.to("#s9-doc-hint",    { opacity: 1, duration: 0.45, ease: "power2.out" }, 71.4);
+
+/* ── S10 · Workspace (74.2 – 87.0s) ────────────────────── */
+show("#s10", 74.2); hide("#s9", 74.2);
+tl.from("#s10 .ch-badge",    { x: -28, opacity: 0, duration: 0.5, ease: "power3.out" }, 74.6);
+tl.from("#s10 .scene-title", { x: -18, opacity: 0, duration: 0.5, ease: "power2.out" }, 74.85);
+tl.from("#s10-browser",      { y: 36,  opacity: 0, duration: 0.7, ease: "expo.out"   }, 75.1);
+tl.from("#s10 .caption",     { y: 18,  opacity: 0, duration: 0.5, ease: "power2.out" }, 75.7);
+// Workspace 面板从左侧滑入
+tl.from("#s10-workspace",    { x: -36, opacity: 0, duration: 0.6, ease: "expo.out"   }, 76.2);
+// POI 条目逐个浮现
+tl.from(".poi-group",        { y: 14, opacity: 0, duration: 0.45, stagger: 0.18, ease: "power2.out" }, 76.9);
+tl.from(".task-item",        { x: -10, opacity: 0, duration: 0.3, stagger: 0.08, ease: "power2.out" }, 77.4);
+// 光标移到导入按钮
+tl.to("#s10-cursor", { opacity: 1, duration: 0.25 }, 79.2);
+tl.to("#s10-cursor", { top: 648, left: 256, duration: 0.6, ease: "power2.inOut" }, 79.45);
+// 高亮导入按钮
+tl.to("#s10-import-btn", { backgroundColor: "rgba(217,119,87,0.22)", scale: 1.04, duration: 0.2, ease: "power2.out" }, 80.15);
+// 点击
+tl.to("#s10-cursor", { scale: 0.7, duration: 0.1 }, 80.4);
+tl.to("#s10-cursor", { scale: 1,   duration: 0.2, ease: "back.out(3)" }, 80.5);
+tl.to("#s10-import-btn", { backgroundColor: "rgba(217,119,87,0.1)", scale: 1, duration: 0.25 }, 80.75);
+// 导入成功提示
+tl.fromTo("#s10-import-ok", { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 81.1);
+tl.to("#s10-cursor",         { opacity: 0, duration: 0.3 }, 82.0);
+
+/* ── S11 · Mermaid 双击改字 (86.8 – 100.0s) ────────────── */
+show("#s11", 86.8); hide("#s10", 86.8);
+tl.from("#s11 .ch-badge",    { x: -28, opacity: 0, duration: 0.5, ease: "power3.out" }, 87.2);
+tl.from("#s11 .scene-title", { x: -18, opacity: 0, duration: 0.5, ease: "power2.out" }, 87.45);
+tl.from("#s11-browser",      { y: 36,  opacity: 0, duration: 0.7, ease: "expo.out"   }, 87.7);
+tl.from("#s11 .caption",     { y: 18,  opacity: 0, duration: 0.5, ease: "power2.out" }, 88.3);
+// modal 从缩放浮现
+tl.from(".mermaid-modal-box", { scale: 0.94, opacity: 0, duration: 0.55, ease: "back.out(1.5)" }, 88.8);
+tl.from(".mermaid-code > div", { x: -10, opacity: 0, duration: 0.3, stagger: 0.04, ease: "power2.out" }, 89.4);
+// 光标进场，移到保险柜节点（SVG 在 modal 右侧预览区，估算绝对位置）
+tl.to("#s11-cursor", { opacity: 1, duration: 0.25 }, 90.6);
+tl.to("#s11-cursor", { top: 380, left: 1050, duration: 0.6, ease: "power2.inOut" }, 90.85);
+// 双击保险柜节点
+tl.to("#s11-cursor", { scale: 0.7, duration: 0.08 }, 91.55);
+tl.to("#s11-cursor", { scale: 1,   duration: 0.15, ease: "back.out(3)" }, 91.63);
+tl.to("#s11-cursor", { scale: 0.7, duration: 0.08 }, 91.82);
+tl.to("#s11-cursor", { scale: 1,   duration: 0.15, ease: "back.out(3)" }, 91.9);
+// 节点高亮 (stroke 变蓝)
+tl.to("#s11-safe-node polygon", { stroke: "#1a73e8", strokeWidth: 2.5, fill: "#dbeafe", duration: 0.25 }, 92.1);
+// inline input 弹出
+tl.fromTo("#s11-inline-input", { opacity: 0, scale: 0.85 }, { opacity: 1, scale: 1, duration: 0.3, ease: "back.out(2)" }, 92.4);
+tl.to("#s11-cursor",           { opacity: 0, duration: 0.2 }, 92.8);
+// 文字逐字打入"密码柜"（模拟效果：先显示"密"再整体变）
+// inline input 内文字无法逐字动，改为先有光标再整体换色确认
+tl.to("#s11-safe-text",  { opacity: 0, duration: 0.2 }, 94.6);
+// 源码行变色（表示已同步）
+tl.to("#s11-code-str",   { color: "#4ec9b0", duration: 0.35, ease: "power2.out" }, 95.0);
+// 节点重新渲染：label 切换为"密码柜"
+tl.set("#s11-safe-text", { textContent: "密码柜" }, 95.4);
+tl.to("#s11-safe-text",  { opacity: 1, duration: 0.3, ease: "power2.out" }, 95.4);
+tl.to("#s11-inline-input", { opacity: 0, duration: 0.25 }, 95.5);
+tl.to("#s11-safe-node polygon", { stroke: "#ca8a04", strokeWidth: 1.5, fill: "#fef9c3", duration: 0.35 }, 95.8);
+// 最终淡出
+hide("#s11", 99.2);
 
 window.__timelines["webapp-tutorial"] = tl;
 </script>
