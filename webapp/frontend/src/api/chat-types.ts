@@ -63,6 +63,11 @@ export type SessionEndedPayload = {
   reason: string;
 };
 
+export type CcInterruptedPayload = {
+  type: "cc_interrupted";
+  cc_session_id: string | null;
+};
+
 export type EventPayload =
   | SessionStartedPayload
   | CcOutputDeltaPayload
@@ -72,7 +77,8 @@ export type EventPayload =
   | CcMessageCompletePayload
   | SpecUpdatedPayload
   | AgentErrorPayload
-  | SessionEndedPayload;
+  | SessionEndedPayload
+  | CcInterruptedPayload;
 
 // ── WS envelope ─────────────────────────────────────────────────────────────
 

@@ -125,7 +125,10 @@ async def ws_chat(websocket: WebSocket, client_id: str):
                     msg = {}
                 if msg.get("type") == "ping":
                     await websocket.send_text(json.dumps({"type": "pong"}))
-                # "interrupt" — v1 stub: received, not acted on
+                elif msg.get("type") == "interrupt":
+                    # 让 AgentRunner 杀活跃 cc 子进程 / 给 gateway 推 cancel；
+                    # 子进程退出后 send_message 的 finally 会 yield CcInterrupted
+                    agent.interrupt(client_id)
 
             if queue_task in done:
                 text = queue_task.result()

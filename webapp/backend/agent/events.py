@@ -81,9 +81,16 @@ class SessionEnded:
     type: str = "session_ended"
 
 
+@dataclass
+class CcInterrupted:
+    """用户主动 stop 当前 turn 时发出。区别于 AgentError —— 这不是错误，是受控终止。"""
+    cc_session_id: str | None = None
+    type: str = "cc_interrupted"
+
+
 AgentEvent = Union[
     SessionStarted, CcOutputDelta, CcThinking, ToolUseStart, ToolUseEnd,
-    CcMessageComplete, SpecUpdated, AgentError, SessionEnded,
+    CcMessageComplete, SpecUpdated, AgentError, SessionEnded, CcInterrupted,
 ]
 
 

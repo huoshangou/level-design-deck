@@ -16,8 +16,8 @@ from typing import AsyncIterator, Sequence
 
 from backend.agent.base import AgentRunner
 from backend.agent.events import (
-    AgentError, AgentEvent, CcMessageComplete, CcOutputDelta, CcThinking,
-    SessionStarted, ToolUseStart,
+    AgentError, AgentEvent, CcInterrupted, CcMessageComplete, CcOutputDelta,
+    CcThinking, SessionStarted, ToolUseStart,
 )
 
 DEFAULT_MODEL = "claude-haiku-4-5"
@@ -102,12 +102,28 @@ class LocalCcRunner(AgentRunner):
     def end_session(self, client_id: str) -> None:
         self._sessions.pop(client_id, None)
 
+    def interrupt(self, client_id: str) -> bool:
+        """杀掉 client_id 当前活跃的 cc 子进程（如果有）。"""
+        meta = self._sessions.get(client_id)
+        if not meta:
+            return False
+        proc = meta.get("proc")
+        if proc is None or proc.returncode is not None:
+            return False
+        meta["interrupted"] = True
+        try:
+            proc.terminate()
+        except ProcessLookupError:
+            return False
+        return True
+
     async def send_message(self, client_id: str, text: str) -> AsyncIterator[AgentEvent]:
         if client_id not in self._sessions:
             yield AgentError(code="session_not_found", message=f"client_id={client_id}", recoverable=False)
             return
 
         meta = self._sessions[client_id]
+        meta["interrupted"] = False  # 每个 turn 重置 flag，不让上一次的 interrupt 残留
         cc_sid = meta.get("cc_session_id")
         is_first_turn = cc_sid is None
 
@@ -177,6 +193,8 @@ class LocalCcRunner(AgentRunner):
                 proc = await asyncio.create_subprocess_shell(cmd_str, **common_kwargs)
             else:
                 proc = await asyncio.create_subprocess_exec(*cmd, **common_kwargs)
+            # 暴露 proc 给 interrupt() —— 后者按 client_id 找到 meta，杀这个 proc
+            meta["proc"] = proc
         except FileNotFoundError:
             yield AgentError(
                 code="claude_cli_missing",
@@ -253,7 +271,12 @@ class LocalCcRunner(AgentRunner):
             rc = await proc.wait()
             meta["last_active"] = time.time()
             meta["turn_count"] += 1
-            if rc != 0:
+            meta.pop("proc", None)  # turn 结束清掉 proc 句柄
+            was_interrupted = meta.pop("interrupted", False)
+            if was_interrupted:
+                # 用户主动 stop —— 不当作 error 报，发 CcInterrupted 让前端显示 "已停止"
+                yield CcInterrupted(cc_session_id=meta.get("cc_session_id"))
+            elif rc != 0:
                 assert proc.stderr is not None
                 stderr_bytes = await proc.stderr.read()
                 # Windows 上 cc / cmd.exe 的错误信息可能是 cp936（系统 ACP）而非 UTF-8，

@@ -23,11 +23,15 @@ export default function ChatSidebar() {
     isStreaming,
     awaitingResponse,
     awaitingStartTs,
+    lastActivityTs,
+    lastActivityLabel,
+    interruptRequested,
     inputPrefill,
     initSession,
     loadHistorySession,
     addUserMessage,
     markSendFailed,
+    requestInterrupt,
     clearInputPrefill,
     reset,
     uploadFile,
@@ -101,6 +105,7 @@ export default function ChatSidebar() {
     return () => clearInterval(id);
   }, [awaitingResponse]);
   const elapsedSec = awaitingStartTs ? Math.max(0, Math.floor((Date.now() - awaitingStartTs) / 1000)) : 0;
+  const sinceLastActivitySec = lastActivityTs ? Math.max(0, Math.floor((Date.now() - lastActivityTs) / 1000)) : null;
 
   // 消费预填充指令（点开模板时触发）
   useEffect(() => {
@@ -158,6 +163,9 @@ export default function ChatSidebar() {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       void handleSend();
+    } else if (e.key === "Escape" && (isStreaming || awaitingResponse)) {
+      e.preventDefault();
+      requestInterrupt();
     }
   }
 
@@ -388,9 +396,14 @@ export default function ChatSidebar() {
             >
               <span style={{ marginRight: 4 }}>⏳</span>
               cc 处理中… {elapsedSec}s
+              {lastActivityLabel && sinceLastActivitySec !== null && (
+                <div style={{ marginTop: 4, fontSize: 11, color: "var(--text-dim)" }}>
+                  最近: {lastActivityLabel} · {sinceLastActivitySec}s 前
+                </div>
+              )}
               {elapsedSec >= 60 && (
                 <div style={{ marginTop: 4, fontSize: 11, color: "var(--review)" }}>
-                  ⚠️ 已等待 {elapsedSec}s，cc 可能卡住，可以点「+ 新建」重试
+                  ⚠️ 已等待 {elapsedSec}s，cc 可能卡住，可以点「停止」终止 turn
                 </div>
               )}
             </div>
@@ -432,23 +445,44 @@ export default function ChatSidebar() {
               lineHeight: 1.5,
             }}
           />
-          <button
-            onClick={() => void handleSend()}
-            disabled={disabled || !input.trim()}
-            style={{
-              padding: "6px 12px",
-              fontSize: 12,
-              border: "none",
-              borderRadius: 4,
-              background: disabled || !input.trim() ? "var(--border)" : "var(--accent)",
-              color: disabled || !input.trim() ? "var(--text-faint)" : "#fff",
-              cursor: disabled || !input.trim() ? "not-allowed" : "pointer",
-              flexShrink: 0,
-              alignSelf: "stretch",
-            }}
-          >
-            {(isStreaming || awaitingResponse) ? "…" : "发送"}
-          </button>
+          {(isStreaming || awaitingResponse) ? (
+            <button
+              onClick={() => requestInterrupt()}
+              disabled={interruptRequested}
+              title={interruptRequested ? "已请求停止，等 cc 收尾" : "停止当前 cc turn（Esc）"}
+              style={{
+                padding: "6px 12px",
+                fontSize: 12,
+                border: "none",
+                borderRadius: 4,
+                background: interruptRequested ? "var(--border)" : "var(--error)",
+                color: interruptRequested ? "var(--text-faint)" : "#fff",
+                cursor: interruptRequested ? "wait" : "pointer",
+                flexShrink: 0,
+                alignSelf: "stretch",
+              }}
+            >
+              {interruptRequested ? "⏸ 收尾..." : "⏹ 停止"}
+            </button>
+          ) : (
+            <button
+              onClick={() => void handleSend()}
+              disabled={disabled || !input.trim()}
+              style={{
+                padding: "6px 12px",
+                fontSize: 12,
+                border: "none",
+                borderRadius: 4,
+                background: disabled || !input.trim() ? "var(--border)" : "var(--accent)",
+                color: disabled || !input.trim() ? "var(--text-faint)" : "#fff",
+                cursor: disabled || !input.trim() ? "not-allowed" : "pointer",
+                flexShrink: 0,
+                alignSelf: "stretch",
+              }}
+            >
+              发送
+            </button>
+          )}
         </div>
       </div>
     </aside>

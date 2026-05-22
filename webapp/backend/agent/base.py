@@ -36,3 +36,11 @@ class AgentRunner(ABC):
     @abstractmethod
     def send_message(self, client_id: str, text: str) -> AsyncIterator[AgentEvent]:
         """向 cc 发用户消息，async 流出事件序列。"""
+
+    def interrupt(self, client_id: str) -> bool:
+        """用户主动停止当前 turn。返回 True 表示找到活跃任务并已发停止信号。
+
+        默认 no-op 返回 False —— 子类按需实现。LocalCcRunner: 杀 cc 子进程；
+        RemoteAgentRunner: POST gateway 取消信号。WS 收到 interrupt 帧时调用。
+        """
+        return False

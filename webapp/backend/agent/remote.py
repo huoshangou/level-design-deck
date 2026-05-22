@@ -53,6 +53,12 @@ class RemoteAgentRunner(AgentRunner):
     def end_session(self, client_id: str) -> None:
         raise NotImplementedError("RemoteAgentRunner.end_session — Phase 4 stub")
 
+    def interrupt(self, client_id: str) -> bool:
+        raise NotImplementedError(
+            "RemoteAgentRunner.interrupt — Phase 4 stub。"
+            " 预期协议：POST {gateway}/sessions/{client_id}/interrupt（或者 WS 端推 cancel 帧给 gateway）"
+        )
+
     async def send_message(self, client_id: str, text: str) -> AsyncIterator[AgentEvent]:
         raise NotImplementedError(
             "RemoteAgentRunner.send_message — Phase 4 待工具组实现。"

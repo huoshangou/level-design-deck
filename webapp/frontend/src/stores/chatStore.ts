@@ -4,6 +4,7 @@
 import { create } from "zustand";
 import { api } from "../api/client";
 import { useEditorStore } from "./editorStore";
+import { sendInterrupt } from "../hooks/useChatSocket";
 import type { AttachedFile, WsEnvelope } from "../api/chat-types";
 
 export type ChatMessage =
@@ -24,6 +25,11 @@ type ChatState = {
   isStreaming: boolean;
   awaitingResponse: boolean;       // 发出消息后，cc 完整 turn 未结束之前为 true
   awaitingStartTs: number | null;  // awaitingResponse 起始时刻（ms），用来算耗时
+  // cc 正在 awaiting 时，最近一次"有动静"是什么时间 / 干啥（thinking / tool / streaming），
+  // 用来给 awaiting 占位气泡加 "5s 前 🔧 Read" 这种活体感
+  lastActivityTs: number | null;
+  lastActivityLabel: string | null;
+  interruptRequested: boolean;     // 用户已经按过 stop、等后端 ack 中
   attachedFiles: AttachedFile[];
   uploadingFiles: string[];
   _lastSendTs: number;
@@ -36,6 +42,7 @@ type ChatState = {
   handleEvent: (envelope: WsEnvelope) => void;
   markStreamComplete: () => void;
   setWsState: (state: WsState) => void;
+  requestInterrupt: () => void;
   triggerDocFill: (kind: string, label: string) => void;
   clearInputPrefill: () => void;
   reset: () => void;
@@ -52,6 +59,9 @@ export const useChatStore = create<ChatState>((set, get) => ({
   isStreaming: false,
   awaitingResponse: false,
   awaitingStartTs: null,
+  lastActivityTs: null,
+  lastActivityLabel: null,
+  interruptRequested: false,
   attachedFiles: [],
   uploadingFiles: [],
   _lastSendTs: 0,
@@ -66,6 +76,9 @@ export const useChatStore = create<ChatState>((set, get) => ({
       isStreaming: false,
       awaitingResponse: false,
       awaitingStartTs: null,
+      lastActivityTs: null,
+      lastActivityLabel: null,
+      interruptRequested: false,
       wsState: "connecting",
     });
   },
@@ -111,6 +124,9 @@ export const useChatStore = create<ChatState>((set, get) => ({
       isStreaming: false,
       awaitingResponse: false,
       awaitingStartTs: null,
+      lastActivityTs: null,
+      lastActivityLabel: null,
+      interruptRequested: false,
       wsState: "connecting",
     });
   },
@@ -122,6 +138,9 @@ export const useChatStore = create<ChatState>((set, get) => ({
       _lastSendTs: now / 1000, // Unix 秒，和 mtime 对齐
       awaitingResponse: true,
       awaitingStartTs: now,
+      lastActivityTs: null,
+      lastActivityLabel: null,
+      interruptRequested: false,
     }));
   },
 
@@ -130,47 +149,114 @@ export const useChatStore = create<ChatState>((set, get) => ({
     set((s) => ({
       awaitingResponse: false,
       awaitingStartTs: null,
+      lastActivityTs: null,
+      lastActivityLabel: null,
+      interruptRequested: false,
       messages: [...s.messages, { kind: "error", message: `发送失败：${errMsg}`, ts: Date.now() }],
+    }));
+  },
+
+  // 用户按 Stop 按钮：立即给后端推 interrupt 帧 + 加 hint + 锁按钮
+  // 真正的"已停止"由后端回的 cc_interrupted 事件触发（见 handleEvent）
+  requestInterrupt: () => {
+    const { awaitingResponse, interruptRequested } = get();
+    if (!awaitingResponse || interruptRequested) return;
+    const ok = sendInterrupt();
+    if (!ok) {
+      // WS 没开就直接前端 mark 停 —— 不让用户卡在锁定状态
+      set({
+        awaitingResponse: false,
+        awaitingStartTs: null,
+        lastActivityTs: null,
+        lastActivityLabel: null,
+        interruptRequested: false,
+        messages: [...get().messages, { kind: "hint", text: "🛑 WS 未连接，已就地停止（cc 子进程可能还在跑，下条消息会用新进程）", ts: Date.now() }],
+      });
+      return;
+    }
+    set((s) => ({
+      interruptRequested: true,
+      messages: [...s.messages, { kind: "hint", text: "🛑 已请求停止，等 cc 收尾...", ts: Date.now() }],
     }));
   },
 
   handleEvent: (envelope) => {
     const p = envelope.payload;
+    const now = Date.now();
     switch (p.type) {
       case "cc_output_delta":
-        set((s) => ({ pendingAssistant: s.pendingAssistant + p.text, isStreaming: true }));
+        set((s) => ({
+          pendingAssistant: s.pendingAssistant + p.text,
+          isStreaming: true,
+          lastActivityTs: now,
+          lastActivityLabel: "✍️ 输出中",
+        }));
         break;
 
       case "cc_thinking":
         set((s) => ({
-          messages: [...s.messages, { kind: "thinking", text: p.text, ts: Date.now() }],
+          messages: [...s.messages, { kind: "thinking", text: p.text, ts: now }],
+          lastActivityTs: now,
+          lastActivityLabel: "💭 思考",
         }));
         break;
 
       case "tool_use_start":
         set((s) => ({
-          messages: [...s.messages, { kind: "tool_use", tool: p.tool, args: p.args, ts: Date.now() }],
+          messages: [...s.messages, { kind: "tool_use", tool: p.tool, args: p.args, ts: now }],
+          lastActivityTs: now,
+          lastActivityLabel: `🔧 ${p.tool}`,
         }));
         break;
 
       case "cc_message_complete":
         get().markStreamComplete();
-        set({ awaitingResponse: false, awaitingStartTs: null });
+        set({
+          awaitingResponse: false,
+          awaitingStartTs: null,
+          lastActivityTs: null,
+          lastActivityLabel: null,
+          interruptRequested: false,
+        });
         // cc 完成后检测 docs/ 是否有新生成的文档
         void checkNewDoc(get()._lastSendTs);
         break;
 
+      case "cc_interrupted":
+        // 用户主动 stop 的受控终止 —— flush 半截输出 + 加"已停止"hint，不当 error 报
+        get().markStreamComplete();
+        set((s) => ({
+          messages: [...s.messages, { kind: "hint", text: "✋ 已停止", ts: now }],
+          awaitingResponse: false,
+          awaitingStartTs: null,
+          lastActivityTs: null,
+          lastActivityLabel: null,
+          interruptRequested: false,
+        }));
+        break;
+
       case "agent_error":
         set((s) => ({
-          messages: [...s.messages, { kind: "error", message: p.message, ts: Date.now() }],
+          messages: [...s.messages, { kind: "error", message: p.message, ts: now }],
           isStreaming: false,
           awaitingResponse: false,
           awaitingStartTs: null,
+          lastActivityTs: null,
+          lastActivityLabel: null,
+          interruptRequested: false,
         }));
         break;
 
       case "session_ended":
-        set({ wsState: "closed", isStreaming: false, awaitingResponse: false, awaitingStartTs: null });
+        set({
+          wsState: "closed",
+          isStreaming: false,
+          awaitingResponse: false,
+          awaitingStartTs: null,
+          lastActivityTs: null,
+          lastActivityLabel: null,
+          interruptRequested: false,
+        });
         break;
 
       // session_started / tool_use_end / spec_updated — no UI action in v1
@@ -219,6 +305,9 @@ export const useChatStore = create<ChatState>((set, get) => ({
       isStreaming: false,
       awaitingResponse: false,
       awaitingStartTs: null,
+      lastActivityTs: null,
+      lastActivityLabel: null,
+      interruptRequested: false,
       attachedFiles: [],
       uploadingFiles: [],
     }),
