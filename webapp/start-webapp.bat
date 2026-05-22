@@ -1,4 +1,4 @@
-@echo off
+﻿@echo off
 chcp 65001 >nul
 REM level-design-deck webapp 启动脚本（Windows）
 REM 用法：双击此文件，或在 cmd / PowerShell 里 cd 到 webapp\ 后运行 start-webapp.bat
@@ -6,6 +6,10 @@ REM 行为对齐 start-webapp.command（mac 版）：端口被占自动 kill 老
 
 setlocal enabledelayedexpansion
 cd /d "%~dp0"
+
+REM uvicorn 子进程一律 UTF-8 I/O，避免 Python 默认 cp936 把 stream-json 写成乱码
+set PYTHONUTF8=1
+set PYTHONIOENCODING=utf-8
 
 set BACKEND_PORT=8766
 
@@ -18,6 +22,18 @@ if not exist "%~dp0.venv\Scripts\uvicorn.exe" (
     echo   .venv\Scripts\pip install --no-index --find-links wheels\ fastapi uvicorn pydantic pydantic-settings python-multipart watchfiles pytest httpx python-dotenv
     echo.
     echo 注意：Windows 不用 uvicorn[standard]（uvloop 不支持 Windows）
+    pause
+    exit /b 1
+)
+
+REM 启动前 import 自检：把 ModuleNotFoundError 这类错误显示在主窗口，
+REM 不让它消失在 start /min 的子窗口里、用户只看到 health check WARN 就懵了。
+echo [INFO] 自检 backend 导入 ...
+"%~dp0.venv\Scripts\python.exe" -c "import backend.app" 2>&1
+if errorlevel 1 (
+    echo.
+    echo [ERROR] backend.app 导入失败，看上面 traceback。
+    echo 常见原因：缺依赖（重新 pip install）/ Python 版本不对 / 工作目录漂移
     pause
     exit /b 1
 )
@@ -35,9 +51,12 @@ timeout /t 1 /nobreak >nul
 
 echo [INFO] 启动 webapp (port %BACKEND_PORT%) ...
 
-REM 用 start "title" 起一个独立子窗口跑 uvicorn（前台、可见输出、关窗即停 server）。
-REM "%~dp0.venv\Scripts\uvicorn.exe" 用绝对路径，避免双击启动时工作目录漂移。
-start "level-design-deck webapp" /min cmd /c "cd /d %~dp0 && .venv\Scripts\uvicorn.exe backend.app:app --host 127.0.0.1 --port %BACKEND_PORT%"
+REM start "title" [options] "exe" args：第一个引号串是 title（必须），
+REM 这样 uvicorn.exe 的绝对路径才能正确带引号。
+REM 之前用 `cmd /c "cd /d %%~dp0 && uvicorn..."` 包装，%%~dp0 含空格或中文用户名
+REM 就会让 cd /d 失败、uvicorn 永不启动。现在直接 spawn uvicorn.exe，cwd 由
+REM 父 bat 的 `cd /d "%%~dp0"` 已设好继承下去。
+start "level-design-deck webapp" /min "%~dp0.venv\Scripts\uvicorn.exe" backend.app:app --host 127.0.0.1 --port %BACKEND_PORT%
 
 echo [INFO] 等待 server 启动（最多 10 秒）...
 set /a tries=0
@@ -48,7 +67,14 @@ REM Windows 不一定有 curl，用 PowerShell Invoke-WebRequest 做 health chec
 powershell -NoProfile -Command "try { $null = Invoke-WebRequest -Uri 'http://127.0.0.1:%BACKEND_PORT%/api/health' -UseBasicParsing -TimeoutSec 1; exit 0 } catch { exit 1 }" >nul 2>&1
 if %errorlevel%==0 goto ready
 if %tries% lss 10 goto wait_loop
-echo [WARN] Server 可能还没准备好，请稍后手动刷新浏览器
+echo.
+echo [ERROR] Server 没起来。常见原因：
+echo   - 子窗口 uvicorn 启动失败但被 /min 藏了
+echo     → 改成可见调试：把上面 start 行的 /min 去掉重跑
+echo   - 端口 %BACKEND_PORT% 被 firewall/AV 拦了
+echo   - .venv 装的依赖版本和 backend 不匹配
+pause
+exit /b 1
 
 :ready
 echo.

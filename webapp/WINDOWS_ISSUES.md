@@ -39,6 +39,22 @@
 
 **修复**：`start-webapp.bat` 加 `chcp 65001`、所有路径用 `%~dp0` 绝对、health check 改用 PowerShell `Invoke-WebRequest`。
 
+## P1b · 中文乱码 + uvicorn 启动失败二次出现 ✅ 已修（2026-05-22）
+
+**现象**：双击 bat 看到中文乱码（[INFO] / webapp 已启动 等），按任意键浏览器弹出但显示"无法访问此网站" / ERR_CONNECTION_REFUSED。uvicorn 子窗口闪一下就关。
+
+**原因**（两个叠加）：
+1. **bat 文件 UTF-8 无 BOM**。`chcp 65001` 只切换控制台**输出**码页，cmd.exe 解析 bat 文件字节时仍按系统 ACP（中文 Windows = CP936）读取。UTF-8 字节被错读为 CP936 → 中文 echo 乱码。
+   修法：bat 加 UTF-8 BOM（`EF BB BF`），Win10 1903+ 的 cmd 识别 BOM 后按 UTF-8 解析。
+2. **`cmd /c "cd /d %~dp0 && uvicorn..."` 的 `%~dp0` 没加引号**。如果 Windows 用户名是中文（`C:\Users\张三\...`）或含空格（`C:\Users\Joe Bloggs\...`），`cd /d %~dp0` 在空格处截断、cd 失败、`&&` 后的 uvicorn 永不执行。健康检查 10 秒超时后给 WARN 兜底通过，但 server 实际没起。
+
+**修复**（`start-webapp.bat`）：
+- 文件加 UTF-8 BOM
+- 去掉 `cmd /c "cd /d %~dp0 && uvicorn..."` 这层包装，直接 `start "title" /min "%~dp0.venv\Scripts\uvicorn.exe" backend.app:app ...`。绝对引号路径不会被空格 / 中文截断；cwd 由父 bat 顶部的 `cd /d "%~dp0"` 设好继承下去
+- 启动前加 `python -c "import backend.app"` 自检：依赖缺失这类错误显示在主窗口，不会被 `/min` 子窗口藏掉
+- 加 `set PYTHONUTF8=1` / `set PYTHONIOENCODING=utf-8`：uvicorn / cc 等 Python 子进程一律 UTF-8 stdio，避免 stream-json 写成 cp936 乱码
+- WARN 改 ERROR + 列出排查思路（去 /min 看子窗口、firewall、依赖版本）
+
 ---
 
 ## P4 · Python subprocess 找不到 claude.cmd ✅ 已修
@@ -61,6 +77,14 @@
 **现象**：重新双击 `start-webapp.bat` 时，老 uvicorn 还占着 8766，新启的失败。Mac 版（`.command`）一直是自动 kill 老进程重启的，bat 之前只做了"尝试 8767 兜底，两个都占就放弃"，跟 mac 行为不一致。
 
 **修复**：用 `for /f "tokens=5" %%P in ('netstat -ano ^| findstr ":PORT " ^| findstr LISTENING') do taskkill /F /PID %%P` 把占用 8766 的进程全部 kill，再 sleep 1s 给 TIME_WAIT 缓冲，然后正常启动。行为对齐 mac 版 `.command`。
+
+## P5 · cc 子进程报 "not logged in - please run /login" ✅ 已修（2026-05-21）
+
+**现象**：Windows 上 webapp 启动成功，但 chat 发消息后 cc 子进程立刻退、显示 "not logged in - please run /login"。CLI 直接敲 `claude` 又能正常用。
+
+**原因**：`backend/agent/local_cc.py` 之前一律 `env.pop("ANTHROPIC_API_KEY")` / `BASE_URL` / `CUSTOM_HEADERS`。这套在 mac/linux 没事 —— cc CLI 有 `~/.claude/.credentials.json` + keychain 兜底，pop 反而能避开父进程错的 BASE_URL（如老 yotta gateway）污染。但 Windows 上 cc CLI 完全靠 env 认证（没 keychain 等价物），pop 之后就裸奔。
+
+**修复**：env.pop 加 `if sys.platform != "win32":` 守卫，Windows 上保留环境变量继承。同时给 stderr 解码加 cp936 兜底（之前 utf-8+replace 会把 Windows 中文报错变成 �，根本看不出问题）。
 
 ## P2 · local_cc.py 硬编码 Mac 路径 ✅ 已修
 

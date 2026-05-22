@@ -256,7 +256,20 @@ class LocalCcRunner(AgentRunner):
             if rc != 0:
                 assert proc.stderr is not None
                 stderr_bytes = await proc.stderr.read()
+                # Windows 上 cc / cmd.exe 的错误信息可能是 cp936（系统 ACP）而非 UTF-8，
+                # 直接 utf-8+replace 会把中文报错变成 �，调试时完全看不出问题。
+                # 试 utf-8 → cp936（仅 win32）→ replace 兜底。
+                stderr_text = ""
+                encodings = ("utf-8", "cp936") if sys.platform == "win32" else ("utf-8",)
+                for enc in encodings:
+                    try:
+                        stderr_text = stderr_bytes.decode(enc)
+                        break
+                    except UnicodeDecodeError:
+                        continue
+                if not stderr_text:
+                    stderr_text = stderr_bytes.decode("utf-8", "replace")
                 yield AgentError(
                     code="cc_exit_nonzero",
-                    message=f"exit={rc} stderr={stderr_bytes.decode('utf-8', 'replace')[:200]}",
+                    message=f"exit={rc} stderr={stderr_text[:200]}",
                 )
