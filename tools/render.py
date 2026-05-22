@@ -65,6 +65,7 @@ def render_each(template, data):
 # 通用模板引擎不动；按 spec_id 前缀派发到 enricher，注入派生字段（如 mermaid_source）。
 # 派生字段约定写到 spec["__derived__"] 命名空间，模板可用 {{__derived__.xxx}} 取值。
 
+# 与 webapp/frontend/src/components/BubbleDiagramView.tsx:NODE_SHAPE/ARROW 同步
 NODE_SHAPE = {
     "entry":    ("([", "])"),
     "exit":     ("([", "])"),

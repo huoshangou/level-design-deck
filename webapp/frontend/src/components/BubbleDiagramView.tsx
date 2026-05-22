@@ -1,24 +1,28 @@
 import { useEffect, useRef, useState } from "react";
 
-// node.type → Mermaid shape
-const SHAPE: Record<string, (id: string, label: string) => string> = {
-  entry: (id, l) => `${id}([${l}])`,
-  exit: (id, l) => `${id}([${l}])`,
-  scene: (id, l) => `${id}[${l}]`,
-  puzzle: (id, l) => `${id}{${l}}`,
-  hub: (id, l) => `${id}((${l}))`,
-  branch: (id, l) => `${id}{${l}}`,
-  default: (id, l) => `${id}[${l}]`,
+// 与 tools/render.py:spec_to_mermaid / NODE_SHAPE / EDGE_ARROW 同步
+// node.type → Mermaid shape brackets [left, right]；label 必须双引号包裹防特殊字符炸
+const NODE_SHAPE: Record<string, [string, string]> = {
+  entry:    ["([", "])"],
+  exit:     ["([", "])"],
+  combat:   ["[", "]"],
+  scene:    ["[", "]"],
+  puzzle:   ["{", "}"],
+  choice:   ["{", "}"],
+  dialogue: ["[/", "/]"],
+  cutscene: ["[\\", "\\]"],
 };
+const DEFAULT_SHAPE: [string, string] = ["[", "]"];
 
 // edge.type → Mermaid arrow style
 const ARROW: Record<string, string> = {
   sequential: "-->",
-  optional: "-.->",
-  loop: "-->",
   branch: "-->",
-  default: "-->",
+  optional: "-.->",
+  loop: "==>",
+  failure: "-.->",
 };
+const DEFAULT_ARROW = "-->";
 
 export interface DiagramNode {
   id: string;
@@ -33,6 +37,7 @@ export interface DiagramEdge {
   to: string;
   type?: string;
   label?: string;
+  requires?: string[];
 }
 
 interface Props {
@@ -41,40 +46,54 @@ interface Props {
   onNodeClick?: (nodeId: string) => void;
 }
 
+function nodeDecl(n: DiagramNode): string {
+  const [l, r] = NODE_SHAPE[n.type ?? ""] ?? DEFAULT_SHAPE;
+  const label = (n.label ?? n.id).replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+  return `${n.id}${l}"${label}"${r}`;
+}
+
 function buildMermaid(nodes: DiagramNode[], edges: DiagramEdge[]): string {
-  const phases = new Map<string, DiagramNode[]>();
-  const noPhase: DiagramNode[] = [];
-  for (const n of nodes) {
-    if (n.phase) {
-      if (!phases.has(n.phase)) phases.set(n.phase, []);
-      phases.get(n.phase)!.push(n);
-    } else {
-      noPhase.push(n);
+  const lines: string[] = ["graph TD"];
+
+  // M3.6: 任一节点有 phase 即启用 subgraph 分组（与 tools/render.py 一致）
+  const hasAnyPhase = nodes.some((n) => !!n.phase);
+
+  if (hasAnyPhase) {
+    const order: string[] = [];
+    const groups = new Map<string, DiagramNode[]>();
+    for (const n of nodes) {
+      const ph = n.phase ?? "";
+      if (!groups.has(ph)) { groups.set(ph, []); order.push(ph); }
+      groups.get(ph)!.push(n);
     }
+    for (const ph of order) {
+      const list = groups.get(ph)!;
+      if (ph === "") {
+        for (const n of list) lines.push(`  ${nodeDecl(n)}`);
+      } else {
+        const slug = (ph.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "")) || "x";
+        lines.push(`  subgraph phase_${slug}["${ph.replace(/"/g, '\\"')}"]`);
+        for (const n of list) lines.push(`    ${nodeDecl(n)}`);
+        lines.push("  end");
+      }
+    }
+  } else {
+    for (const n of nodes) lines.push(`  ${nodeDecl(n)}`);
   }
 
-  const lines: string[] = ["flowchart LR"];
-  let sg = 0;
-  for (const [phase, pnodes] of phases) {
-    lines.push(`  subgraph sg${sg}["${phase}"]`);
-    for (const n of pnodes) {
-      const shapeFn = SHAPE[n.type ?? "default"] ?? SHAPE.default;
-      lines.push(`    ${shapeFn(n.id, (n.label ?? n.id).replace(/"/g, "'"))}`);
-    }
-    lines.push("  end");
-    sg++;
-  }
-  for (const n of noPhase) {
-    const shapeFn = SHAPE[n.type ?? "default"] ?? SHAPE.default;
-    lines.push(`  ${shapeFn(n.id, (n.label ?? n.id).replace(/"/g, "'"))}`);
-  }
   for (const e of edges) {
-    const arrow = ARROW[e.type ?? "default"] ?? ARROW.default;
-    if (e.label) {
-      lines.push(`  ${e.from} ${arrow}|"${e.label.replace(/"/g, "'")}"| ${e.to}`);
-    } else {
-      lines.push(`  ${e.from} ${arrow} ${e.to}`);
-    }
+    const et = e.type ?? "sequential";
+    const arrow = ARROW[et] ?? DEFAULT_ARROW;
+    const lbl = (e.label ?? "").replace(/"/g, '\\"');
+    // M3.5: requires 合取前置依赖 → label 前缀 [需 X+Y]
+    const reqs = e.requires ?? [];
+    const prefix = reqs.length ? `[需 ${reqs.join("+")}] ` : "";
+    let edgePart: string;
+    if (et === "failure" && lbl) edgePart = `${arrow}|"${prefix}${lbl} (失败)"|`;
+    else if (et === "failure")   edgePart = `${arrow}|"${prefix}失败"|`;
+    else if (prefix || lbl)      edgePart = `${arrow}|"${prefix}${lbl}"|`;
+    else                          edgePart = arrow;
+    lines.push(`  ${e.from} ${edgePart} ${e.to}`);
   }
   return lines.join("\n");
 }
