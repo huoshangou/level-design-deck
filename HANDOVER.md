@@ -10,7 +10,7 @@
 
 - **项目**：`level-design-deck`，spec 真源 + schema-driven 编辑 + 机械校验工作台
 - **状态**：**A 阶段完结 ✅**（9 Module + 7 cross_check 规则）；**v0.1.0 已发布 GitHub** (`huoshangou/level-design-deck`)；**汇报 Deck 视图 ✅**（沙丘 WebGL + 11 slides）；**cc skill v0.3.0 ✅**（向导 + 推荐 module + ERROR 弹 editor + deck action）；**storyboard module ✅**（M4.1+M4.2，img2img prompt 生产，ImageProvider API 接口预留）
-- **下一步（当前工作）**：P2 拆 `tools/_cross_check_helpers.py`（cross_check 已 304/300 软超）→ P2 Three.js 本地化 → P2 bubble_diagram nodes→zone cross_check → P3 接 image-2 API（候选 Seedance / SD / Midjourney / Flux）
+- **下一步（当前工作）**：P2 Three.js 本地化 → P2 bubble_diagram nodes→zone cross_check → P3 接 image-2 API（候选 Seedance / SD / Midjourney / Flux）→ P3 工作项目 POI 真实 storyboard 案例
 
 ---
 
@@ -79,7 +79,8 @@ python3 tools/render.py specs/<id>.spec.json templates/lighting_req.html.tmpl ou
 | **deck 视图** | ✅ 完成 | `render_deck.py`（246 行）；沙丘主题 WebGL 双背景；Cover + 8 module slide + Coda（10 张）；serve_editor 加端点；editor 加🎞按钮 | abandoned_temple 10 slides 全出 ✓ |
 | **M4.1** | ✅ 完成 | 第 9 个 module = `storyboard`（key art × 玩法 beat，img2img prompt 生产 spec）；schema 177 行 + 5 panel 真实案例（abandoned_temple，跨 Part 1/2）+ template 240 行（CSS 装帧米色纸+黑框+16:9）+ cross_check 第 7 条规则（panels[].beat_id ∈ bubble nodes id）+ zone_ref 列表追加 1 项 | storyboard 0/0；cross_check 9 modules / 9 checks / 0 ERROR；2 故意破坏精确命中；render HTML ✓；8 module 回归 0 ERROR；⚠️ cross_check.py 286→304 软超 4 行（已记 P2 拆 helper） |
 | **M4.2** | ✅ 完成 | `tools/storyboard_render.py`（230 行 < 300 ✓）= PromptComposer + ImageProvider ABC + DummyProvider；当前 `--prompt-only` 跑通，留 API 子类位；集成 5 处（generate_spec MODULES / render_level MODULE_ORDER+LABELS / render_deck MODULE_ORDER+META / template_diff SKIP_PREFIXES / cc-skill 推荐流程）；M4.2 中发现 prompt 冗余 → 删 default template 末尾 `{style.lighting_aesthetic}`（3 处同步） | 5 prompts composed ✓；generate_spec 出 486 行 prompt ✓；render_level 9 modules 完整文档 ✓；render_deck 11 slide ✓；8 module 回归 0 ERROR |
-| **进行中** | 🔧 | P2: 拆 `tools/_cross_check_helpers.py`（必须先拆才能加下一条 cross_check 规则）；P2: Three.js 本地化；P2: bubble→zone cross_check；P3: 接 image-2 API | 见候选表 |
+| **M4.3** | ✅ 完成 | 拆 `tools/_cross_check_helpers.py`（偿还 M4.1 技术债）：helper 文件放 `get_spatial_labels` / `check_zone_field` / `make_zone_ref_check` 工厂；主文件保留 `_ZONE_REF_RULES` 列表 + 注册 + 3 个独立规则 | cross_check.py 304→272（腾出 28 行预算）；helper 65 行；9 module / 9 checks / 0 ERROR ✓；2 故意破坏精确命中 ✓ |
+| **进行中** | 🔧 | P2: Three.js 本地化；P2: bubble→zone cross_check；P3: 接 image-2 API；P3: 工作项目 POI 真实案例 | 见候选表 |
 
 ---
 
@@ -95,7 +96,6 @@ python3 tools/render.py specs/<id>.spec.json templates/lighting_req.html.tmpl ou
 | **P2** | **Three.js 本地化** | M3.14 留 TODO：spatial_layout template 仍用 CDN Three.js，是目前唯一外网依赖。importmap addons 目录复杂，需单独处理 |
 | **P2** | **bubble_diagram 节点 → spatial zone 引用** | 设计意图：beat 节点可标注所在 spatial zone（"打斗发生在礼佛堂"），加 `nodes[].zone_id` 可选字段 + cross_check 第 6 条规则 |
 | **P3** | **bubble_diagram schema 补 est_minutes / tbd** | `nodes[].est_minutes:[min,max]` 估时 + `nodes[].tbd:bool` 待定标记。无强 case 驱动，按需加 |
-| **P2 🆕** | **拆 `tools/_cross_check_helpers.py`** | M4.1 触发：cross_check.py 加 storyboard 第 7 条规则后达 304/300，软超硬限 4 行。**必须先拆才能加下一条 cross_check 规则**。方案：把 `_get_spatial_labels` / `_check_zone_field` / `_ZONE_REF_RULES` 列表 + `_make_zone_ref_check` 工厂移出到 `tools/_cross_check_helpers.py`，主文件压回 < 230，腾出 70+ 行预算给未来规则。`[来源: M4.1 触发]` |
 | **P3 🆕** | **接 image-2 API（实装 ImageProvider 子类）** | M4.2 已留好框架：`tools/storyboard_render.py` 内 `ImageProvider` ABC + `DummyProvider` only。下一步实现 `Image2Provider` / `SDProvider` / `MidjourneyProvider` / `FluxProvider` 之一，跑通 spec → API → 回填 generated_image_url + generation_meta 全链路。当前 spec 框架已能用 `--prompt-only` 产 prompt 字符串。候选模型评估 + API key 设置由 Steve 决定。 |
 | **P3 🆕** | **工作项目第一个 POI 真实 storyboard 案例** | abandoned_temple 是虚构 PoC。等 Steve 准备好某个工作项目 POI 的 bubble_diagram + spatial_layout 前置数据后，启动 M4.3 = 工作项目 POI storyboard 案例（图像风格已定 = 日式 imageboard 铅笔风，可直接复用 abandoned_temple 的 style_anchor）。 |
 | **搁置** | **alerts 人话化（P2 UX）** | 机械检测输出仍是英文 field path。成本中等，影响不紧迫 |

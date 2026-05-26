@@ -19,6 +19,14 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_OUTPUT = PROJECT_ROOT / "outputs" / ".cross_warnings.json"
 
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+from tools._cross_check_helpers import (
+    get_spatial_labels,
+    check_zone_field,
+    make_zone_ref_check,
+)
+
 # ---------------------------------------------------------------------------
 # Validator
 # ---------------------------------------------------------------------------
@@ -46,35 +54,6 @@ def register_cross_check(desc):
         return f
     return deco
 
-def _get_spatial_labels(spatial: dict) -> set:
-    """从 spatial_layout spec 提取所有非空 shape label 集合。"""
-    labels = set()
-    for s in spatial.get("layout", {}).get("shapes", []):
-        if isinstance(s, dict):
-            label = (s.get("label") or "").strip()
-            if label:
-                labels.add(label)
-    return labels
-
-def _check_zone_field(v, spatial_labels, items, field_path_prefix, id_key):
-    """通用 zone ref 校验：遍历 items，取 id_key，不在 spatial_labels 则报 ERROR。"""
-    sample = sorted(spatial_labels)[:10]
-    tail = "..." if len(spatial_labels) > 10 else ""
-    for i, item in enumerate(items):
-        if not isinstance(item, dict):
-            continue
-        zid = (item.get(id_key) or "").strip()
-        if not zid:
-            continue
-        if zid not in spatial_labels:
-            v.add_error(
-                f"{field_path_prefix}[{i}].{id_key}",
-                "cross_ref_integrity",
-                f"{id_key} {zid!r} not in spatial_layout.shapes[].label "
-                f"(available labels: {sample}{tail})",
-            )
-
-
 _ZONE_REF_RULES = [
     ("lighting_req.ambience_refs[].region_id ∈ spatial_layout.shapes[].label",
      "lighting_req", "ambience_refs", "region_id"),
@@ -90,19 +69,8 @@ _ZONE_REF_RULES = [
      "storyboard", "panels", "zone_id"),
 ]
 
-def _make_zone_ref_check(module, collection, id_key):
-    def fn(specs_by_module, v):
-        spec = specs_by_module.get(module)
-        spatial = specs_by_module.get("spatial_layout")
-        if not spec or not spatial:
-            return
-        _check_zone_field(v, _get_spatial_labels(spatial),
-                          spec.get(collection, []),
-                          f"{module}.{collection}", id_key)
-    return fn
-
 for _desc, _mod, _col, _key in _ZONE_REF_RULES:
-    register_cross_check(_desc)(_make_zone_ref_check(_mod, _col, _key))
+    register_cross_check(_desc)(make_zone_ref_check(_mod, _col, _key))
 
 @register_cross_check("bubble_diagram phase 命名汇总（REVIEW）")
 def bubble_phase_summary(specs_by_module, v):
@@ -120,9 +88,9 @@ def check_bubble_zone_ref(specs_by_module, v):
     spatial = specs_by_module.get("spatial_layout")
     if not bubble or not spatial:
         return
-    _check_zone_field(v, _get_spatial_labels(spatial),
-                      bubble.get("nodes", []),
-                      "bubble_diagram.nodes", "zone_id")
+    check_zone_field(v, get_spatial_labels(spatial),
+                     bubble.get("nodes", []),
+                     "bubble_diagram.nodes", "zone_id")
 
 @register_cross_check("storyboard.panels[].beat_id ∈ bubble_diagram.nodes[].id")
 def check_storyboard_beat_ref(specs_by_module, v):
