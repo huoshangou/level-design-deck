@@ -86,6 +86,8 @@ _ZONE_REF_RULES = [
      "atmosphere_ref", "zones", "zone_id"),
     ("asset_list.assets[].ref_zone_id ∈ spatial_layout.shapes[].label",
      "asset_list", "assets", "ref_zone_id"),
+    ("storyboard.panels[].zone_id ∈ spatial_layout.shapes[].label",
+     "storyboard", "panels", "zone_id"),
 ]
 
 def _make_zone_ref_check(module, collection, id_key):
@@ -121,6 +123,22 @@ def check_bubble_zone_ref(specs_by_module, v):
     _check_zone_field(v, _get_spatial_labels(spatial),
                       bubble.get("nodes", []),
                       "bubble_diagram.nodes", "zone_id")
+
+@register_cross_check("storyboard.panels[].beat_id ∈ bubble_diagram.nodes[].id")
+def check_storyboard_beat_ref(specs_by_module, v):
+    sb = specs_by_module.get("storyboard")
+    bubble = specs_by_module.get("bubble_diagram")
+    if not sb or not bubble:
+        return
+    node_ids = {n.get("id") for n in bubble.get("nodes", []) if isinstance(n, dict) and n.get("id")}
+    for i, p in enumerate(sb.get("panels", [])):
+        if not isinstance(p, dict):
+            continue
+        bid = (p.get("beat_id") or "").strip()
+        if bid and bid not in node_ids:
+            v.add_error(f"storyboard.panels[{i}].beat_id", "cross_ref_integrity",
+                        f"beat_id {bid!r} not in bubble_diagram.nodes[].id "
+                        f"(available: {sorted(node_ids)[:5]}...)")
 
 # ---------------------------------------------------------------------------
 # Spec loading helpers

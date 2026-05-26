@@ -88,6 +88,7 @@ deck server 默认在 `http://127.0.0.1:8766`。每次 action 开始时 curl 检
      /design-deck add <level_id> vfx_req <意图>
      /design-deck add <level_id> audio_req <意图>
      /design-deck add <level_id> asset_list <意图>
+     /design-deck add <level_id> storyboard <意图>      # M4.1：img2img 分镜 prompt 生产
    ```
 [来源: Steve 直接指示（2026-05-12）]
 
@@ -97,15 +98,15 @@ deck server 默认在 `http://127.0.0.1:8766`。每次 action 开始时 curl 检
 
 给现有关卡加一个 module 的 spec。
 
-**已支持 module**：`level_overview / spatial_layout / bubble_diagram / atmosphere_ref / lighting_req / vfx_req / audio_req / asset_list`
+**已支持 module**：`level_overview / spatial_layout / bubble_diagram / storyboard / atmosphere_ref / lighting_req / vfx_req / audio_req / asset_list`
 
 **module 推荐顺序（改动 4）**：
 [来源: 第一原理推导]
 ```
-level_overview → spatial_layout → bubble_diagram → atmosphere_ref
+level_overview → spatial_layout → bubble_diagram → storyboard → atmosphere_ref
               → lighting_req → vfx_req → audio_req → asset_list
 ```
-理由：spatial_layout 最先因为后面 5 个 module（lighting_req / atmosphere_ref / vfx_req / audio_req / asset_list）的 cross_check 都依赖它的 zone label；bubble_diagram 表达流程主线，优先于纯需求型 module。
+理由：spatial_layout 最先因为后续 module（lighting_req / atmosphere_ref / vfx_req / audio_req / asset_list / storyboard）的 cross_check 都依赖它的 zone label；bubble_diagram 表达流程主线必须早于 storyboard（storyboard.panels[].beat_id 引用它）；storyboard 是流程的画面化投影，自然紧随 bubble_diagram。
 
 **不传 module 时 → 自动推下一个（改动 4）**：
 1. `ls $DECK_HOME/specs/<module>_<level_id>.spec.json` 检查每个 module 是否已做

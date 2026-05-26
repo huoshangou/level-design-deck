@@ -45,6 +45,7 @@ SKIP_PREFIXES = {
     "vfx_req_": "vfx module (effects-collection, not field-clipboard)",
     "audio_req_": "audio module (ambient-sounds-collection, not field-clipboard)",
     "asset_list_": "asset list module (interface对接表，not field-clipboard)",
+    "storyboard_": "storyboard module (panel-collection + style_anchor, prompt-driven, not field-clipboard)",
 }
 
 

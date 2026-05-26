@@ -82,6 +82,14 @@ MODULES = {
         "spec_id_pattern": "asset_list_<level_short_name>",
         "lvm_generated": True,
     },
+    # M4.1: storyboard = 关卡分镜，img2img prompt 生产 spec；style_anchor 全局共享，panels[].beat_id ref bubble_diagram
+    "storyboard": {
+        "schema_path": "schema/storyboard.schema.json",
+        "demo_path": "specs/storyboard_abandoned_temple.spec.json",
+        "workdoc_key": None,
+        "spec_id_pattern": "storyboard_<level_short_name>",
+        "lvm_generated": True,
+    },
 }
 
 WORK_DOCS_PATH = "reference/work_docs_extract.json"

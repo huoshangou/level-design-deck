@@ -26,11 +26,12 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from tools.render import render
 
-# 推荐渲染顺序（hub → 空间 → 流程 → 氛围 → 子需求 → 资产）
+# 推荐渲染顺序（hub → 空间 → 流程 → 分镜 → 氛围 → 子需求 → 资产）
 MODULE_ORDER = [
     "level_overview",
     "spatial_layout",
     "bubble_diagram",
+    "storyboard",
     "atmosphere_ref",
     "lighting_req",
     "vfx_req",
@@ -42,6 +43,7 @@ MODULE_LABELS = {
     "level_overview": "关卡概览",
     "spatial_layout": "空间布局",
     "bubble_diagram": "流程图",
+    "storyboard": "关卡分镜",
     "atmosphere_ref": "氛围参考",
     "lighting_req": "灯光需求",
     "vfx_req": "视觉特效",

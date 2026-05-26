@@ -1,0 +1,126 @@
+{
+  "meta": {
+    "spec_id": "storyboard_abandoned_temple",
+    "level_id": "abandoned_temple",
+    "version": "0.1.0",
+    "owner": "level"
+  },
+  "context": {
+    "intent": "废弃山寺关卡 5 个关键 beat 的画面化分镜——从山门初见（Part 1 起点）到钟楼守护者对峙（Part 2 高潮），跨越潜入、抉择、首战、谜底、终战五个节奏锚点。",
+    "level_type": "poi"
+  },
+  "style_anchor": {
+    "medium": "Japanese anime imageboard (絵コンテ / ekonte), hand-drawn pencil and ink storyboard layout, AAA action game pre-production art",
+    "art_direction": "Japanese anime-style storyboard layout, loose pencil sketch with selective ink line emphasis, short directional hatching for shading, prominent speed lines and motion lines, cross-hatching for shadows, kinetic dynamic composition",
+    "color_palette": "monochrome graphite and ink on aged off-white / cream paper, no chromatic color, deep black reserved for window interiors and deepest shadows only",
+    "lighting_aesthetic": "implied lighting through hatching density variation, no gradient shading, atmospheric perspective via line weight reduction in background, deep black accents for contrast anchors",
+    "quality_tags": [
+      "Japanese imageboard",
+      "ekonte storyboard",
+      "anime layout art",
+      "pencil and ink pre-vis",
+      "hand-drawn animation storyboard",
+      "kinetic composition"
+    ],
+    "negative_prompt": "color, painted, photorealistic, polished concept art, vibrant, saturated, watercolor, oil painting, 3d render, western hollywood storyboard, gradient shading, soft blending, computer-generated, clean vector line, low quality, deformed, watermark, text overlay, signature",
+    "reference_image_url": "assets/abandoned_temple/style_anchor.png",
+    "presentation": {
+      "frame_style": "thin black border",
+      "paper_texture": "aged cream paper",
+      "aspect_ratio": "16:9"
+    }
+  },
+  "prompt_template": "{style.medium}, {style.art_direction}, {scene}, {subject_action}, {camera}, {lighting}, {mood}, {style.color_palette}, {style.quality_tags}",
+  "panels": [
+    {
+      "panel_id": "p01",
+      "beat_id": "entry",
+      "title": "山门初见",
+      "scene": "an abandoned mountain temple gate emerging from dense mountain mist, broken torii-style stone pillars, withered shimenawa rope hanging loose, faded vermilion wood signs, wet stone steps leading up, faint distant lantern glow from temple beyond",
+      "subject_action": "lone protagonist standing at the foot of stone steps, looking up at the half-collapsed gate, hand resting near holstered weapon, slight tension in posture",
+      "camera": "wide shot, low angle, slow push-in, atmospheric depth",
+      "lighting": "",
+      "mood": "uneasy reverence, threshold-crossing tension, the moment before commitment",
+      "player_intent": "建立潜入基调，让玩家意识到这是一个不该闯入的禁地，开启任务通讯",
+      "player_feels": "压迫 + 好奇，心率基线，等待第一个信号",
+      "gameplay_moment": "纯探索：环境叙事触发（风化石碑、枯萎供花）+ 任务通讯介入",
+      "zone_id": "山门",
+      "source_image_url": "",
+      "generated_prompt": "Japanese anime imageboard (絵コンテ / ekonte), hand-drawn pencil and ink storyboard layout, AAA action game pre-production art, Japanese anime-style storyboard layout, loose pencil sketch with selective ink line emphasis, short directional hatching for shading, prominent speed lines and motion lines, cross-hatching for shadows, kinetic dynamic composition, an abandoned mountain temple gate emerging from dense mountain mist, broken torii-style stone pillars, withered shimenawa rope hanging loose, faded vermilion wood signs, wet stone steps leading up, faint distant lantern glow from temple beyond, lone protagonist standing at the foot of stone steps, looking up at the half-collapsed gate, hand resting near holstered weapon, slight tension in posture, wide shot, low angle, slow push-in, atmospheric depth, implied lighting through hatching density variation, no gradient shading, atmospheric perspective via line weight reduction in background, deep black accents for contrast anchors, uneasy reverence, threshold-crossing tension, the moment before commitment, monochrome graphite and ink on aged off-white / cream paper, no chromatic color, deep black reserved for window interiors and deepest shadows only, Japanese imageboard, ekonte storyboard, anime layout art, pencil and ink pre-vis, hand-drawn animation storyboard, kinetic composition",
+      "generated_image_url": "",
+      "generation_meta": {}
+    },
+    {
+      "panel_id": "p02",
+      "beat_id": "hub_explore",
+      "title": "前殿决策点",
+      "scene": "interior of a derelict Japanese Buddhist front hall, flickering candles on overturned altar, scattered handwritten sutra pages on tatami floor, broken wooden fish drum, three corridors leading off-screen in different directions, dust particles drifting through air",
+      "subject_action": "protagonist crouched in shadow behind a fallen pillar, scanning the three exit corridors, gloved hand pressed against the floor for stealth, gaze flicking between options",
+      "camera": "medium shot, slightly elevated angle, decision-moment framing, three vanishing points",
+      "lighting": "single candle as key light from screen-left, deep shadow pools in corridor openings, atmospheric haze",
+      "mood": "calculating tension, branching choice, the weight of three doors",
+      "player_intent": "向玩家展示三条钥匙线索的入口（回廊/藏经阁/主殿），让玩家自主选择探索顺序",
+      "player_feels": "掌控感 + 谨慎，心率小幅上升，开始策略思考",
+      "gameplay_moment": "抉择 + 探索：HUB 结构关键节点，3 条路径可选（回廊钥匙 / 藏经阁钥匙 / 主殿钥匙）",
+      "zone_id": "前殿",
+      "source_image_url": "",
+      "generated_prompt": "Japanese anime imageboard (絵コンテ / ekonte), hand-drawn pencil and ink storyboard layout, AAA action game pre-production art, Japanese anime-style storyboard layout, loose pencil sketch with selective ink line emphasis, short directional hatching for shading, prominent speed lines and motion lines, cross-hatching for shadows, kinetic dynamic composition, interior of a derelict Japanese Buddhist front hall, flickering candles on overturned altar, scattered handwritten sutra pages on tatami floor, broken wooden fish drum, three corridors leading off-screen in different directions, dust particles drifting through air, protagonist crouched in shadow behind a fallen pillar, scanning the three exit corridors, gloved hand pressed against the floor for stealth, gaze flicking between options, medium shot, slightly elevated angle, decision-moment framing, three vanishing points, single candle as key light from screen-left, deep shadow pools in corridor openings, atmospheric haze, calculating tension, branching choice, the weight of three doors, monochrome graphite and ink on aged off-white / cream paper, no chromatic color, deep black reserved for window interiors and deepest shadows only, Japanese imageboard, ekonte storyboard, anime layout art, pencil and ink pre-vis, hand-drawn animation storyboard, kinetic composition",
+      "generated_image_url": "",
+      "generation_meta": {}
+    },
+    {
+      "panel_id": "p03",
+      "beat_id": "hondo_key",
+      "title": "主殿首战",
+      "scene": "the main hall of the temple, massive damaged Buddha altar with gold leaf peeling off in the background, scattered ritual protection talismans drawn on the floor, debris from collapsed ceiling beams, broken roof tiles letting in shafts of moonlight",
+      "subject_action": "protagonist mid-motion drawing weapon, body turned sharply toward an oncoming guardian figure lunging from screen-right with a handheld lantern swinging wildly, the lantern light slashing across both figures",
+      "camera": "low angle dynamic shot, fish-eye distortion at edges, action lines radiating from impact point, panel tilted 5 degrees for kinetic energy",
+      "lighting": "harsh swinging lantern light creating violent shadow oscillation across the altar, deep black behind the Buddha statue",
+      "mood": "sudden combat eruption, ritual desecration, first clash of the level",
+      "player_intent": "首次正面战斗，确认守护者是真实威胁；获取主殿钥匙",
+      "player_feels": "肾上腺素飙升，紧张转为应激，从潜入心态切换到战斗心态",
+      "gameplay_moment": "遭遇战：1v1 守护者，必须击败才能拿到钥匙；战斗系统首次教学",
+      "zone_id": "主殿",
+      "source_image_url": "",
+      "generated_prompt": "Japanese anime imageboard (絵コンテ / ekonte), hand-drawn pencil and ink storyboard layout, AAA action game pre-production art, Japanese anime-style storyboard layout, loose pencil sketch with selective ink line emphasis, short directional hatching for shading, prominent speed lines and motion lines, cross-hatching for shadows, kinetic dynamic composition, the main hall of the temple, massive damaged Buddha altar with gold leaf peeling off in the background, scattered ritual protection talismans drawn on the floor, debris from collapsed ceiling beams, broken roof tiles letting in shafts of moonlight, protagonist mid-motion drawing weapon, body turned sharply toward an oncoming guardian figure lunging from screen-right with a handheld lantern swinging wildly, the lantern light slashing across both figures, low angle dynamic shot, fish-eye distortion at edges, action lines radiating from impact point, panel tilted 5 degrees for kinetic energy, harsh swinging lantern light creating violent shadow oscillation across the altar, deep black behind the Buddha statue, sudden combat eruption, ritual desecration, first clash of the level, monochrome graphite and ink on aged off-white / cream paper, no chromatic color, deep black reserved for window interiors and deepest shadows only, Japanese imageboard, ekonte storyboard, anime layout art, pencil and ink pre-vis, hand-drawn animation storyboard, kinetic composition",
+      "generated_image_url": "",
+      "generation_meta": {}
+    },
+    {
+      "panel_id": "p04",
+      "beat_id": "underground_discovery",
+      "title": "密室真相",
+      "scene": "a cramped underground stone chamber with rough chiseled walls, a single stone stele in the center carved with overlapping runes glowing faintly cold-blue, scattered failed offerings on the floor, dripping water from above, claustrophobic ceiling",
+      "subject_action": "protagonist kneeling before the stele, one hand reaching out to touch the carved runes, head tilted in shock or recognition, missing person's backpack visible at their side",
+      "camera": "close-up over-the-shoulder shot, shallow depth, the stele dominating frame center, the protagonist's silhouette in foreground",
+      "lighting": "single cold-blue light source from the stele itself, the protagonist's face half-lit, rim light on the backpack, surrounding chamber falling into deep black",
+      "mood": "revelation, dread, the moment the level's true premise becomes clear",
+      "player_intent": "揭示守护者并非反派而是封印者，反转玩家对前面战斗的道德判断",
+      "player_feels": "震惊 + 困惑，心率短暂下降进入认知重组，叙事情绪冲击",
+      "gameplay_moment": "纯叙事：交互式物件触发，无战斗；玩家阅读石碑+背包遗书后剧情转向",
+      "zone_id": "地下密室",
+      "source_image_url": "",
+      "generated_prompt": "Japanese anime imageboard (絵コンテ / ekonte), hand-drawn pencil and ink storyboard layout, AAA action game pre-production art, Japanese anime-style storyboard layout, loose pencil sketch with selective ink line emphasis, short directional hatching for shading, prominent speed lines and motion lines, cross-hatching for shadows, kinetic dynamic composition, a cramped underground stone chamber with rough chiseled walls, a single stone stele in the center carved with overlapping runes glowing faintly cold-blue, scattered failed offerings on the floor, dripping water from above, claustrophobic ceiling, protagonist kneeling before the stele, one hand reaching out to touch the carved runes, head tilted in shock or recognition, missing person's backpack visible at their side, close-up over-the-shoulder shot, shallow depth, the stele dominating frame center, the protagonist's silhouette in foreground, single cold-blue light source from the stele itself, the protagonist's face half-lit, rim light on the backpack, surrounding chamber falling into deep black, revelation, dread, the moment the level's true premise becomes clear, monochrome graphite and ink on aged off-white / cream paper, no chromatic color, deep black reserved for window interiors and deepest shadows only, Japanese imageboard, ekonte storyboard, anime layout art, pencil and ink pre-vis, hand-drawn animation storyboard, kinetic composition",
+      "generated_image_url": "",
+      "generation_meta": {}
+    },
+    {
+      "panel_id": "p05",
+      "beat_id": "boss_confrontation",
+      "title": "钟楼对峙",
+      "scene": "the top of the temple bell tower, massive bronze bell hanging center frame fully intact, panoramic moonlit view of the broken temple complex below, mountain mist surrounding the tower base, wooden support beams crisscrossing dramatically",
+      "subject_action": "protagonist and the guardian facing each other across the bell, both weapons lowered slightly, the guardian's posture defensive rather than aggressive, the bell rope swaying between them as a visual barrier",
+      "camera": "symmetrical two-shot composition, level eye-line, slight upward tilt to include sky, the bell as the geometric and dramatic center",
+      "lighting": "high-key moonlight from above through open tower structure, cool ambient light, soft rim light on both figures, the bell catching the brightest highlight",
+      "mood": "uneasy ceasefire, mutual recognition, the eye of the storm before final choice",
+      "player_intent": "把对峙从战斗变成对话/抉择；让玩家在敲钟（背叛守护者）和让钟保持沉默（与守护者和解）之间二选一",
+      "player_feels": "紧绷克制，情绪复杂，从纯战斗心态切换到道德抉择",
+      "gameplay_moment": "对峙/抉择：可战斗也可对话；玩家选择敲钟会触发 boss 战，选择不敲则触发和解过场",
+      "zone_id": "钟楼",
+      "source_image_url": "",
+      "generated_prompt": "Japanese anime imageboard (絵コンテ / ekonte), hand-drawn pencil and ink storyboard layout, AAA action game pre-production art, Japanese anime-style storyboard layout, loose pencil sketch with selective ink line emphasis, short directional hatching for shading, prominent speed lines and motion lines, cross-hatching for shadows, kinetic dynamic composition, the top of the temple bell tower, massive bronze bell hanging center frame fully intact, panoramic moonlit view of the broken temple complex below, mountain mist surrounding the tower base, wooden support beams crisscrossing dramatically, protagonist and the guardian facing each other across the bell, both weapons lowered slightly, the guardian's posture defensive rather than aggressive, the bell rope swaying between them as a visual barrier, symmetrical two-shot composition, level eye-line, slight upward tilt to include sky, the bell as the geometric and dramatic center, high-key moonlight from above through open tower structure, cool ambient light, soft rim light on both figures, the bell catching the brightest highlight, uneasy ceasefire, mutual recognition, the eye of the storm before final choice, monochrome graphite and ink on aged off-white / cream paper, no chromatic color, deep black reserved for window interiors and deepest shadows only, Japanese imageboard, ekonte storyboard, anime layout art, pencil and ink pre-vis, hand-drawn animation storyboard, kinetic composition",
+      "generated_image_url": "",
+      "generation_meta": {}
+    }
+  ]
+}

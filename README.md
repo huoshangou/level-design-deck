@@ -107,13 +107,14 @@ skill 检测到长文本，spawn subagent 提取设计维度，跳过对应问�
 
 ---
 
-## 8 个 Module
+## 9 个 Module
 
 | module | 定位 |
 |---|---|
 | `level_overview` | 关卡 README，同 level 所有 module 的 hub，level_id 真源 |
 | `spatial_layout` | 空间布局，接 LevelCraft 2D 工具导出 JSON，渲染 2D/3D 区域图 |
 | `bubble_diagram` | 流程图，节点+边描述关卡动线，支持 HUB 结构、分支、回流 |
+| `storyboard` | 关卡分镜（M4），key art × 玩法 beat，产 img2img prompt；`style_anchor` 全局共享保证风格一致，留 ImageProvider API 接口 |
 | `lighting_req` | 灯光需求，颜色/强度/氛围光分区描述，POI 专用 |
 | `atmosphere_ref` | 氛围参考，图片墙+关键词+区域氛围描述 |
 | `vfx_req` | 视觉特效需求，环境/互动/叙事类特效分区描述 |
@@ -192,5 +193,6 @@ spec 只走一个方向：对话 → JSON → HTML。HTML 永远不反向影响 
 | M1 | 完成 | lighting_req 端到端：schema + editor + 机械检测 + 渲染 |
 | M2 | 完成 | AI 生成工具（generate_spec.py / regenerate_field.py，只产 prompt 不调 LLM） |
 | M3 | 完成 | 8 个 module 全部落地 + 跨 module cross_check + LevelCraft 集成 + cc skill + Mermaid 本地化 |
-| 未来方向 | 待定 | app 壳（Tauri/Electron/内网部署）让不会 cc 的设计师直接用；MCP server 升级 skill 到产品形态 |
+| M4.1+M4.2 | 完成 | 第 9 个 module = `storyboard`（img2img prompt 生产 spec）；style_anchor 全局共享 + prompt 拼接器 + ImageProvider API 接口预留；首批案例 abandoned_temple 5 panel |
+| 未来方向 | 待定 | app 壳（Tauri/Electron/内网部署）让不会 cc 的设计师直接用；MCP server 升级 skill 到产品形态；接入 image-2 真实 API |
 

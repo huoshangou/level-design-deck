@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>{{meta.level_id}} · 分镜</title>
+<style>
+:root { --fg:#222; --muted:#888; --bg:#fafaf6; --line:#e8e8e0; --accent:#1a73e8; --code-bg:#f0f0ea; --paper:#f3ead4; --paper-dark:#e8dcb9; --frame:#1a1a1a; }
+* { box-sizing:border-box; margin:0; padding:0; }
+body { font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif; color:var(--fg); background:var(--bg); line-height:1.7; padding:32px 24px; max-width:1280px; margin:0 auto; font-size:14px; }
+.header { padding-bottom:20px; border-bottom:2px solid var(--fg); margin-bottom:24px; }
+.header h1 { font-size:22px; font-weight:700; letter-spacing:.02em; margin-bottom:6px; }
+.meta-bar { color:var(--muted); font-family:"JetBrains Mono","Consolas",monospace; font-size:11px; }
+.meta-bar span { margin-right:16px; }
+.section-label { font-size:11px; font-weight:600; color:var(--accent); text-transform:uppercase; letter-spacing:.08em; margin:24px 0 8px; padding-top:16px; border-top:1px solid var(--line); }
+.intent { background:var(--code-bg); border-left:3px solid var(--accent); border-radius:0 4px 4px 0; padding:12px 16px; }
+
+/* style anchor 折叠区 */
+.style-anchor { background:#fff; border:1px solid var(--line); border-radius:6px; padding:0; margin-bottom:8px; }
+.style-anchor summary { cursor:pointer; padding:12px 16px; font-weight:600; font-size:13px; user-select:none; }
+.style-anchor summary::-webkit-details-marker { color:var(--muted); }
+.style-anchor[open] summary { border-bottom:1px solid var(--line); }
+.style-body { padding:12px 16px; font-size:12px; }
+.style-row { display:grid; grid-template-columns:140px 1fr; gap:12px; padding:6px 0; border-bottom:1px dashed var(--line); }
+.style-row:last-child { border-bottom:none; }
+.style-key { color:var(--muted); font-family:"JetBrains Mono","Consolas",monospace; font-size:11px; padding-top:2px; }
+.style-val { color:var(--fg); word-break:break-word; }
+.style-val .tag { display:inline-block; font-size:11px; padding:2px 8px; border-radius:10px; background:var(--code-bg); border:1px solid var(--line); margin:2px 4px 2px 0; }
+.style-val.negative { color:#c53030; font-size:11px; font-style:italic; }
+
+/* panel nav */
+.panel-nav { display:flex; gap:6px; flex-wrap:wrap; margin:8px 0 16px; padding:8px 12px; background:var(--code-bg); border-radius:4px; font-size:12px; align-items:center; }
+.panel-nav .nav-label { color:var(--muted); margin-right:6px; }
+.panel-nav .nav-item { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; background:#fff; border:1px solid var(--line); border-radius:12px; cursor:pointer; transition:all .15s; font-size:11px; }
+.panel-nav .nav-item:hover { border-color:var(--accent); color:var(--accent); }
+.panel-nav .nav-arrow { color:var(--muted); font-size:10px; }
+
+/* panel cards */
+.panels-container { display:flex; flex-direction:column; gap:24px; }
+.panel-card { background:#fff; border:1px solid var(--line); border-radius:6px; padding:16px; display:grid; grid-template-columns:minmax(360px, 45%) 1fr; gap:20px; scroll-margin-top:20px; }
+.panel-card-header { grid-column:1 / -1; display:flex; align-items:baseline; gap:12px; padding-bottom:8px; border-bottom:1px solid var(--line); margin-bottom:4px; }
+.panel-id { font-family:"JetBrains Mono","Consolas",monospace; font-size:11px; color:var(--muted); padding:2px 6px; background:var(--code-bg); border-radius:3px; }
+.panel-title { font-size:16px; font-weight:700; }
+.beat-chip { display:inline-flex; align-items:center; font-size:11px; padding:2px 8px; border-radius:10px; background:#e8f0fe; border:1px solid #aecbfa; color:#1a56db; font-family:monospace; }
+.zone-chip { display:inline-flex; align-items:center; font-size:11px; padding:2px 8px; border-radius:10px; background:#fef3c7; border:1px solid #fde68a; color:#d97706; }
+
+/* panel frame — 米色纸 + 黑框 + 16:9 装帧 */
+.panel-frame-wrap { display:flex; flex-direction:column; gap:6px; }
+.panel-frame {
+  aspect-ratio: 16 / 9;
+  background:
+    radial-gradient(ellipse at center, var(--paper) 0%, var(--paper-dark) 100%),
+    repeating-linear-gradient(90deg, transparent 0 2px, rgba(0,0,0,0.01) 2px 3px);
+  background-blend-mode: multiply;
+  border: 1.5px solid var(--frame);
+  border-radius: 2px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12), inset 0 0 30px rgba(120,90,40,0.08);
+  display:flex; align-items:center; justify-content:center;
+  position:relative; overflow:hidden;
+}
+.panel-frame img { width:100%; height:100%; object-fit:cover; display:block; }
+.panel-frame .placeholder {
+  text-align:center; color:#a08a5e; font-family:"JetBrains Mono","Consolas",monospace; font-size:11px; padding:16px; line-height:1.6;
+}
+.panel-frame .placeholder .ph-icon { font-size:24px; margin-bottom:6px; opacity:0.4; }
+.frame-caption { font-size:10px; color:var(--muted); text-align:center; font-family:"JetBrains Mono","Consolas",monospace; }
+
+/* panel fields */
+.panel-fields { display:flex; flex-direction:column; gap:14px; min-width:0; }
+.field-group { padding:10px 12px; border-radius:4px; }
+.field-group.prompt { background:#f5f8f5; border-left:3px solid #5d8b6e; }
+.field-group.intent { background:#fcf6ea; border-left:3px solid #c79a4e; }
+.field-group.system { background:#f3f4f6; border-left:3px solid #9ca3af; }
+.fg-label { font-size:10px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; margin-bottom:6px; }
+.field-row { padding:4px 0; font-size:12px; line-height:1.6; }
+.field-row + .field-row { border-top:1px dashed rgba(0,0,0,0.06); margin-top:4px; padding-top:6px; }
+.field-key { color:var(--muted); font-size:10px; font-family:"JetBrains Mono","Consolas",monospace; margin-right:6px; }
+.field-val { color:var(--fg); word-break:break-word; }
+.field-val.en { font-style:italic; color:#444; }
+.field-val.empty { color:#bbb; font-style:italic; }
+
+/* generated prompt */
+.gen-prompt { font-family:"JetBrains Mono","Consolas",monospace; font-size:11px; color:#444; background:#fafafa; padding:8px 10px; border:1px dashed var(--line); border-radius:3px; word-break:break-word; white-space:pre-wrap; line-height:1.5; }
+.gen-prompt-empty { font-style:italic; color:#bbb; }
+
+@media (max-width: 900px) {
+  .panel-card { grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>关卡分镜 Storyboard</h1>
+  <div class="meta-bar">
+    <span><b>spec_id:</b> {{meta.spec_id}}</span>
+    <span><b>level_id:</b> {{meta.level_id}}</span>
+    <span><b>v</b>{{meta.version}}</span>
+    <span><b>owner:</b> {{meta.owner}}</span>
+    <span><b>type:</b> {{context.level_type}}</span>
+  </div>
+</div>
+
+<div class="section-label">设计意图</div>
+<div class="intent">{{context.intent}}</div>
+
+<div class="section-label">风格锚定（全 panel 共享）</div>
+<details class="style-anchor" id="style-anchor-block">
+  <summary>展开 / 折叠 style_anchor</summary>
+  <div class="style-body" id="style-body"></div>
+</details>
+
+<div class="section-label">分镜序列</div>
+<div class="panel-nav" id="panel-nav"></div>
+
+<div class="panels-container" id="panels-container"></div>
+
+<script>
+(function () {
+  var styleAnchor = {{style_anchor}};
+  var panels = {{panels}};
+  var refImageDefault = styleAnchor.reference_image_url || '';
+
+  // ---- 渲染 style_anchor ----
+  var styleBody = document.getElementById('style-body');
+  function row(key, val) {
+    var r = document.createElement('div');
+    r.className = 'style-row';
+    var k = document.createElement('div'); k.className = 'style-key'; k.textContent = key;
+    var v = document.createElement('div'); v.className = 'style-val';
+    if (Array.isArray(val)) {
+      val.forEach(function (t) {
+        var span = document.createElement('span'); span.className = 'tag'; span.textContent = t;
+        v.appendChild(span);
+      });
+    } else if (typeof val === 'object' && val !== null) {
+      Object.keys(val).forEach(function (sk) {
+        var line = document.createElement('div');
+        line.style.fontSize = '11px'; line.style.color = '#555';
+        line.innerHTML = '<code style="color:#888">' + sk + ':</code> ' + (val[sk] || '<em>—</em>');
+        v.appendChild(line);
+      });
+    } else {
+      v.textContent = val || '—';
+    }
+    r.appendChild(k); r.appendChild(v);
+    return r;
+  }
+  ['medium', 'art_direction', 'color_palette', 'lighting_aesthetic'].forEach(function (k) {
+    styleBody.appendChild(row(k, styleAnchor[k]));
+  });
+  styleBody.appendChild(row('quality_tags', styleAnchor.quality_tags || []));
+  var negRow = row('negative_prompt', styleAnchor.negative_prompt || '');
+  negRow.querySelector('.style-val').classList.add('negative');
+  styleBody.appendChild(negRow);
+  styleBody.appendChild(row('reference_image_url', styleAnchor.reference_image_url || '—'));
+  if (styleAnchor.presentation) styleBody.appendChild(row('presentation', styleAnchor.presentation));
+
+  // ---- panel nav ----
+  var nav = document.getElementById('panel-nav');
+  var navLabel = document.createElement('span'); navLabel.className = 'nav-label'; navLabel.textContent = '序列：'; nav.appendChild(navLabel);
+  panels.forEach(function (p, idx) {
+    if (idx > 0) {
+      var arrow = document.createElement('span'); arrow.className = 'nav-arrow'; arrow.textContent = '→'; nav.appendChild(arrow);
+    }
+    var item = document.createElement('a');
+    item.className = 'nav-item'; item.href = '#' + p.panel_id;
+    item.innerHTML = '<b>' + p.panel_id + '</b> ' + (p.title || '');
+    nav.appendChild(item);
+  });
+
+  // ---- panel cards ----
+  var container = document.getElementById('panels-container');
+  panels.forEach(function (p) {
+    var card = document.createElement('div');
+    card.className = 'panel-card';
+    card.id = p.panel_id;
+
+    // header row
+    var hdr = document.createElement('div');
+    hdr.className = 'panel-card-header';
+    hdr.innerHTML = '<span class="panel-id">' + p.panel_id + '</span>' +
+                    '<span class="panel-title">' + (p.title || '') + '</span>' +
+                    '<span class="beat-chip">beat: ' + (p.beat_id || '?') + '</span>' +
+                    (p.zone_id ? '<span class="zone-chip">zone: ' + p.zone_id + '</span>' : '');
+    card.appendChild(hdr);
+
+    // left: frame
+    var frameWrap = document.createElement('div');
+    frameWrap.className = 'panel-frame-wrap';
+    var frame = document.createElement('div');
+    frame.className = 'panel-frame';
+    var imgUrl = p.generated_image_url || '';
+    if (imgUrl) {
+      var img = document.createElement('img'); img.src = imgUrl; img.alt = p.title || '';
+      img.onerror = function () { this.style.display = 'none'; renderPlaceholder(frame, p); };
+      frame.appendChild(img);
+    } else {
+      renderPlaceholder(frame, p);
+    }
+    frameWrap.appendChild(frame);
+    var cap = document.createElement('div');
+    cap.className = 'frame-caption';
+    cap.textContent = (p.source_image_url || refImageDefault || '—') + ' · ' + (styleAnchor.presentation && styleAnchor.presentation.aspect_ratio || '16:9');
+    frameWrap.appendChild(cap);
+    card.appendChild(frameWrap);
+
+    // right: fields
+    var fields = document.createElement('div');
+    fields.className = 'panel-fields';
+
+    // prompt 原料组
+    var promptGroup = makeGroup('prompt', 'PROMPT 原料（入 generated_prompt）');
+    addField(promptGroup, 'scene', p.scene, 'en');
+    addField(promptGroup, 'subject_action', p.subject_action, 'en');
+    addField(promptGroup, 'camera', p.camera, 'en');
+    addField(promptGroup, 'lighting', p.lighting || '（继承 style_anchor.lighting_aesthetic）', p.lighting ? 'en' : 'empty');
+    addField(promptGroup, 'mood', p.mood, 'en');
+    fields.appendChild(promptGroup);
+
+    // 设计意图组
+    var intentGroup = makeGroup('intent', '设计意图（仅供人读，不入 prompt）');
+    addField(intentGroup, 'player_intent', p.player_intent);
+    addField(intentGroup, 'player_feels', p.player_feels);
+    addField(intentGroup, 'gameplay_moment', p.gameplay_moment);
+    fields.appendChild(intentGroup);
+
+    // generated_prompt
+    var sysGroup = makeGroup('system', 'GENERATED PROMPT（tools/storyboard_render.py 回填）');
+    var promptBox = document.createElement('div');
+    promptBox.className = 'gen-prompt';
+    if (p.generated_prompt) {
+      promptBox.textContent = p.generated_prompt;
+    } else {
+      promptBox.classList.add('gen-prompt-empty');
+      promptBox.textContent = '尚未拼接。运行：python3 tools/storyboard_render.py specs/' + ('{{meta.spec_id}}'.trim()) + '.spec.json --prompt-only';
+    }
+    sysGroup.appendChild(promptBox);
+    fields.appendChild(sysGroup);
+
+    card.appendChild(fields);
+    container.appendChild(card);
+  });
+
+  function renderPlaceholder(frame, p) {
+    var ph = document.createElement('div');
+    ph.className = 'placeholder';
+    ph.innerHTML = '<div class="ph-icon">✎</div>' +
+                   '<div>未生成 / 待 img2img API</div>' +
+                   '<div style="margin-top:4px;opacity:.7">source: ' + (p.source_image_url || refImageDefault || '<em>(none)</em>') + '</div>';
+    frame.appendChild(ph);
+  }
+  function makeGroup(cls, label) {
+    var g = document.createElement('div');
+    g.className = 'field-group ' + cls;
+    var l = document.createElement('div'); l.className = 'fg-label'; l.textContent = label;
+    g.appendChild(l);
+    return g;
+  }
+  function addField(group, key, val, valCls) {
+    var row = document.createElement('div'); row.className = 'field-row';
+    row.innerHTML = '<span class="field-key">' + key + ':</span>' +
+                    '<span class="field-val ' + (valCls || '') + '">' + (val || '—') + '</span>';
+    group.appendChild(row);
+  }
+})();
+</script>
+
+</body>
+</html>

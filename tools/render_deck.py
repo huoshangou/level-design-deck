@@ -14,12 +14,13 @@ from pathlib import Path
 BASE = Path(__file__).resolve().parent.parent
 
 MODULE_ORDER = [
-    "level_overview","bubble_diagram","spatial_layout","atmosphere_ref",
+    "level_overview","bubble_diagram","storyboard","spatial_layout","atmosphere_ref",
     "lighting_req","vfx_req","audio_req","asset_list",
 ]
 MODULE_META = {
     "level_overview": ("关卡概览","Level Overview"),
     "bubble_diagram": ("流程主线","Flow Diagram"),
+    "storyboard":     ("关卡分镜","Storyboard"),
     "spatial_layout": ("空间布局","Spatial Layout"),
     "atmosphere_ref": ("氛围参考","Atmosphere Reference"),
     "lighting_req":   ("灯光需求","Lighting Requirements"),
