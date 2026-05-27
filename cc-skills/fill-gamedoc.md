@@ -302,10 +302,21 @@ Read: ~/Desktop/level-design-deck/templates/html/{kind}_template_v1.5.html
 
 ### 3.6 完成报告
 
-**写完成报告前必须先跑头部 meta sweep**（3.1.5 配套完工 gate）：
+**写完成报告前必须先跑两道 gate**：
+
+**Gate 1 — 全文骨架对账**（推荐，一次拿全部字段状态）：
+
+```
+Bash python3 ~/Desktop/level-design-deck/tools/doc_skeleton.py <docs/文件名>
+```
+
+骨架输出"合计：N 字段 / 已填 X / ❗ 待填 Y / ⚠ ai-uncertain Z"。
+- ❗ 待填数 > 0 → 看清单逐项判断是用户提供过但你漏填、还是确实没素材应该留 ai-flag
+- 已知留 placeholder 的字段（白盒视频 P4 路径、ip_link 等用户后补）不计 fail
+
+**Gate 2 — 头部 meta 兜底**（3.1.5 配套）：
 
 ```bash
-# 任意一项非空才允许写完成报告；空 / 占位 / "XXX" / "待填写" 一律算 fail
 Grep -n 'data-field="(gameplay_name_cn|gameplay_name_en|version_num|header_date|status|designer|info_name_cn|info_name_en|info_version|info_setting|info_region)"' <docs/文件名>
 Grep -n '<title>' <docs/文件名>  # 不能是默认 "玩法设计文档"
 Grep -n 'nav-title' <docs/文件名>  # 不能是默认 "XXX 玩法"
@@ -338,6 +349,28 @@ webapp 应已自动在预览栏打开新文档。
 ## Phase 4 — 增量修改（用户提"改一下 XX"时）
 
 **绝对原则：用 `Edit` 精确替换，不要 `Write` 重写整文件。**
+
+### 4.0 修改前必读骨架（强制）
+
+任何 Phase 4 接力修改之前，**第一动作**是跑：
+
+```
+Bash python3 ~/Desktop/level-design-deck/tools/doc_skeleton.py <docs/XXX.html>
+```
+
+输出告诉你每个字段当前值、待填项 ❗、ai-flag 状态、checkbox 勾选清单，
+~50 行 Markdown 骨架。**禁止凭印象 grep**：
+
+- 你历史踩坑的"以为这个字段是 X 实际是 Y" / "以为漏了 N 处实际是 M 处" /
+  "以为改完了实际还有 4-5 处旧术语" 全部来自跳过这一步（session 8bf0befd）。
+- 骨架 ❗ 列表是 4.3 完工 gate 的事实基线。
+
+骨架告诉你三件事：
+1. 当前哪些字段已填、内容大致是什么
+2. 哪些 ai-flag 待清（uncertain / missing）
+3. checkbox 当前勾选状态（决定哪些 section 是激活的）
+
+**例外**：纯首次填充（Phase 3）不必跑骨架（模板就是空的）。Phase 4 接力一律强制。
 
 ### 4.1 定位
 

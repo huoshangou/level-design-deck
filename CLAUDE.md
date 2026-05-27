@@ -180,7 +180,24 @@ L3 防线由**两个机制**组成：自问（4.A）+ 决策来源标签（4.B�
 
 ---
 
-## 8. 新 session 入口
+## 8. Session 启动流程（cc 进 LDD 工作目录时自动）
+
+每次 cc 在 LDD 工作目录启动新对话，**第一动作**：
+
+1. 检查 `memory/pending_review.md` 是否存在且非空
+   - 若有内容：给 Steve 展示最近 session 的 [决策] / [待定] / [风险] / [需求] / [迭代]
+     摘要，**问他**要不要合并到正式位置（PROJECT.md 决策记录 / 某 module 的 spec 备注 /
+     本文约束清单等）；合并完后**清空** `pending_review.md`（保留文件，写入"已清空"标记
+     或直接删除内容）
+   - 若空 / 不存在：跳过
+2. 列 `memory/*.md` 提示是否要继续某个未结话题
+3. 然后才进 9 节"新 session 入口"必读顺序
+
+`memory/pending_review.md` 由 `tools/stop_hook.py` 在 cc 对话结束时自动追加（通过
+`.claude/settings.json` 的 Stop hook 注册）。**禁止**人工直接编辑此文件 — 它是机器自动落盘
+的暂存区，正式去处由你跟 Steve 合并后定。
+
+## 9. 新 session 入口
 
 新 session 必读顺序（30 秒内）：
 1. **PROJECT.md** —— 项目定位 + 5 步流程 + 3 里程碑
@@ -194,4 +211,4 @@ L3 防线由**两个机制**组成：自问（4.A）+ 决策来源标签（4.B�
 
 ## 版本
 
-CLAUDE.md v0.8（2026-04-30 创建；2026-05-06 加 4.B 决策来源标签输出契约；2026-05-06 同日：补 work_docs_extract.json 和 Steve 直接指示 2 种来源枚举；2026-05-06 M3.2：editor.html 行数约束从 < 300 bump 到 < 400；2026-05-07 M3.3：editor.html 从 < 400 bump 到 < 900，加 bubble_diagram 图状专用视图；2026-05-09 M3.7：加反污染 M3.7 例外块，有限解锁 pipeline spatial_layout/template.html + test_cases/case_05/layout_data.json；2026-05-11 M3.7 扩展：例外块加"运行时资产可复制"层级，解锁 LevelCraft editor.html + levelcraft/ bundle 复制到 deck 内供 spatial_layout 流程使用；2026-05-15 v0.7→v0.8 加 webapp/ 例外子节（B 阶段 M4 启动）+ 红线第 5 条加 webapp/ 范围限定）
+CLAUDE.md v0.9（2026-04-30 创建；2026-05-06 加 4.B 决策来源标签输出契约；2026-05-06 同日：补 work_docs_extract.json 和 Steve 直接指示 2 种来源枚举；2026-05-06 M3.2：editor.html 行数约束从 < 300 bump 到 < 400；2026-05-07 M3.3：editor.html 从 < 400 bump 到 < 900，加 bubble_diagram 图状专用视图；2026-05-09 M3.7：加反污染 M3.7 例外块，有限解锁 pipeline spatial_layout/template.html + test_cases/case_05/layout_data.json；2026-05-11 M3.7 扩展：例外块加"运行时资产可复制"层级，解锁 LevelCraft editor.html + levelcraft/ bundle 复制到 deck 内供 spatial_layout 流程使用；2026-05-15 v0.7→v0.8 加 webapp/ 例外子节（B 阶段 M4 启动）+ 红线第 5 条加 webapp/ 范围限定；2026-05-27 v0.8→v0.9 加第 8 节 Session 启动流程 + 引入 memory/pending_review.md 自动落盘机制，原 8 节顺延到 9）
