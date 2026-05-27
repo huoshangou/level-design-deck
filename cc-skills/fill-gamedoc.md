@@ -191,6 +191,41 @@ Read: ~/Desktop/level-design-deck/templates/html/{kind}_template_v1.5.html
 **Step C：** 一次性 `Grep -n 'data-field' docs/<文件名>` 拿到所有字段位置，记在脑子里备用。
 **不要每改一个字段就重新 Read 一遍**——这非常浪费 token。
 
+### 3.1.5 头部 meta 必填 checklist（**强制顺序：先填头部再填正文字段**）
+
+**踩坑记录**：cc 经常默认从 6.x 玩法需求开始填，把抬头/标题/版本等头部字段当成可选→生成出的文档浏览器 tab 名、侧边栏导航、H1、版本/日期/策划名全是 `XXX 玩法` 之类的占位，用户必须事后手动指出才补。**这是 fill-gamedoc 的最高频 bug。**
+
+**Step A：进入 3.2 字段替换循环之前，先把下列 13 项全填掉。**
+
+| # | 位置 | data-field / HTML 锚点 | 来源策略 |
+|---|---|---|---|
+| 1 | HTML `<title>` 标签（行 ~8） | `<title>...</title>`（**非 data-field**，Grep 锚点 `<title>`）| `{中文名} - 玩法设计文档` |
+| 2 | 侧边栏导航标题（行 ~1100） | `id="nav-title"`（**非 data-field**，Grep 锚点 `nav-title`）| `{中文名}<br>玩法设计` |
+| 3 | 文档头主标题 H1 | `data-field="gameplay_name_cn"` | 中文名（用户素材里有，必给）|
+| 4 | 文档头副标题 | `data-field="gameplay_name_en"` | 英文名 + 一句话定位（如 `Dynamic Truck Boarding — 开放世界机会性载具交互`）|
+| 5 | 版本号 | `data-field="version_num"` | 默认 `v1.0`（首次生成）|
+| 6 | 日期 | `data-field="header_date"` | 今天日期 `YYYY-MM-DD`（用 Bash 跑 `date +%Y-%m-%d` 不要猜）|
+| 7 | 状态 | `data-field="status"` | 默认 `设计中`（首次生成）|
+| 8 | 策划名 | `data-field="designer"` | 走 profile_prompt_block 注入的设计者信息（如 `芬里尔 (FNR)`），**禁止留空 / 禁止写"待填写"** |
+| 9 | 02 玩法信息 · 中文名 | `data-field="info_name_cn"` | 同 #3 |
+| 10 | 02 玩法信息 · 英文名 | `data-field="info_name_en"` | 同 #4（去掉一句话定位部分，只留英文名）|
+| 11 | 02 玩法信息 · 版本 | `data-field="info_version"` | 同 #5 |
+| 12 | 02 玩法信息 · 设定 | `data-field="info_setting"` | 用户素材里通常有（如 `现代开放世界（大都市）`）|
+| 13 | 02 玩法信息 · 地块 | `data-field="info_region"` | 用户素材里通常有（如 `许可路段（高架路 / 工业区干道 / 城郊连接道路）`）|
+
+**Step B：每项标"已知/推断/待用户确认"**
+- 用户素材直接有 → 已知，填
+- 素材里有迹象可推断 → 推断，填上 + 用 `ai-flag ai-uncertain` 包裹（除非是 #1 #2 #5 #6 #7 这类 deterministic 字段不需要 flag）
+- 完全没线索 → 这是**少数情况**（基本字段而已），当场问用户**1 个问题**拿到答案，禁止直接填"待填写"占位让用户事后补
+
+**Step C：完成头部 13 项后，再进 3.2 通用字段循环。**
+
+**反例（cc 历史踩过的坑）**：
+- ❌ `<title>` 留默认 `玩法设计文档` 不改 → 浏览器 tab 名永远是"玩法设计文档"
+- ❌ `gameplay_name_en` 写 `XXX 玩法` 当占位 → 用户看 H1 副标题以为还没改
+- ❌ `designer` 留空 → 文档没归属
+- ❌ `header_date` 写 `YYYY-MM-DD` 字面字符串 → 设计师以为日期控件坏了
+
 ### 3.2 用 Edit 逐字段替换
 
 对每个待填字段，用 `Edit` 工具找到模板原占位（通常是空 `<td></td>`、`<div contenteditable="true"></div>` 或 `<span class="fill-placeholder">...</span>`），原位替换成内容。
@@ -240,26 +275,50 @@ Read: ~/Desktop/level-design-deck/templates/html/{kind}_template_v1.5.html
 
 ```html
 <body>
-<div id="ai-review-box" style="position:sticky;top:0;z-index:999;background:#FAF3E8;border-bottom:2px solid #CC785C;padding:12px 20px;font-size:13px;line-height:1.8;display:flex;gap:24px;align-items:flex-start;font-family:-apple-system,'Helvetica Neue',sans-serif;">
-  <div style="flex:0 0 auto">
-    <strong>📋 AI 填充摘要</strong><br>
-    <span style="color:#888;font-size:11px">检视完成后删除此框</span>
-  </div>
-  <div>
-    ✅ 自动填入 <strong>N</strong> 项 &nbsp;
+<details id="ai-review-box" style="position:sticky;top:0;z-index:999;background:#FAF3E8;border-bottom:2px solid #CC785C;font-family:-apple-system,'Helvetica Neue',sans-serif;font-size:13px;">
+  <summary style="padding:8px 16px;cursor:pointer;list-style:none;display:flex;gap:14px;align-items:center;flex-wrap:wrap;">
+    <strong style="white-space:nowrap">📋 AI 填充摘要</strong>
+    <span style="white-space:nowrap">✅ <strong>N_FILLED</strong></span>
+    <span style="white-space:nowrap;color:#856404">⚠️ <strong>N_UNCERTAIN</strong></span>
+    <span style="white-space:nowrap;color:#B33B3B">❌ <strong>N_MISSING</strong></span>
+    <span style="margin-left:auto;color:#888;font-size:11px;white-space:nowrap">点击展开详情 · 检视完成后删除此框</span>
+  </summary>
+  <div style="padding:6px 16px 12px;line-height:1.8;border-top:1px solid #E8DCC8;">
     ⚠️ 待确认：<a href="#flag-1" style="color:#856404">字段名</a> &nbsp;
     ❌ 待填写：<a href="#flag-2" style="color:#B33B3B">字段名</a>
   </div>
-</div>
-<style>@media print { #ai-review-box { display:none } }</style>
+</details>
+<style>
+  #ai-review-box summary::-webkit-details-marker { display:none }
+  #ai-review-box summary::after { content:"▸"; font-size:11px; color:#888; }
+  #ai-review-box[open] summary::after { content:"▾"; }
+  @media print { #ai-review-box { display:none } }
+</style>
 ```
 
-把 N 替换成实际数量，锚点列表按实际 flag-N 全部列出。
+**默认折叠**（不写 `open` 属性），只占一行不挤占预览栏，点击展开看详情。替换规则：
+- `N_FILLED` / `N_UNCERTAIN` / `N_MISSING` → 实际数量（为 0 时仍保留 chip 显示 `0`，让设计师一眼看出"已全部清干净"）
+- `<details>` 内的待确认 / 待填写锚点按实际 flag-N 全部列出；如果某类为 0，对应整行去掉
 
 ### 3.6 完成报告
 
+**写完成报告前必须先跑头部 meta sweep**（3.1.5 配套完工 gate）：
+
+```bash
+# 任意一项非空才允许写完成报告；空 / 占位 / "XXX" / "待填写" 一律算 fail
+Grep -n 'data-field="(gameplay_name_cn|gameplay_name_en|version_num|header_date|status|designer|info_name_cn|info_name_en|info_version|info_setting|info_region)"' <docs/文件名>
+Grep -n '<title>' <docs/文件名>  # 不能是默认 "玩法设计文档"
+Grep -n 'nav-title' <docs/文件名>  # 不能是默认 "XXX 玩法"
+```
+
+任意头部字段未填 / 仍是占位 → 回 3.1.5 补，**禁止写"完成"**。
+
+完成模板：
+
 ```
 ✅ 文档已生成：docs/{文件名}
+
+头部 meta（13 项）：全部已填 ✅
 
 摘要：
 - 自动填入 N 项
@@ -302,6 +361,70 @@ webapp 应已自动在预览栏打开新文档。
 ### 4.3 摘要框更新
 
 修改完成后，如果调整了 ai-flag 数量，用 `Edit` 同步更新顶部摘要框的统计数字和锚点列表。
+
+### 4.4 接力修改（用户给新方案推翻旧方案 / 大改）
+
+**触发条件**：用户在已有文档基础上说"现在改用 XX 方案"、"流程改成 A→B→C"、"把 30m 改成 50m"、"半接管去掉换成 QTE" 等，**任何会让多个字段同时失效的方案级改动**。
+
+**强制纪律**：按字段 checklist 改必漏。旧术语会零散散布在 `design_goal` / `uiux_requirement` / `sfx_requirement` / `anim_requirement` / `gameplay_name_en` 副标题 / 摘要描述等各种地方，单凭印象改完不能算完工。
+
+**必须执行的三步**：
+
+**步 1：先产出"旧→新术语映射表"**（在 thinking 里列清，不要跳过）
+```
+旧术语 → 新术语
+- "30m" → "50m"
+- "半接管" → "QTE 接入"
+- "一段 / 二段 / 双段接入" → "单段 QTE"
+- "意图区" → "标记区"
+- "玩家手动追近+系统接管" → "玩家手动驾驶+QTE+Cutscene 校正"
+```
+
+**步 2：按映射表逐项 Grep + Edit**
+- 每个旧术语跑 `Grep -i "旧术语" 文件`，对每个 hit 判断是合法保留（如 changelog 摘要 / 反例说明）还是要替换
+- 用 Edit 替换需要改的 hit；保留的 hit 写明理由
+- 不要"按字段顺序通读改"——那样一定漏
+
+**步 3：完成后必须跑"旧术语 sweep 验证"**（这是完工判据，不是可选）
+- 把映射表里所有旧术语用一条 Bash 命令 grep 一遍
+- 输出格式：
+  ```
+  旧术语 sweep 验证：
+  - "30m": 0 hits ✅
+  - "半接管": 1 hit（L1077 changelog 摘要，合法保留）✅
+  - "意图区": 0 hits ✅
+  ...
+  ```
+- 任意一项有非白名单 hit → **不能写"修改完成"**，必须继续改
+
+**白名单**（合法保留旧术语的位置）：
+- ai-review-box 摘要框里的"已删除 X / 已替换 X→Y"changelog 行
+- 注释里明确写"⚠ 旧方案，已废弃"的对照说明
+
+### 4.5 用户报告 diff 不对时（"没看到改动 / 还是旧的 / 没生效"）
+
+**禁止反射**：第一句话不要说"浏览器缓存 / 硬刷新 / 清缓存"。这是 cc 历史上反复踩的坑——文件没改干净时让用户去清缓存，浪费双方时间。
+
+**必须反射**（按顺序）：
+1. **先 Grep 验证文件实际状态**：用用户提到的关键词跑 `Grep -i "关键词" 文件`
+2. **看是否真改了**：
+   - 文件里还有旧内容 → 是 **cc 的问题**，承认遗漏并继续改
+   - 文件里已经是新内容 → 才考虑外部因素（浏览器缓存 / iframe 没刷新 / 预览栏没指向最新文件等）
+3. **承认遗漏时的措辞**：直接说"我之前漏了 X / Y / Z 处，现在补"，不要找借口
+
+### 4.6 mermaid 流程图字段编辑（硬规则）
+
+**只允许整段替换**：mermaid 字段的 Edit `old_string` 必须 = 完整的 `<div class="mermaid" ... data-field="mermaid_flowchart">...完整 flowchart 源码...</div>`，含开标签和闭标签。
+
+**禁止局部替换**：禁止只换 mermaid 节内某几行节点 / 某条边。
+- **理由**：mermaid 解析器对未定义节点容错差，残留一行 `B --> C{xxx}` 会让整张图渲染失败。Edit 局部替换时极容易把旧节点连接的尾巴留下变成孤立节点。
+- **代价对比**：整段替换的 `old_string` 长一些，但保证图能渲染；局部替换省字符但坏图概率高。
+
+**实操**：
+1. `Grep -n "data-field=\"mermaid_flowchart\"" 文件` 定位 mermaid 节起点
+2. `Read` 起点+50 行，确认看到 `</div>` 闭标签
+3. Edit 时 `old_string` 包含从 `<div class="mermaid"` 到 `</div>` 的完整段
+4. `new_string` 重写整段 mermaid 源码（含 `flowchart TD`、所有节点、所有 style）
 
 ---
 
