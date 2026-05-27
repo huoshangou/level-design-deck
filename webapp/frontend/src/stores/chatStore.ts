@@ -129,6 +129,12 @@ export const useChatStore = create<ChatState>((set, get) => ({
       interruptRequested: false,
       wsState: "connecting",
     });
+    // 等 WS 真正握手完毕再返回。避免用户看到 hint 后立刻发消息，
+    // 但 useChatSocket 的 useEffect 还没把 WS connect 上 → 后端 409。
+    for (let i = 0; i < 30; i++) {
+      await new Promise((r) => setTimeout(r, 100));
+      if (useChatStore.getState().wsState === "open") return;
+    }
   },
 
   addUserMessage: (text) => {

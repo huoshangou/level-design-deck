@@ -148,9 +148,20 @@ export default function ChatSidebar() {
       try {
         await api.sendMessage(clientId, text);
       } catch (e) {
-        // POST 失败：回滚 awaitingResponse + 把错误塞消息流，避免前端"假死"
-        markSendFailed(String(e));
-        throw e;
+        // 409 = backend _ws_connected 没认到 → 多半是 StrictMode race 残留 / WS 刚断
+        // sleep 500ms 让 useChatSocket 重连后端 ws handler 重新注册，再试一次
+        if (String(e).includes("409")) {
+          await new Promise((r) => setTimeout(r, 500));
+          try {
+            await api.sendMessage(clientId, text);
+          } catch (e2) {
+            markSendFailed(String(e2));
+            throw e2;
+          }
+        } else {
+          markSendFailed(String(e));
+          throw e;
+        }
       }
     } catch (e) {
       alert(`发送失败：${String(e)}`);

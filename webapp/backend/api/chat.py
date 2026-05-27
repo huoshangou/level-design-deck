@@ -22,6 +22,11 @@ _queues: dict[str, asyncio.Queue] = {}
 # client_id → bool  (True while a WS is connected)
 _ws_connected: dict[str, bool] = {}
 
+# client_id → 当前 active WebSocket 对象。StrictMode 双 mount / 用户快速重连时
+# 可能有两个 ws handler 并存，finally 清理时必须先确认自己仍是 active 的，
+# 否则会把后开的连接状态错误擦掉，导致 POST /messages 报 409。
+_active_ws: dict[str, WebSocket] = {}
+
 
 class SendMessageRequest(BaseModel):
     text: str
@@ -100,6 +105,7 @@ async def ws_chat(websocket: WebSocket, client_id: str):
     queue: asyncio.Queue = asyncio.Queue()
     _queues[client_id] = queue
     _ws_connected[client_id] = True
+    _active_ws[client_id] = websocket
 
     try:
         while True:
@@ -139,5 +145,8 @@ async def ws_chat(websocket: WebSocket, client_id: str):
     except WebSocketDisconnect:
         pass
     finally:
-        _ws_connected.pop(client_id, None)
-        _queues.pop(client_id, None)
+        # 只在自己仍是 active ws 时才清；否则会擦掉后开的连接状态（StrictMode race）
+        if _active_ws.get(client_id) is websocket:
+            _active_ws.pop(client_id, None)
+            _ws_connected.pop(client_id, None)
+            _queues.pop(client_id, None)
