@@ -363,7 +363,7 @@ Bash python3 ~/Desktop/level-design-deck/tools/doc_skeleton.py <docs/XXX.html>
 
 - 你历史踩坑的"以为这个字段是 X 实际是 Y" / "以为漏了 N 处实际是 M 处" /
   "以为改完了实际还有 4-5 处旧术语" 全部来自跳过这一步（session 8bf0befd）。
-- 骨架 ❗ 列表是 4.3 完工 gate 的事实基线。
+- 骨架 ❗ 列表是 3.6 完工 gate 的事实基线。
 
 骨架告诉你三件事：
 1. 当前哪些字段已填、内容大致是什么
