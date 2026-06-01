@@ -5,7 +5,7 @@ import contextlib
 import io
 from typing import Any
 
-from tools.cross_check import collect_specs_by_level, run_cross_checks
+from lib.protocol.cross_check import collect_specs_by_level, run_cross_checks
 
 
 def run_cross(level_id: str) -> dict[str, Any]:

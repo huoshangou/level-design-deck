@@ -21,7 +21,7 @@ from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
-# 与 tools/mechanical_check.py 同步维护
+# 与 lib/protocol/mechanical_check.py 同步维护
 PLACEHOLDER_PATTERNS = "待定 / 待补充 / TBD / TODO / 参考xxx / 全 ~~~ / 全 ???"
 CAVEAT_PATTERNS = "（待xxx确认） / 暂用xxx代替 / 临时xxx方案"
 

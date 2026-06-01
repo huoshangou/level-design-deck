@@ -20,7 +20,7 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 DEFAULT_WORK_DOCS = PROJECT_ROOT / "reference" / "work_docs_extract.json"
 DEFAULT_TEMPLATE_FIELDS = PROJECT_ROOT / "reference" / "template_fields.json"
 DEFAULT_OUTPUT = PROJECT_ROOT / "outputs" / ".diff.json"

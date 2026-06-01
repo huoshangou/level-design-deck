@@ -20,7 +20,7 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 DEFAULT_OUTPUT = PROJECT_ROOT / "outputs" / ".warnings.json"
 
 PLACEHOLDER_RE = re.compile(r"待定|待补充|TBD|TODO|参考xxx|参考XXX|^~+$|^\?+$", re.IGNORECASE)

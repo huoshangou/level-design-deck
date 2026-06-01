@@ -7,8 +7,8 @@ from typing import Any
 
 from backend.config import PROJECT_ROOT
 from backend.store.base import SpecRecord
-from tools.mechanical_check import Validator, infer_module, SEMANTIC_CHECKS
-from tools.template_diff import build_diff_payload
+from lib.protocol.mechanical_check import Validator, infer_module, SEMANTIC_CHECKS
+from lib.protocol.template_diff import build_diff_payload
 
 
 def _infer_schema_path(spec_id: str) -> Path | None:

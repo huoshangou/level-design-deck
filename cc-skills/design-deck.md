@@ -72,7 +72,7 @@ deck server 默认在 `http://127.0.0.1:8766`。每次 action 开始时 curl 检
 2. 跑 `cd $DECK_HOME && python3 tools/generate_spec.py --module level_overview --intent "<意图>"`
 3. 看 stdout 输出的 self-contained prompt → **按 prompt 内化执行** → 产 level_overview spec JSON
 4. 用 Write 工具写到 `$DECK_HOME/specs/level_overview_<level_id>.spec.json`
-5. 跑 `python3 tools/mechanical_check.py specs/level_overview_<level_id>.spec.json schema/level_overview.schema.json --quiet`
+5. 跑 `python3 lib/protocol/mechanical_check.py specs/level_overview_<level_id>.spec.json schema/level_overview.schema.json --quiet`
 6. 0 ERROR → **自动打开 editor**（改动 1）：
    `python3 -c "import webbrowser; webbrowser.open('http://127.0.0.1:8766/editor/editor.html?spec=level_overview_<level_id>')"`
 7. 打开后 print：
@@ -128,12 +128,16 @@ level_overview → spatial_layout → bubble_diagram → storyboard → atmosphe
 3. 通过 `/design-deck open <level_id>` 后在 editor 用 [📥 Import JSON] 按钮闭环
 
 **生成步骤（非 spatial_layout）**：
+0. **先读 spec_skeleton 了解关卡现状（M5.1 新加）**：
+   `python3 lib/protocol/spec_skeleton.py --level-id <level_id> --markdown 2>/dev/null || echo "首个 module，无现存 spec"`
+   - 目的：cc 看清已有哪些 module / 哪些 zone label 可被引用 / 哪些 cross_ref 已建立。**不看就动手 = 漏字段 / 编错 zone_id 的常见原因**
+   - 注意：spec_skeleton 输出 ≠ doc_skeleton（doc_skeleton 看 HTML 文档；spec_skeleton 看 spec.json + 跨 module 状态）
 1. 检查目标 spec 不存在（如已存在，建议用 editor 改字段或调 `regenerate_field.py`）
 2. 跑 `cd $DECK_HOME && python3 tools/generate_spec.py --module <module> --intent "<意图>"`
 3. 内化执行 prompt → 产 spec → Write 到 `$DECK_HOME/specs/<module>_<level_id>.spec.json`
-4. 跑 `python3 tools/mechanical_check.py specs/<module>_<level_id>.spec.json schema/<module>.schema.json --quiet`
+4. 跑 `python3 lib/protocol/mechanical_check.py specs/<module>_<level_id>.spec.json schema/<module>.schema.json --quiet`
 5. **如果该 module 有 zone ref**（lighting_req / atmosphere_ref / vfx_req / audio_req / asset_list）：
-   - 跑 `python3 tools/cross_check.py --level-id <level_id>`
+   - 跑 `python3 lib/protocol/cross_check.py --level-id <level_id>`
    - **有 ERROR**（改动 2）：
      - Print 错误信息
      - **自动打开 editor 跳到出错 spec**：
@@ -166,9 +170,10 @@ level_overview → spatial_layout → bubble_diagram → storyboard → atmosphe
 
 **步骤**：
 1. `ls $DECK_HOME/specs/` 找该 level_id 所有 spec（匹配 `*_<level_id>.spec.json`）
-2. 对每个 spec 跑 `python3 tools/mechanical_check.py specs/<...> schema/<module>.schema.json`
-3. 跑 `python3 tools/cross_check.py --level-id <level_id>`
-4. 汇总：errors / reviews 数 + 详细列表
+2. 对每个 spec 跑 `python3 lib/protocol/mechanical_check.py specs/<...> schema/<module>.schema.json`
+3. 跑 `python3 lib/protocol/cross_check.py --level-id <level_id>`
+4. 跑 `python3 lib/protocol/spec_skeleton.py --level-id <level_id> --markdown`（M5.1 新加：跨 module 填空进度 + cross_ref 健康度一次看全）
+5. 汇总：errors / reviews 数 + 详细列表 + skeleton 摘要（modules_present / fields_pending / cross_refs_broken）
 
 ---
 

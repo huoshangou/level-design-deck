@@ -94,7 +94,7 @@ MODULES = {
 
 WORK_DOCS_PATH = "reference/work_docs_extract.json"
 
-# 与 tools/mechanical_check.py 同步维护（不 import 避免耦合）
+# 与 lib/protocol/mechanical_check.py 同步维护（不 import 避免耦合）
 PLACEHOLDER_PATTERNS = "待定 / 待补充 / TBD / TODO / 参考xxx / 全 ~~~ / 全 ???"
 CAVEAT_PATTERNS = "（待xxx确认） / 暂用xxx代替 / 临时xxx方案"
 
@@ -126,8 +126,8 @@ def section_role(module_name):
         产出后，你（或 Steve）应该用 Write 工具落到：
             specs/<spec_id>.spec.json
         然后跑：
-            python3 tools/mechanical_check.py specs/<spec_id>.spec.json schema/{module_name}.schema.json
-            python3 tools/template_diff.py     specs/<spec_id>.spec.json
+            python3 lib/protocol/mechanical_check.py specs/<spec_id>.spec.json schema/{module_name}.schema.json
+            python3 lib/protocol/template_diff.py     specs/<spec_id>.spec.json
         两个工具都应输出 0 ERROR / 0 MISSING。""")
 
 
