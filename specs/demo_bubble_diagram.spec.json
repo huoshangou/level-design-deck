@@ -3,7 +3,8 @@
     "spec_id": "bubble_diagram_demo_abandoned_lab",
     "level_id": "demo_abandoned_lab_infiltration",
     "version": "0.1.0",
-    "owner": "level"
+    "owner": "level",
+    "phase": "L0"
   },
   "context": {
     "intent": "虚构演示流程：废弃实验室渗透 → 击败守卫 → 双路选择（解谜隐蔽路径 vs 强攻主通道）→ 撤离",

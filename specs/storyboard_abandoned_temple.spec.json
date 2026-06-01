@@ -3,7 +3,8 @@
     "spec_id": "storyboard_abandoned_temple",
     "level_id": "abandoned_temple",
     "version": "0.1.0",
-    "owner": "level"
+    "owner": "level",
+    "phase": "docified"
   },
   "context": {
     "intent": "废弃山寺关卡 5 个关键 beat 的画面化分镜——从山门初见（Part 1 起点）到钟楼守护者对峙（Part 2 高潮），跨越潜入、抉择、首战、谜底、终战五个节奏锚点。",

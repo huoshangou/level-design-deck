@@ -2,17 +2,29 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "level-design-deck/schema/lighting_req.schema.json",
   "title": "lighting_req spec",
-  "description": "POI 灯光需求 spec schema。字段来源 work_docs_extract.json poi_lighting_fields。M1 v0.1.0；M3.8 v0.2.0：ambience_refs[].region_id 语义改为指代同 level 的 spatial_layout.shapes[].label，由 cross_check.py 跨 spec 校验。",
-  "version": "0.3.0",
-  "applies_to": ["POI"],
+  "description": "POI 灯光需求 spec schema。字段来源 work_docs_extract.json poi_lighting_fields。M1 v0.1.0；M3.8 v0.2.0：ambience_refs[].region_id 语义改为指代同 level 的 spatial_layout.shapes[].label，由 cross_check.py 跨 spec 校验。 M5.4 v0.4.0: meta 加 optional phase 字段 (L0/whitebox/docified)。",
+  "version": "0.4.0",
+  "applies_to": [
+    "POI"
+  ],
   "type": "object",
-  "required": ["meta", "map_constraint", "level_constraint", "mission_constraint", "concept_art"],
+  "required": [
+    "meta",
+    "map_constraint",
+    "level_constraint",
+    "mission_constraint",
+    "concept_art"
+  ],
   "additionalProperties": false,
   "properties": {
     "meta": {
       "title": "元信息",
       "type": "object",
-      "required": ["spec_id", "level_id", "version"],
+      "required": [
+        "spec_id",
+        "level_id",
+        "version"
+      ],
       "additionalProperties": false,
       "properties": {
         "spec_id": {
@@ -44,13 +56,25 @@
           "type": "string",
           "default": "level",
           "description": "需求归属方，POI 灯光默认 OWNER=关卡（来自 PDF 第六节）"
+        },
+        "phase": {
+          "title": "阶段",
+          "type": "string",
+          "enum": [
+            "L0",
+            "whitebox",
+            "docified"
+          ],
+          "description": "该 module 在 5 阶段流程中的归属 (L0=设计意图期 / whitebox=白盒可玩期 / docified=文档化分发期)。M5.4 加入；optional，旧 spec 可不填。详见 PROJECT.md 决议 F + lib/protocol/README。"
         }
       }
     },
     "map_constraint": {
       "title": "地图收束",
       "type": "object",
-      "required": ["description"],
+      "required": [
+        "description"
+      ],
       "additionalProperties": false,
       "description": "地图收束_环境光（POI 文档第六节第 1 项）",
       "properties": {
@@ -63,7 +87,9 @@
         "ir_refs": {
           "title": "IR 参考",
           "type": "array",
-          "items": { "type": "string" },
+          "items": {
+            "type": "string"
+          },
           "description": "可选引用 IR 字段路径，如 FEEL.overall_tone / SPACE.environment_type"
         }
       }
@@ -71,7 +97,9 @@
     "level_constraint": {
       "title": "关卡收束",
       "type": "object",
-      "required": ["description"],
+      "required": [
+        "description"
+      ],
       "additionalProperties": false,
       "description": "关卡收束_常亮指引光（POI 文档第六节第 2 项）",
       "properties": {
@@ -84,14 +112,18 @@
         "ir_refs": {
           "title": "IR 参考",
           "type": "array",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         }
       }
     },
     "mission_constraint": {
       "title": "任务收束",
       "type": "object",
-      "required": ["description"],
+      "required": [
+        "description"
+      ],
       "additionalProperties": false,
       "description": "任务收束_任务流程灯光（POI 文档第六节第 3 项）",
       "properties": {
@@ -104,47 +136,77 @@
         "ir_refs": {
           "title": "IR 参考",
           "type": "array",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         }
       }
     },
     "concept_art": {
       "title": "原画效果图",
       "type": "object",
-      "required": ["ambient_only", "with_mission"],
+      "required": [
+        "ambient_only",
+        "with_mission"
+      ],
       "additionalProperties": false,
       "description": "原画两版效果图（POI 文档 3.0 更新要求）",
       "properties": {
         "ambient_only": {
           "title": "环境光版",
           "type": "object",
-          "required": ["status"],
+          "required": [
+            "status"
+          ],
           "additionalProperties": false,
           "description": "效果图①：环境光+常亮指引光",
           "properties": {
-            "url": { "title": "图片链接", "type": "string", "description": "图片 URL 或内网路径" },
+            "url": {
+              "title": "图片链接",
+              "type": "string",
+              "description": "图片 URL 或内网路径"
+            },
             "status": {
               "title": "状态",
               "type": "string",
-              "enum": ["pending", "in_progress", "done"]
+              "enum": [
+                "pending",
+                "in_progress",
+                "done"
+              ]
             },
-            "notes": { "title": "备注", "type": "string" }
+            "notes": {
+              "title": "备注",
+              "type": "string"
+            }
           }
         },
         "with_mission": {
           "title": "任务灯光版",
           "type": "object",
-          "required": ["status"],
+          "required": [
+            "status"
+          ],
           "additionalProperties": false,
           "description": "效果图②：环境光+常亮指引光+任务流程灯光",
           "properties": {
-            "url": { "title": "图片链接", "type": "string" },
+            "url": {
+              "title": "图片链接",
+              "type": "string"
+            },
             "status": {
               "title": "状态",
               "type": "string",
-              "enum": ["pending", "in_progress", "done"]
+              "enum": [
+                "pending",
+                "in_progress",
+                "done"
+              ]
             },
-            "notes": { "title": "备注", "type": "string" }
+            "notes": {
+              "title": "备注",
+              "type": "string"
+            }
           }
         }
       }
@@ -161,7 +223,10 @@
       "items": {
         "title": "氛围参考项",
         "type": "object",
-        "required": ["region_id", "description"],
+        "required": [
+          "region_id",
+          "description"
+        ],
         "additionalProperties": false,
         "properties": {
           "region_id": {

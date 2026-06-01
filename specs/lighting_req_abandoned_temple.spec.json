@@ -4,7 +4,8 @@
     "poi_id": "[待对接]",
     "level_id": "abandoned_temple",
     "version": "0.1.0",
-    "owner": "level"
+    "owner": "level",
+    "phase": "docified"
   },
   "map_constraint": {
     "description": "整体环境光以冷蓝灰月色为基底，色温 4200-4800K，强度极低（废弃山寺无电力）。室内主要依赖玩家角色的手电、守护者手持灯笼（暖橙色，运动光源）、蜡烛/油灯的散点辅助。核心收束原则：光即危险——守护者靠近时亮度局部升高，玩家需在光圈外移动；谜题激活时冷光蓝白色短暂提示。"

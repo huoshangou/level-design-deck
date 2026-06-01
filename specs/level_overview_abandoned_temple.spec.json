@@ -3,7 +3,8 @@
     "spec_id": "level_overview_abandoned_temple",
     "level_id": "abandoned_temple",
     "version": "0.1.0",
-    "owner": "level"
+    "owner": "level",
+    "phase": "L0"
   },
   "context": {
     "intent": "玩家扮演民间调查员，潜入山中废弃寺庙调查三名登山者失踪事件，最终与独自守护遗物、心智扭曲的前住持正面对峙。",

@@ -139,5 +139,51 @@ class TestEndToEndAbandonedTemple(unittest.TestCase):
         self.assertGreater(len(ref_fields), 0)
 
 
+class TestPhaseFilter(unittest.TestCase):
+    """M5.4: build_skeleton 支持 phase_filter 折叠。"""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.spec_paths = discover_specs("abandoned_temple")
+
+    def _filter(self, phase):
+        return build_skeleton("abandoned_temple", self.spec_paths, phase_filter=phase)
+
+    def test_phase_L0_has_3_modules(self):
+        skel = self._filter("L0")
+        names = {m["module"] for m in skel["modules"]}
+        self.assertEqual(names, {"level_overview", "atmosphere_ref", "bubble_diagram"})
+
+    def test_phase_whitebox_has_only_spatial(self):
+        skel = self._filter("whitebox")
+        names = [m["module"] for m in skel["modules"]]
+        self.assertEqual(names, ["spatial_layout"])
+
+    def test_phase_docified_has_5_modules(self):
+        skel = self._filter("docified")
+        names = {m["module"] for m in skel["modules"]}
+        self.assertEqual(names, {"lighting_req", "vfx_req", "audio_req", "asset_list", "storyboard"})
+
+    def test_phase_sums_to_all_modules(self):
+        """L0 + whitebox + docified 模块数 = 全集（守门：phase 归属不重不漏）。"""
+        n_l0 = len(self._filter("L0")["modules"])
+        n_wb = len(self._filter("whitebox")["modules"])
+        n_doc = len(self._filter("docified")["modules"])
+        n_all = len(build_skeleton("abandoned_temple", self.spec_paths)["modules"])
+        self.assertEqual(n_l0 + n_wb + n_doc, n_all)
+
+    def test_cross_refs_filtered_by_phase(self):
+        """phase=L0 时不该出现 docified module 的 cross_refs。"""
+        skel = self._filter("L0")
+        for r in skel["cross_refs"]:
+            src_mod = r["from"].split(".")[0]
+            self.assertIn(src_mod, {"level_overview", "atmosphere_ref", "bubble_diagram"})
+
+    def test_phase_attached_to_module(self):
+        skel = self._filter("docified")
+        for m in skel["modules"]:
+            self.assertEqual(m["phase"], "docified")
+
+
 if __name__ == "__main__":
     unittest.main()

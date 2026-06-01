@@ -3,7 +3,8 @@
     "spec_id": "bubble_diagram_test_warehouse",
     "level_id": "test_warehouse",
     "version": "0.1.0",
-    "owner": "level"
+    "owner": "level",
+    "phase": "L0"
   },
   "context": {
     "intent": "测试关卡主线：夜盗主角潜入废弃仓库，规避巡逻、抵达金库、撬开保险柜后撤退，验证 deck 流程图模块。",

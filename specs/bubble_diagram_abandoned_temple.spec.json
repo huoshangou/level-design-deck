@@ -3,7 +3,8 @@
     "spec_id": "bubble_diagram_abandoned_temple",
     "level_id": "abandoned_temple",
     "version": "0.1.0",
-    "owner": "level"
+    "owner": "level",
+    "phase": "L0"
   },
   "context": {
     "intent": "两段式主动线：Part 1 潜入调查以 Key 收集 + 线索解谜为核心（HUB 结构），Part 2 以仪式化 Boss 战收束——钟楼道具打断守护者状态是解谜胜负手。",
@@ -96,26 +97,95 @@
     }
   ],
   "edges": [
-    { "from": "entry", "to": "zendo_recon", "type": "sequential" },
-    { "from": "zendo_recon", "to": "hub_explore", "type": "sequential" },
-    { "from": "hub_explore", "to": "kairoh_key", "type": "branch", "label": "前往回廊" },
-    { "from": "hub_explore", "to": "kyozo_key", "type": "branch", "label": "前往藏经阁" },
-    { "from": "hub_explore", "to": "hondo_key", "type": "branch", "label": "前往主殿" },
-    { "from": "kairoh_key", "to": "hub_explore", "type": "loop", "label": "取得回廊钥匙后返回分流点" },
-    { "from": "kyozo_key", "to": "hub_explore", "type": "loop", "label": "取得藏经阁钥匙后返回分流点" },
-    { "from": "hondo_key", "to": "hub_explore", "type": "loop", "label": "取得主殿钥匙后返回分流点" },
+    {
+      "from": "entry",
+      "to": "zendo_recon",
+      "type": "sequential"
+    },
+    {
+      "from": "zendo_recon",
+      "to": "hub_explore",
+      "type": "sequential"
+    },
+    {
+      "from": "hub_explore",
+      "to": "kairoh_key",
+      "type": "branch",
+      "label": "前往回廊"
+    },
+    {
+      "from": "hub_explore",
+      "to": "kyozo_key",
+      "type": "branch",
+      "label": "前往藏经阁"
+    },
+    {
+      "from": "hub_explore",
+      "to": "hondo_key",
+      "type": "branch",
+      "label": "前往主殿"
+    },
+    {
+      "from": "kairoh_key",
+      "to": "hub_explore",
+      "type": "loop",
+      "label": "取得回廊钥匙后返回分流点"
+    },
+    {
+      "from": "kyozo_key",
+      "to": "hub_explore",
+      "type": "loop",
+      "label": "取得藏经阁钥匙后返回分流点"
+    },
+    {
+      "from": "hondo_key",
+      "to": "hub_explore",
+      "type": "loop",
+      "label": "取得主殿钥匙后返回分流点"
+    },
     {
       "from": "hub_explore",
       "to": "underground_unlock",
       "type": "sequential",
       "label": "三把钥匙集齐后解锁",
-      "requires": ["kairoh_key", "kyozo_key", "hondo_key"]
+      "requires": [
+        "kairoh_key",
+        "kyozo_key",
+        "hondo_key"
+      ]
     },
-    { "from": "underground_unlock", "to": "underground_discovery", "type": "sequential" },
-    { "from": "underground_discovery", "to": "bell_gambit", "type": "sequential" },
-    { "from": "bell_gambit", "to": "boss_confrontation", "type": "sequential", "label": "铃铛打断后进入攻击窗口" },
-    { "from": "boss_confrontation", "to": "bell_gambit", "type": "loop", "label": "守护者恢复仪式→再次前往钟楼" },
-    { "from": "boss_confrontation", "to": "ending_cutscene", "type": "sequential", "label": "累积 3 次伤害窗口后触发" },
-    { "from": "ending_cutscene", "to": "exit", "type": "sequential" }
+    {
+      "from": "underground_unlock",
+      "to": "underground_discovery",
+      "type": "sequential"
+    },
+    {
+      "from": "underground_discovery",
+      "to": "bell_gambit",
+      "type": "sequential"
+    },
+    {
+      "from": "bell_gambit",
+      "to": "boss_confrontation",
+      "type": "sequential",
+      "label": "铃铛打断后进入攻击窗口"
+    },
+    {
+      "from": "boss_confrontation",
+      "to": "bell_gambit",
+      "type": "loop",
+      "label": "守护者恢复仪式→再次前往钟楼"
+    },
+    {
+      "from": "boss_confrontation",
+      "to": "ending_cutscene",
+      "type": "sequential",
+      "label": "累积 3 次伤害窗口后触发"
+    },
+    {
+      "from": "ending_cutscene",
+      "to": "exit",
+      "type": "sequential"
+    }
   ]
 }

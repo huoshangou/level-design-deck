@@ -3,7 +3,8 @@
     "spec_id": "spatial_layout_abandoned_temple",
     "level_id": "abandoned_temple",
     "version": "0.1.0",
-    "owner": "level"
+    "owner": "level",
+    "phase": "whitebox"
   },
   "context": {
     "intent": "废弃山寺的平面布局——以中轴线主殿为核心，山门→前殿→主殿形成主动线，地下密室和钟楼作为支线空间，藏经阁和回廊提供侧翼探索路径。",
@@ -49,7 +50,12 @@
         "color": "#E8D5B0",
         "wallHeight": 300,
         "strokeExclusions": [
-          { "wall": "bottom", "x": 48, "width": 24, "color": "#6B4226" }
+          {
+            "wall": "bottom",
+            "x": 48,
+            "width": 24,
+            "color": "#6B4226"
+          }
         ]
       },
       {
@@ -64,8 +70,18 @@
         "color": "#DCC89A",
         "wallHeight": 300,
         "strokeExclusions": [
-          { "wall": "top", "x": 100, "width": 40, "color": "#6B4226" },
-          { "wall": "bottom", "x": 100, "width": 40, "color": "#6B4226" }
+          {
+            "wall": "top",
+            "x": 100,
+            "width": 40,
+            "color": "#6B4226"
+          },
+          {
+            "wall": "bottom",
+            "x": 100,
+            "width": 40,
+            "color": "#6B4226"
+          }
         ]
       },
       {
@@ -92,8 +108,18 @@
         "color": "#C8A87A",
         "wallHeight": 360,
         "strokeExclusions": [
-          { "wall": "top", "x": 120, "width": 40, "color": "#6B4226" },
-          { "wall": "left", "x": 80, "width": 30, "color": "#6B4226" }
+          {
+            "wall": "top",
+            "x": 120,
+            "width": 40,
+            "color": "#6B4226"
+          },
+          {
+            "wall": "left",
+            "x": 80,
+            "width": 30,
+            "color": "#6B4226"
+          }
         ]
       },
       {
@@ -145,7 +171,12 @@
         "color": "#C4A880",
         "wallHeight": 300,
         "strokeExclusions": [
-          { "wall": "left", "x": 50, "width": 30, "color": "#6B4226" }
+          {
+            "wall": "left",
+            "x": 50,
+            "width": 30,
+            "color": "#6B4226"
+          }
         ]
       }
     ],
@@ -154,13 +185,19 @@
         "id": "entity_player_start",
         "type": "player_start",
         "layerId": "layer_ground",
-        "position": { "x": 400, "y": 80 }
+        "position": {
+          "x": 400,
+          "y": 80
+        }
       },
       {
         "id": "entity_guardian_patrol",
         "type": "npc",
         "layerId": "layer_ground",
-        "position": { "x": 390, "y": 430 }
+        "position": {
+          "x": 390,
+          "y": 430
+        }
       }
     ]
   }

@@ -3,7 +3,8 @@
     "spec_id": "asset_list_abandoned_temple",
     "level_id": "abandoned_temple",
     "version": "0.1.0",
-    "owner": "level"
+    "owner": "level",
+    "phase": "docified"
   },
   "context": {
     "intent": "废弃山寺资产对接清单——涵盖建筑模型、装饰纹理、特效、音频、动画、交互道具，所有 asset_id 由制作团队对接定名，PoC 阶段全部留 [待对接]。",

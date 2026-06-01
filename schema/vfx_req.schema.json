@@ -2,17 +2,28 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "level-design-deck/schema/vfx_req.schema.json",
   "title": "vfx_req spec",
-  "description": "POI 视觉特效需求（环境特效 + 可交互物件特效；不含玩法技能特效）。M3.11 v0.1.0",
-  "version": "0.1.0",
-  "applies_to": ["POI", "mixed"],
+  "description": "POI 视觉特效需求（环境特效 + 可交互物件特效；不含玩法技能特效）。M3.11 v0.1.0 M5.4 v0.2.0: meta 加 optional phase 字段 (L0/whitebox/docified)。",
+  "version": "0.2.0",
+  "applies_to": [
+    "POI",
+    "mixed"
+  ],
   "type": "object",
-  "required": ["meta", "context", "overall"],
+  "required": [
+    "meta",
+    "context",
+    "overall"
+  ],
   "additionalProperties": false,
   "properties": {
     "meta": {
       "title": "元信息",
       "type": "object",
-      "required": ["spec_id", "level_id", "version"],
+      "required": [
+        "spec_id",
+        "level_id",
+        "version"
+      ],
       "additionalProperties": false,
       "properties": {
         "spec_id": {
@@ -20,19 +31,56 @@
           "type": "string",
           "pattern": "^vfx_req_[a-z0-9_]+$"
         },
-        "level_id": {"title": "关卡 ID", "type": "string", "minLength": 1},
-        "version": {"title": "版本号", "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$"},
-        "owner": {"title": "责任方", "type": "string", "default": "level"}
+        "level_id": {
+          "title": "关卡 ID",
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "title": "版本号",
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$"
+        },
+        "owner": {
+          "title": "责任方",
+          "type": "string",
+          "default": "level"
+        },
+        "phase": {
+          "title": "阶段",
+          "type": "string",
+          "enum": [
+            "L0",
+            "whitebox",
+            "docified"
+          ],
+          "description": "该 module 在 5 阶段流程中的归属 (L0=设计意图期 / whitebox=白盒可玩期 / docified=文档化分发期)。M5.4 加入；optional，旧 spec 可不填。详见 PROJECT.md 决议 F + lib/protocol/README。"
+        }
       }
     },
     "context": {
       "title": "上下文",
       "type": "object",
-      "required": ["intent", "level_type"],
+      "required": [
+        "intent",
+        "level_type"
+      ],
       "additionalProperties": false,
       "properties": {
-        "intent": {"title": "设计意图", "type": "string", "minLength": 10},
-        "level_type": {"title": "关卡类型", "type": "string", "enum": ["poi", "gameplay", "mixed"]}
+        "intent": {
+          "title": "设计意图",
+          "type": "string",
+          "minLength": 10
+        },
+        "level_type": {
+          "title": "关卡类型",
+          "type": "string",
+          "enum": [
+            "poi",
+            "gameplay",
+            "mixed"
+          ]
+        }
       }
     },
     "overall": {
@@ -48,25 +96,57 @@
       "items": {
         "title": "特效项",
         "type": "object",
-        "required": ["name", "description"],
+        "required": [
+          "name",
+          "description"
+        ],
         "additionalProperties": false,
         "properties": {
-          "name": {"title": "特效名", "type": "string", "minLength": 1, "description": "如「香火烟雾」「门开光斑」"},
+          "name": {
+            "title": "特效名",
+            "type": "string",
+            "minLength": 1,
+            "description": "如「香火烟雾」「门开光斑」"
+          },
           "category": {
             "title": "类别",
             "type": "string",
-            "enum": ["environmental", "interactive_object", "ambient", "narrative"],
+            "enum": [
+              "environmental",
+              "interactive_object",
+              "ambient",
+              "narrative"
+            ],
             "description": "environmental = 环境特效（烟/雾/雨）；interactive_object = 可交互物件触发的；ambient = 整体氛围；narrative = 剧情节点"
           },
-          "description": {"title": "描述", "type": "string", "minLength": 5},
+          "description": {
+            "title": "描述",
+            "type": "string",
+            "minLength": 5
+          },
           "zone_id": {
             "title": "区域名",
             "type": "string",
             "description": "可选 — 指代同 level spatial_layout.shapes[].label。整体特效可不填"
           },
-          "trigger": {"title": "触发条件", "type": "string", "description": "如「常驻」「玩家接近 5m」「Boss 战开始」"},
-          "ref_image_url": {"title": "参考图链接", "type": "string"},
-          "status": {"title": "状态", "type": "string", "enum": ["pending", "in_progress", "done"]}
+          "trigger": {
+            "title": "触发条件",
+            "type": "string",
+            "description": "如「常驻」「玩家接近 5m」「Boss 战开始」"
+          },
+          "ref_image_url": {
+            "title": "参考图链接",
+            "type": "string"
+          },
+          "status": {
+            "title": "状态",
+            "type": "string",
+            "enum": [
+              "pending",
+              "in_progress",
+              "done"
+            ]
+          }
         }
       }
     }

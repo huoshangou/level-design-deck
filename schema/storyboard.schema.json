@@ -2,17 +2,30 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "level-design-deck/schema/storyboard.schema.json",
   "title": "storyboard spec",
-  "description": "关卡分镜 (storyboard) — bubble_diagram 关键 beat 的画面层投影。产出物 = img2img 文字提示词 (generated_prompt)。style_anchor 全局共享保证风格一致；panels[] 每帧只变内容字段。预留 ImageProvider API 接口。M4.1 v0.1.0",
-  "version": "0.1.0",
-  "applies_to": ["POI", "gameplay", "mixed"],
+  "description": "关卡分镜 (storyboard) — bubble_diagram 关键 beat 的画面层投影。产出物 = img2img 文字提示词 (generated_prompt)。style_anchor 全局共享保证风格一致；panels[] 每帧只变内容字段。预留 ImageProvider API 接口。M4.1 v0.1.0 M5.4 v0.2.0: meta 加 optional phase 字段 (L0/whitebox/docified)。",
+  "version": "0.2.0",
+  "applies_to": [
+    "POI",
+    "gameplay",
+    "mixed"
+  ],
   "type": "object",
-  "required": ["meta", "context", "style_anchor", "panels"],
+  "required": [
+    "meta",
+    "context",
+    "style_anchor",
+    "panels"
+  ],
   "additionalProperties": false,
   "properties": {
     "meta": {
       "title": "元信息",
       "type": "object",
-      "required": ["spec_id", "level_id", "version"],
+      "required": [
+        "spec_id",
+        "level_id",
+        "version"
+      ],
       "additionalProperties": false,
       "properties": {
         "spec_id": {
@@ -21,26 +34,69 @@
           "pattern": "^storyboard_[a-z0-9_]+$",
           "description": "spec 唯一 ID，命名规则 storyboard_<level_short_name>"
         },
-        "level_id": {"title": "关卡 ID", "type": "string", "minLength": 1},
-        "version": {"title": "版本号", "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$"},
-        "owner": {"title": "责任方", "type": "string", "default": "level"}
+        "level_id": {
+          "title": "关卡 ID",
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "title": "版本号",
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$"
+        },
+        "owner": {
+          "title": "责任方",
+          "type": "string",
+          "default": "level"
+        },
+        "phase": {
+          "title": "阶段",
+          "type": "string",
+          "enum": [
+            "L0",
+            "whitebox",
+            "docified"
+          ],
+          "description": "该 module 在 5 阶段流程中的归属 (L0=设计意图期 / whitebox=白盒可玩期 / docified=文档化分发期)。M5.4 加入；optional，旧 spec 可不填。详见 PROJECT.md 决议 F + lib/protocol/README。"
+        }
       }
     },
     "context": {
       "title": "上下文",
       "type": "object",
-      "required": ["intent", "level_type"],
+      "required": [
+        "intent",
+        "level_type"
+      ],
       "additionalProperties": false,
       "properties": {
-        "intent": {"title": "设计意图", "type": "string", "minLength": 10},
-        "level_type": {"title": "关卡类型", "type": "string", "enum": ["poi", "gameplay", "mixed"]}
+        "intent": {
+          "title": "设计意图",
+          "type": "string",
+          "minLength": 10
+        },
+        "level_type": {
+          "title": "关卡类型",
+          "type": "string",
+          "enum": [
+            "poi",
+            "gameplay",
+            "mixed"
+          ]
+        }
       }
     },
     "style_anchor": {
       "title": "风格锚定（全局共享）",
       "type": "object",
       "description": "决定整套 panels 的 img2img 风格一致性。改一处此处字段，所有 panel 拼接出的 prompt 自动同步更新。",
-      "required": ["medium", "art_direction", "color_palette", "lighting_aesthetic", "negative_prompt"],
+      "required": [
+        "medium",
+        "art_direction",
+        "color_palette",
+        "lighting_aesthetic",
+        "negative_prompt"
+      ],
       "additionalProperties": false,
       "properties": {
         "medium": {
@@ -71,7 +127,10 @@
           "title": "质量词",
           "type": "array",
           "description": "质量/技术词数组，如 [\"rough sketch\", \"pre-production concept\"]",
-          "items": {"type": "string", "minLength": 1}
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
         },
         "negative_prompt": {
           "title": "反向 prompt",
@@ -90,9 +149,21 @@
           "description": "panel 装帧样式，由 template.html CSS 应用，不入 generated_prompt。",
           "additionalProperties": false,
           "properties": {
-            "frame_style": {"title": "边框样式", "type": "string", "description": "如 thin black border / none"},
-            "paper_texture": {"title": "纸张质感", "type": "string", "description": "如 aged cream paper / white"},
-            "aspect_ratio": {"title": "画幅比", "type": "string", "description": "如 16:9 / 2.39:1 / 1:1"}
+            "frame_style": {
+              "title": "边框样式",
+              "type": "string",
+              "description": "如 thin black border / none"
+            },
+            "paper_texture": {
+              "title": "纸张质感",
+              "type": "string",
+              "description": "如 aged cream paper / white"
+            },
+            "aspect_ratio": {
+              "title": "画幅比",
+              "type": "string",
+              "description": "如 16:9 / 2.39:1 / 1:1"
+            }
           }
         }
       }
@@ -111,7 +182,15 @@
       "items": {
         "title": "分镜帧",
         "type": "object",
-        "required": ["panel_id", "beat_id", "title", "scene", "subject_action", "camera", "mood"],
+        "required": [
+          "panel_id",
+          "beat_id",
+          "title",
+          "scene",
+          "subject_action",
+          "camera",
+          "mood"
+        ],
         "additionalProperties": false,
         "properties": {
           "panel_id": {

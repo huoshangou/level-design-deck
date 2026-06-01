@@ -3,7 +3,8 @@
     "spec_id": "audio_req_abandoned_temple",
     "level_id": "abandoned_temple",
     "version": "0.1.0",
-    "owner": "level"
+    "owner": "level",
+    "phase": "docified"
   },
   "context": {
     "intent": "废弃山寺音频设计——以极简环境音作为心理张力工具，有声即有信息（守护者的脚步/木鱼声 = 位置提示），刻意回避 BGM 对玩家专注力的干扰。Part 2 铃铛敲响是全场最强的音频事件。",

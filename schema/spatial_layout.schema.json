@@ -2,17 +2,28 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "level-design-deck/schema/spatial_layout.schema.json",
   "title": "spatial_layout spec",
-  "description": "POI/关卡空间布局 spec schema。spec.layout 直接嵌套 LevelCraft 2D 工具导出的 JSON，deck 仅校验和渲染（不内置编辑器）。M3.7 v0.1.0 [来源: Steve 直接指示（2026-05-09）]",
-  "version": "0.1.0",
-  "applies_to": ["POI", "mixed"],
+  "description": "POI/关卡空间布局 spec schema。spec.layout 直接嵌套 LevelCraft 2D 工具导出的 JSON，deck 仅校验和渲染（不内置编辑器）。M3.7 v0.1.0 [来源: Steve 直接指示（2026-05-09）] M5.4 v0.2.0: meta 加 optional phase 字段 (L0/whitebox/docified)。",
+  "version": "0.2.0",
+  "applies_to": [
+    "POI",
+    "mixed"
+  ],
   "type": "object",
-  "required": ["meta", "context", "layout"],
+  "required": [
+    "meta",
+    "context",
+    "layout"
+  ],
   "additionalProperties": false,
   "properties": {
     "meta": {
       "title": "元信息",
       "type": "object",
-      "required": ["spec_id", "level_id", "version"],
+      "required": [
+        "spec_id",
+        "level_id",
+        "version"
+      ],
       "additionalProperties": false,
       "properties": {
         "spec_id": {
@@ -38,13 +49,26 @@
           "type": "string",
           "default": "level",
           "description": "需求归属方"
+        },
+        "phase": {
+          "title": "阶段",
+          "type": "string",
+          "enum": [
+            "L0",
+            "whitebox",
+            "docified"
+          ],
+          "description": "该 module 在 5 阶段流程中的归属 (L0=设计意图期 / whitebox=白盒可玩期 / docified=文档化分发期)。M5.4 加入；optional，旧 spec 可不填。详见 PROJECT.md 决议 F + lib/protocol/README。"
         }
       }
     },
     "context": {
       "title": "上下文",
       "type": "object",
-      "required": ["intent", "level_type"],
+      "required": [
+        "intent",
+        "level_type"
+      ],
       "additionalProperties": false,
       "description": "布局所属关卡上下文",
       "properties": {
@@ -57,7 +81,11 @@
         "level_type": {
           "title": "关卡类型",
           "type": "string",
-          "enum": ["poi", "gameplay", "mixed"],
+          "enum": [
+            "poi",
+            "gameplay",
+            "mixed"
+          ],
           "description": "关卡类型"
         }
       }
@@ -65,7 +93,11 @@
     "layout": {
       "title": "空间布局",
       "type": "object",
-      "required": ["name", "shapes", "layers"],
+      "required": [
+        "name",
+        "shapes",
+        "layers"
+      ],
       "additionalProperties": true,
       "description": "LevelCraft 2D 导出 JSON。additionalProperties=true：LevelCraft 协议演进 deck 不应阻断（M3.7 启用，未来 LevelCraft 加字段直接通过）",
       "properties": {
@@ -89,23 +121,86 @@
           "items": {
             "title": "区域",
             "type": "object",
-            "required": ["id", "x", "y", "width", "height", "layerId"],
+            "required": [
+              "id",
+              "x",
+              "y",
+              "width",
+              "height",
+              "layerId"
+            ],
             "additionalProperties": true,
             "properties": {
-              "id": {"title": "唯一 ID", "type": "string", "minLength": 1, "description": "shape 唯一 ID（LevelCraft 用 UUID）"},
-              "type": {"title": "类型", "type": "string", "description": "形状类型（rect / polygon 等，LevelCraft 自定）"},
-              "label": {"title": "区域名", "type": "string", "description": "区域名/文字标注（区分于纯尺寸标注）"},
-              "x": {"title": "X 坐标", "type": "number"},
-              "y": {"title": "Y 坐标", "type": "number"},
-              "width": {"title": "宽度", "type": "number", "minimum": 0},
-              "height": {"title": "高度", "type": "number", "minimum": 0},
-              "rotation": {"title": "旋转角度", "type": "number", "description": "旋转角度（度）"},
-              "color": {"title": "填充色", "type": "string", "description": "填充色（hex / rgba）"},
-              "layerId": {"title": "所属楼层", "type": "string", "minLength": 1, "description": "所属楼层 ID（必须命中 layers[].id）"},
-              "isStairs": {"title": "是否楼梯", "type": "boolean", "description": "是否为楼梯间"},
-              "strokeExclusions": {"title": "门定义", "type": "array", "description": "门定义"},
-              "strokeWindows": {"title": "窗定义", "type": "array", "description": "窗定义"},
-              "wallHeight": {"title": "墙体高度", "type": "number", "description": "墙体高度（用于 3D 挤出）"}
+              "id": {
+                "title": "唯一 ID",
+                "type": "string",
+                "minLength": 1,
+                "description": "shape 唯一 ID（LevelCraft 用 UUID）"
+              },
+              "type": {
+                "title": "类型",
+                "type": "string",
+                "description": "形状类型（rect / polygon 等，LevelCraft 自定）"
+              },
+              "label": {
+                "title": "区域名",
+                "type": "string",
+                "description": "区域名/文字标注（区分于纯尺寸标注）"
+              },
+              "x": {
+                "title": "X 坐标",
+                "type": "number"
+              },
+              "y": {
+                "title": "Y 坐标",
+                "type": "number"
+              },
+              "width": {
+                "title": "宽度",
+                "type": "number",
+                "minimum": 0
+              },
+              "height": {
+                "title": "高度",
+                "type": "number",
+                "minimum": 0
+              },
+              "rotation": {
+                "title": "旋转角度",
+                "type": "number",
+                "description": "旋转角度（度）"
+              },
+              "color": {
+                "title": "填充色",
+                "type": "string",
+                "description": "填充色（hex / rgba）"
+              },
+              "layerId": {
+                "title": "所属楼层",
+                "type": "string",
+                "minLength": 1,
+                "description": "所属楼层 ID（必须命中 layers[].id）"
+              },
+              "isStairs": {
+                "title": "是否楼梯",
+                "type": "boolean",
+                "description": "是否为楼梯间"
+              },
+              "strokeExclusions": {
+                "title": "门定义",
+                "type": "array",
+                "description": "门定义"
+              },
+              "strokeWindows": {
+                "title": "窗定义",
+                "type": "array",
+                "description": "窗定义"
+              },
+              "wallHeight": {
+                "title": "墙体高度",
+                "type": "number",
+                "description": "墙体高度（用于 3D 挤出）"
+              }
             }
           }
         },
@@ -116,20 +211,40 @@
           "items": {
             "title": "实体",
             "type": "object",
-            "required": ["id"],
+            "required": [
+              "id"
+            ],
             "additionalProperties": true,
             "properties": {
-              "id": {"title": "唯一 ID", "type": "string", "minLength": 1},
-              "type": {"title": "实体类型", "type": "string", "description": "实体类型（player_start / npc / interactive 等）"},
+              "id": {
+                "title": "唯一 ID",
+                "type": "string",
+                "minLength": 1
+              },
+              "type": {
+                "title": "实体类型",
+                "type": "string",
+                "description": "实体类型（player_start / npc / interactive 等）"
+              },
               "position": {
                 "title": "坐标位置",
                 "type": "object",
                 "properties": {
-                  "x": {"title": "X 坐标", "type": "number"},
-                  "y": {"title": "Y 坐标", "type": "number"}
+                  "x": {
+                    "title": "X 坐标",
+                    "type": "number"
+                  },
+                  "y": {
+                    "title": "Y 坐标",
+                    "type": "number"
+                  }
                 }
               },
-              "layerId": {"title": "所属楼层", "type": "string", "description": "所属楼层 ID"}
+              "layerId": {
+                "title": "所属楼层",
+                "type": "string",
+                "description": "所属楼层 ID"
+              }
             }
           }
         },
@@ -141,15 +256,41 @@
           "items": {
             "title": "楼层",
             "type": "object",
-            "required": ["id", "name"],
+            "required": [
+              "id",
+              "name"
+            ],
             "additionalProperties": true,
             "properties": {
-              "id": {"title": "唯一 ID", "type": "string", "minLength": 1, "description": "楼层唯一 ID"},
-              "name": {"title": "楼层名", "type": "string", "minLength": 1, "description": "楼层显示名（一层 / 二层 / 屋顶 等）"},
-              "height": {"title": "楼层高度", "type": "number", "description": "楼层高度，用于 3D 挤出（px）"},
-              "color": {"title": "填充色", "type": "string"},
-              "showWalls": {"title": "显示墙体", "type": "boolean"},
-              "wallTargetLayerId": {"title": "墙连接楼层", "type": "string"}
+              "id": {
+                "title": "唯一 ID",
+                "type": "string",
+                "minLength": 1,
+                "description": "楼层唯一 ID"
+              },
+              "name": {
+                "title": "楼层名",
+                "type": "string",
+                "minLength": 1,
+                "description": "楼层显示名（一层 / 二层 / 屋顶 等）"
+              },
+              "height": {
+                "title": "楼层高度",
+                "type": "number",
+                "description": "楼层高度，用于 3D 挤出（px）"
+              },
+              "color": {
+                "title": "填充色",
+                "type": "string"
+              },
+              "showWalls": {
+                "title": "显示墙体",
+                "type": "boolean"
+              },
+              "wallTargetLayerId": {
+                "title": "墙连接楼层",
+                "type": "string"
+              }
             }
           }
         }

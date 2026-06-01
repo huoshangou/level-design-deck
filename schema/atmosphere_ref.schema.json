@@ -2,17 +2,28 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "level-design-deck/schema/atmosphere_ref.schema.json",
   "title": "atmosphere_ref spec",
-  "description": "POI 氛围参考墙 — 整体氛围 + 按区域多个参考图。与 spatial_layout 联动（zones[].zone_id 指代同 level spatial_layout.shapes[].label）。M3.10 v0.1.0",
-  "version": "0.1.0",
-  "applies_to": ["POI", "mixed"],
+  "description": "POI 氛围参考墙 — 整体氛围 + 按区域多个参考图。与 spatial_layout 联动（zones[].zone_id 指代同 level spatial_layout.shapes[].label）。M3.10 v0.1.0 M5.4 v0.2.0: meta 加 optional phase 字段 (L0/whitebox/docified)。",
+  "version": "0.2.0",
+  "applies_to": [
+    "POI",
+    "mixed"
+  ],
   "type": "object",
-  "required": ["meta", "context", "overall"],
+  "required": [
+    "meta",
+    "context",
+    "overall"
+  ],
   "additionalProperties": false,
   "properties": {
     "meta": {
       "title": "元信息",
       "type": "object",
-      "required": ["spec_id", "level_id", "version"],
+      "required": [
+        "spec_id",
+        "level_id",
+        "version"
+      ],
       "additionalProperties": false,
       "properties": {
         "spec_id": {
@@ -21,25 +32,64 @@
           "pattern": "^atmosphere_ref_[a-z0-9_]+$",
           "description": "spec 唯一 ID，命名规则 atmosphere_ref_<level_short_name>"
         },
-        "level_id": {"title": "关卡 ID", "type": "string", "minLength": 1},
-        "version": {"title": "版本号", "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$"},
-        "owner": {"title": "责任方", "type": "string", "default": "level"}
+        "level_id": {
+          "title": "关卡 ID",
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "title": "版本号",
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$"
+        },
+        "owner": {
+          "title": "责任方",
+          "type": "string",
+          "default": "level"
+        },
+        "phase": {
+          "title": "阶段",
+          "type": "string",
+          "enum": [
+            "L0",
+            "whitebox",
+            "docified"
+          ],
+          "description": "该 module 在 5 阶段流程中的归属 (L0=设计意图期 / whitebox=白盒可玩期 / docified=文档化分发期)。M5.4 加入；optional，旧 spec 可不填。详见 PROJECT.md 决议 F + lib/protocol/README。"
+        }
       }
     },
     "context": {
       "title": "上下文",
       "type": "object",
-      "required": ["intent", "level_type"],
+      "required": [
+        "intent",
+        "level_type"
+      ],
       "additionalProperties": false,
       "properties": {
-        "intent": {"title": "设计意图", "type": "string", "minLength": 10},
-        "level_type": {"title": "关卡类型", "type": "string", "enum": ["poi", "gameplay", "mixed"]}
+        "intent": {
+          "title": "设计意图",
+          "type": "string",
+          "minLength": 10
+        },
+        "level_type": {
+          "title": "关卡类型",
+          "type": "string",
+          "enum": [
+            "poi",
+            "gameplay",
+            "mixed"
+          ]
+        }
       }
     },
     "overall": {
       "title": "整体氛围",
       "type": "object",
-      "required": ["description"],
+      "required": [
+        "description"
+      ],
       "additionalProperties": false,
       "description": "POI 整体氛围（一个 POI 一份）",
       "properties": {
@@ -47,7 +97,10 @@
           "title": "氛围关键词",
           "type": "array",
           "description": "短词描述整体氛围，如「神秘」「紧张」「宁静」",
-          "items": {"type": "string", "minLength": 1}
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
         },
         "description": {
           "title": "整体氛围描述",
@@ -62,7 +115,9 @@
           "items": {
             "title": "参考图项",
             "type": "object",
-            "required": ["image_url"],
+            "required": [
+              "image_url"
+            ],
             "additionalProperties": false,
             "properties": {
               "image_url": {
@@ -71,11 +126,16 @@
                 "minLength": 1,
                 "description": "URL 或相对路径（如 assets/my_level/foo.png）"
               },
-              "caption": {"title": "图注", "type": "string"},
+              "caption": {
+                "title": "图注",
+                "type": "string"
+              },
               "tags": {
                 "title": "标签",
                 "type": "array",
-                "items": {"type": "string"}
+                "items": {
+                  "type": "string"
+                }
               }
             }
           }
@@ -89,7 +149,10 @@
       "items": {
         "title": "区域氛围项",
         "type": "object",
-        "required": ["zone_id", "description"],
+        "required": [
+          "zone_id",
+          "description"
+        ],
         "additionalProperties": false,
         "properties": {
           "zone_id": {
@@ -110,12 +173,27 @@
             "items": {
               "title": "参考图项",
               "type": "object",
-              "required": ["image_url"],
+              "required": [
+                "image_url"
+              ],
               "additionalProperties": false,
               "properties": {
-                "image_url": {"title": "图片地址", "type": "string", "minLength": 1},
-                "caption": {"title": "图注", "type": "string"},
-                "tags": {"title": "标签", "type": "array", "items": {"type": "string"}}
+                "image_url": {
+                  "title": "图片地址",
+                  "type": "string",
+                  "minLength": 1
+                },
+                "caption": {
+                  "title": "图注",
+                  "type": "string"
+                },
+                "tags": {
+                  "title": "标签",
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
               }
             }
           }

@@ -3,7 +3,8 @@
     "spec_id": "vfx_req_abandoned_temple",
     "level_id": "abandoned_temple",
     "version": "0.1.0",
-    "owner": "level"
+    "owner": "level",
+    "phase": "docified"
   },
   "context": {
     "intent": "废弃山寺特效需求——以环境氛围特效为主（落叶/山雾/蜡烛飘火），符文系列特效作为叙事节点的视觉锚点，钟楼铃铛触发的冲击波特效是 Part 2 最关键的反馈信号。",

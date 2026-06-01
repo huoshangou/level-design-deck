@@ -2,8 +2,8 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "level-design-deck/schema/bubble_diagram.schema.json",
   "title": "bubble_diagram spec",
-  "description": "关卡流程气泡图 spec schema。节点级真源（spec.nodes[] / spec.edges[]）。schema 字段从第一原理推导，不参考 pipeline 旧 /bubble-diagram 实现（已废弃）。图级语义断言（id 唯一、edge 端点引用完整、入口/出口、孤立节点、requires 引用合法性、phase 混用）由 mechanical_check 语义层执行。M3.2 v0.1.0；M3.5 v0.2.0 加 edges[].requires 表达合取前置依赖；M3.6 v0.3.0 加 nodes[].phase 标 Phase 归属（Mermaid subgraph 分组渲染）；M3.8 v0.4.0 加 nodes[].zone_id 标注节点所在 spatial zone（cross_check 规则 7 验引用合法性）。",
-  "version": "0.4.0",
+  "description": "关卡流程气泡图 spec schema。节点级真源（spec.nodes[] / spec.edges[]）。schema 字段从第一原理推导，不参考 pipeline 旧 /bubble-diagram 实现（已废弃）。图级语义断言（id 唯一、edge 端点引用完整、入口/出口、孤立节点、requires 引用合法性、phase 混用）由 mechanical_check 语义层执行。M3.2 v0.1.0；M3.5 v0.2.0 加 edges[].requires 表达合取前置依赖；M3.6 v0.3.0 加 nodes[].phase 标 Phase 归属（Mermaid subgraph 分组渲染）；M3.8 v0.4.0 加 nodes[].zone_id 标注节点所在 spatial zone（cross_check 规则 7 验引用合法性）。 M5.4 v0.5.0: meta 加 optional phase 字段 (L0/whitebox/docified)。",
+  "version": "0.5.0",
   "applies_to": [
     "POI",
     "gameplay",
@@ -51,6 +51,16 @@
           "type": "string",
           "default": "level",
           "description": "需求归属方，关卡流程图默认 OWNER=关卡 [来源: 第一原理推导]"
+        },
+        "phase": {
+          "title": "阶段",
+          "type": "string",
+          "enum": [
+            "L0",
+            "whitebox",
+            "docified"
+          ],
+          "description": "该 module 在 5 阶段流程中的归属 (L0=设计意图期 / whitebox=白盒可玩期 / docified=文档化分发期)。M5.4 加入；optional，旧 spec 可不填。详见 PROJECT.md 决议 F + lib/protocol/README。"
         }
       }
     },

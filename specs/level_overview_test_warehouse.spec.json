@@ -3,7 +3,8 @@
     "spec_id": "level_overview_test_warehouse",
     "level_id": "test_warehouse",
     "version": "0.1.0",
-    "owner": "level"
+    "owner": "level",
+    "phase": "L0"
   },
   "context": {
     "intent": "测试用样例关卡：废弃仓库潜入，主角是夜盗，用于验证 design-deck 各 module 串联流程能跑通。",

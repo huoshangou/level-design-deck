@@ -167,10 +167,9 @@ def collect_cross_refs(specs_by_module: dict) -> list:
     return out
 
 
-def build_skeleton(level_id: str, spec_paths: list) -> dict:
+def build_skeleton(level_id: str, spec_paths: list, phase_filter: str = None) -> dict:
     specs_by_module = {m: load_json(p) for m, p in spec_paths}
     cross_refs = collect_cross_refs(specs_by_module)
-    # 按 module → {local_path: ref_info} 建 lookup，用于注入到 fields
     by_module_lookup = {}
     for r in cross_refs:
         src_mod, _, local_path = r["from"].partition(".")
@@ -178,10 +177,18 @@ def build_skeleton(level_id: str, spec_paths: list) -> dict:
             "to_module": r["to_module"], "to_field": r["to_field"], "status": r["status"]}
     modules_out = [build_module_skeleton(m, p, by_module_lookup.get(m, {}))
                    for m, p in spec_paths]
+    # 给每个 module attach phase（从 spec.meta.phase 读，None = 未设）
+    for m in modules_out:
+        m["phase"] = specs_by_module[m["module"]].get("meta", {}).get("phase")
+    if phase_filter:
+        modules_out = [m for m in modules_out if m["phase"] == phase_filter]
+        kept = {m["module"] for m in modules_out}
+        cross_refs = [r for r in cross_refs if r["from"].split(".")[0] in kept]
     broken = [r for r in cross_refs if r["status"] == "broken"]
     fields_pending = sum(m["stats"].get(k, 0) for m in modules_out
                          for k in ("empty", "required_missing", "placeholder", "tbd_pending"))
-    return {"skeleton_version": "0.2.0", "level_id": level_id,
+    return {"skeleton_version": "0.3.0", "level_id": level_id,
+            "phase_filter": phase_filter,
             "generated_at": datetime.now(timezone.utc).isoformat(),
             "modules": modules_out, "cross_refs": cross_refs,
             "summary": {"modules_total": len(KNOWN_MODULES), "modules_present": len(modules_out),
@@ -190,7 +197,10 @@ def build_skeleton(level_id: str, spec_paths: list) -> dict:
 
 
 def render_markdown(skel: dict) -> str:
-    lines = [f"# Spec Skeleton · {skel['level_id']}", ""]
+    title = f"# Spec Skeleton · {skel['level_id']}"
+    if skel.get("phase_filter"):
+        title += f" · phase={skel['phase_filter']}"
+    lines = [title, ""]
     s = skel["summary"]
     lines.append(f"**进度**：{s['modules_present']}/{s['modules_total']} module · "
                  f"{s['fields_pending']} 字段待填 · cross_ref {s['cross_refs_total']} "
@@ -198,7 +208,8 @@ def render_markdown(skel: dict) -> str:
     lines.append("")
     for m in skel["modules"]:
         ms = m["stats"]
-        lines.append(f"## {m['module']} (v{m['schema_version']})")
+        phase_tag = f" [{m.get('phase')}]" if m.get('phase') else ""
+        lines.append(f"## {m['module']} (v{m['schema_version']}){phase_tag}")
         lines.append(f"_{m['spec_path']}_ · {ms['filled']}/{ms['total']} filled, "
                      f"{ms.get('empty', 0)} empty, {ms.get('required_missing', 0)} required_missing, "
                      f"{ms.get('placeholder', 0)} placeholder, {ms.get('tbd_pending', 0)} tbd")
@@ -231,6 +242,8 @@ def main():
     g.add_argument("--specs", nargs="+", type=Path, help="显式列 spec 文件路径")
     parser.add_argument("--markdown", action="store_true", help="输出 markdown 而非 JSON")
     parser.add_argument("--output", type=Path, help="写文件而非 stdout")
+    parser.add_argument("--phase", choices=["L0", "whitebox", "docified"],
+                        help="按 phase 折叠：只输出该阶段的 module + 相关 cross_refs（M5.4 加）")
     args = parser.parse_args()
 
     if args.level_id:
@@ -251,7 +264,7 @@ def main():
             sys.exit(f"ERROR: specs span multiple level_ids: {first_level_ids}")
         level_id = first_level_ids.pop() if first_level_ids else "unknown"
 
-    skel = build_skeleton(level_id, spec_paths)
+    skel = build_skeleton(level_id, spec_paths, phase_filter=args.phase)
     out = render_markdown(skel) if args.markdown else json.dumps(skel, ensure_ascii=False, indent=2)
 
     if args.output:

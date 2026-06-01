@@ -2,17 +2,28 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "level-design-deck/schema/asset_list.schema.json",
   "title": "asset_list spec",
-  "description": "POI 资产清单 — 给制作团队的对接表。asset_id 字段公司命名待对接，PoC 期 deck 不编造伪接口名。M3.13 v0.1.0",
-  "version": "0.1.0",
-  "applies_to": ["POI", "mixed"],
+  "description": "POI 资产清单 — 给制作团队的对接表。asset_id 字段公司命名待对接，PoC 期 deck 不编造伪接口名。M3.13 v0.1.0 M5.4 v0.2.0: meta 加 optional phase 字段 (L0/whitebox/docified)。",
+  "version": "0.2.0",
+  "applies_to": [
+    "POI",
+    "mixed"
+  ],
   "type": "object",
-  "required": ["meta", "context", "assets"],
+  "required": [
+    "meta",
+    "context",
+    "assets"
+  ],
   "additionalProperties": false,
   "properties": {
     "meta": {
       "title": "元信息",
       "type": "object",
-      "required": ["spec_id", "level_id", "version"],
+      "required": [
+        "spec_id",
+        "level_id",
+        "version"
+      ],
       "additionalProperties": false,
       "properties": {
         "spec_id": {
@@ -20,19 +31,56 @@
           "type": "string",
           "pattern": "^asset_list_[a-z0-9_]+$"
         },
-        "level_id": {"title": "关卡 ID", "type": "string", "minLength": 1},
-        "version": {"title": "版本号", "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$"},
-        "owner": {"title": "责任方", "type": "string", "default": "level"}
+        "level_id": {
+          "title": "关卡 ID",
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "title": "版本号",
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$"
+        },
+        "owner": {
+          "title": "责任方",
+          "type": "string",
+          "default": "level"
+        },
+        "phase": {
+          "title": "阶段",
+          "type": "string",
+          "enum": [
+            "L0",
+            "whitebox",
+            "docified"
+          ],
+          "description": "该 module 在 5 阶段流程中的归属 (L0=设计意图期 / whitebox=白盒可玩期 / docified=文档化分发期)。M5.4 加入；optional，旧 spec 可不填。详见 PROJECT.md 决议 F + lib/protocol/README。"
+        }
       }
     },
     "context": {
       "title": "上下文",
       "type": "object",
-      "required": ["intent", "level_type"],
+      "required": [
+        "intent",
+        "level_type"
+      ],
       "additionalProperties": false,
       "properties": {
-        "intent": {"title": "设计意图", "type": "string", "minLength": 10},
-        "level_type": {"title": "关卡类型", "type": "string", "enum": ["poi", "gameplay", "mixed"]}
+        "intent": {
+          "title": "设计意图",
+          "type": "string",
+          "minLength": 10
+        },
+        "level_type": {
+          "title": "关卡类型",
+          "type": "string",
+          "enum": [
+            "poi",
+            "gameplay",
+            "mixed"
+          ]
+        }
       }
     },
     "assets": {
@@ -43,7 +91,10 @@
       "items": {
         "title": "资产项",
         "type": "object",
-        "required": ["name", "category"],
+        "required": [
+          "name",
+          "category"
+        ],
         "additionalProperties": false,
         "properties": {
           "name": {
@@ -55,7 +106,16 @@
           "category": {
             "title": "资产类别",
             "type": "string",
-            "enum": ["model_3d", "texture", "vfx", "audio", "animation", "interactive_object", "lighting", "other"],
+            "enum": [
+              "model_3d",
+              "texture",
+              "vfx",
+              "audio",
+              "animation",
+              "interactive_object",
+              "lighting",
+              "other"
+            ],
             "description": "POI 资产常见类别"
           },
           "asset_id": {
@@ -71,7 +131,11 @@
           "status": {
             "title": "状态",
             "type": "string",
-            "enum": ["pending", "in_progress", "done"]
+            "enum": [
+              "pending",
+              "in_progress",
+              "done"
+            ]
           },
           "notes": {
             "title": "备注",

@@ -4,7 +4,8 @@
     "poi_id": "demo_warehouse_night",
     "version": "0.1.0",
     "owner": "level",
-    "level_id": "demo_warehouse_night"
+    "level_id": "demo_warehouse_night",
+    "phase": "docified"
   },
   "map_constraint": {
     "description": "夜间冷月色作为整体环境光基底（色温 4500K 偏冷蓝），整体亮度压低保留剪影感；远景路灯零星点亮提供层次。雨后湿润街面对环境光产生反射，强化夜晚潮湿氛围。",
