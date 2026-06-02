@@ -205,10 +205,10 @@ export const api = {
     request<{ sessions: SessionRecord[] }>("/api/sessions"),
   endSession: (client_id: string) =>
     request<{ ok: true }>(`/api/sessions/${encodeURIComponent(client_id)}`, { method: "DELETE" }),
-  sendMessage: (client_id: string, text: string, spec_id?: string) =>
+  sendMessage: (client_id: string, text: string, spec_id?: string, spec_content?: Record<string, unknown>) =>
     request<MessageQueued>(`/api/sessions/${encodeURIComponent(client_id)}/messages`, {
       method: "POST",
-      body: JSON.stringify({ text, ...(spec_id ? { spec_id } : {}) }),
+      body: JSON.stringify({ text, ...(spec_id ? { spec_id } : {}), ...(spec_content ? { spec_content } : {}) }),
     }),
 
   uploadFile: async (client_id: string, file: File): Promise<AttachedFile> => {

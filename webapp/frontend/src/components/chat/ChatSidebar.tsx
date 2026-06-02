@@ -132,7 +132,9 @@ export default function ChatSidebar() {
     const text = input.trim();
     if (!text || !clientId || isStreaming || awaitingResponse || busy) return;
     setBusy(true);
-    const specId = useEditorStore.getState().currentSpecId ?? undefined;
+    const editorState = useEditorStore.getState();
+    const specId = editorState.currentSpecId ?? undefined;
+    const specContent = editorState.localContent ?? undefined;
     try {
       if (wsState !== "open") {
         for (let i = 0; i < 30; i++) {
@@ -147,12 +149,12 @@ export default function ChatSidebar() {
       addUserMessage(text);
       setInput("");
       try {
-        await api.sendMessage(clientId, text, specId);
+        await api.sendMessage(clientId, text, specId, specContent);
       } catch (e) {
         if (String(e).includes("409")) {
           await new Promise((r) => setTimeout(r, 500));
           try {
-            await api.sendMessage(clientId, text, specId);
+            await api.sendMessage(clientId, text, specId, specContent);
           } catch (e2) {
             markSendFailed(String(e2));
             throw e2;
