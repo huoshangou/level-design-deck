@@ -150,5 +150,5 @@ async def upload_image(
                 raise HTTPException(413, f"图片过大（>{MAX_IMAGE_BYTES // (1024*1024)}MB）")
             f.write(chunk)
 
-    relative_path = f"assets/{level_id}/{filename}"
+    relative_path = f"storyboard-assets/{level_id}/{filename}"
     return UploadResponse(relative_path=relative_path, panel_id=panel_id)

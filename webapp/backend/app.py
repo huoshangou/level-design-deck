@@ -77,10 +77,10 @@ def create_app() -> FastAPI:
     if lc_dir.exists():
         app.mount("/tools/levelcraft", StaticFiles(directory=str(lc_dir), html=True), name="levelcraft")
 
-    # storyboard 图片资产
+    # storyboard 图片资产（/storyboard-assets 避免与 dist/assets/ 冲突）
     assets_dir = s.project_root / "assets"
     assets_dir.mkdir(exist_ok=True)
-    app.mount("/assets", StaticFiles(directory=str(assets_dir)), name="assets")
+    app.mount("/storyboard-assets", StaticFiles(directory=str(assets_dir)), name="storyboard-assets")
 
     # HTML 文档模板（gameplay/prop 等可编辑富文本模板）
     html_tmpl_dir = s.project_root / "templates" / "html"
