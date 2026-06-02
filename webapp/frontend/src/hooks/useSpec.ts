@@ -14,8 +14,9 @@ export function useSpecList() {
 
 export function useSpec(spec_id: string | null) {
   const loadContent = useEditorStore((s) => s.loadContent);
+  const reloadTrigger = useEditorStore((s) => s._specReloadTrigger);
   const q = useQuery({
-    queryKey: ["spec", spec_id],
+    queryKey: ["spec", spec_id, reloadTrigger],
     queryFn: () => api.getSpec(spec_id!),
     enabled: !!spec_id,
   });

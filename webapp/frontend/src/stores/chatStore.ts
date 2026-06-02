@@ -224,8 +224,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
           lastActivityLabel: null,
           interruptRequested: false,
         });
-        // cc 完成后检测 docs/ 是否有新生成的文档
         void checkNewDoc(get()._lastSendTs);
+        useEditorStore.getState().triggerSpecReload();
         break;
 
       case "cc_interrupted":

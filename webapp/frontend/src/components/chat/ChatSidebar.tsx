@@ -1,6 +1,7 @@
 // 右侧 360px Chat 侧边栏：header + 消息列表 + 附件区 + 输入区。
 import { useEffect, useRef, useState } from "react";
 import { useChatStore } from "../../stores/chatStore";
+import { useEditorStore } from "../../stores/editorStore";
 import { useChatSocket } from "../../hooks/useChatSocket";
 import { api, type CcHistoryEntry } from "../../api/client";
 import MessageBubble from "./MessageBubble";
@@ -131,10 +132,10 @@ export default function ChatSidebar() {
     const text = input.trim();
     if (!text || !clientId || isStreaming || awaitingResponse || busy) return;
     setBusy(true);
+    const specId = useEditorStore.getState().currentSpecId ?? undefined;
     try {
-      // WS 没就绪时等一会：常发生在页面刚加载 / React strict mode 重连
       if (wsState !== "open") {
-        for (let i = 0; i < 30; i++) {  // 最多等 3s
+        for (let i = 0; i < 30; i++) {
           await new Promise((r) => setTimeout(r, 100));
           if (useChatStore.getState().wsState === "open") break;
         }
@@ -146,14 +147,12 @@ export default function ChatSidebar() {
       addUserMessage(text);
       setInput("");
       try {
-        await api.sendMessage(clientId, text);
+        await api.sendMessage(clientId, text, specId);
       } catch (e) {
-        // 409 = backend _ws_connected 没认到 → 多半是 StrictMode race 残留 / WS 刚断
-        // sleep 500ms 让 useChatSocket 重连后端 ws handler 重新注册，再试一次
         if (String(e).includes("409")) {
           await new Promise((r) => setTimeout(r, 500));
           try {
-            await api.sendMessage(clientId, text);
+            await api.sendMessage(clientId, text, specId);
           } catch (e2) {
             markSendFailed(String(e2));
             throw e2;

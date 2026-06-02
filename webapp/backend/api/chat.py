@@ -30,6 +30,7 @@ _active_ws: dict[str, WebSocket] = {}
 
 class SendMessageRequest(BaseModel):
     text: str
+    spec_id: str | None = None
 
 
 @router.post("/api/sessions/{client_id}/messages", status_code=202)
@@ -57,11 +58,24 @@ def send_message(
             f"{paths}\n"
         )
 
+    spec_context_block = ""
+    if body.spec_id:
+        spec_path = f"specs/{body.spec_id}.spec.json"
+        spec_context_block = (
+            f"[当前编辑的 spec]\n"
+            f"spec_id: {body.spec_id}\n"
+            f"文件路径: {spec_path}\n"
+            f"你可以用 Read 工具读取该文件查看完整内容，用 Edit 工具修改它。\n"
+            f"修改后请只改变需要的字段，保持其他内容不变。\n\n"
+        )
+
     stripped = body.text.lstrip()
     is_slash = stripped.startswith("/") and not stripped.startswith("//")
 
     if is_slash:
         suffix_parts = []
+        if spec_context_block:
+            suffix_parts.append(spec_context_block.rstrip())
         if attachments_block:
             suffix_parts.append(attachments_block)
         if profile_block:
@@ -71,8 +85,13 @@ def send_message(
         else:
             text = body.text
     else:
+        prefix = ""
+        if spec_context_block:
+            prefix += spec_context_block
         if attachments_block:
-            text = attachments_block + f"\n用户问题：{body.text}"
+            prefix += attachments_block + "\n"
+        if prefix:
+            text = prefix + f"用户问题：{body.text}"
         else:
             text = body.text
         if profile_block:

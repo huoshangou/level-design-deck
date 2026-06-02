@@ -2,8 +2,8 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "level-design-deck/schema/storyboard.schema.json",
   "title": "storyboard spec",
-  "description": "关卡分镜 (storyboard) — bubble_diagram 关键 beat 的画面层投影。产出物 = img2img 文字提示词 (generated_prompt)。style_anchor 全局共享保证风格一致；panels[] 每帧只变内容字段。预留 ImageProvider API 接口。M4.1 v0.1.0 M5.4 v0.2.0: meta 加 optional phase 字段 (L0/whitebox/docified)。",
-  "version": "0.2.0",
+  "description": "关卡分镜 (storyboard) — bubble_diagram 关键 beat 的画面层投影。产出物 = img2img 文字提示词 (generated_prompt)。style_anchor 全局共享保证风格一致；panels[] 每帧只变内容字段。预留 ImageProvider API 接口。M4.1 v0.1.0 M5.4 v0.2.0: meta 加 optional phase 字段 (L0/whitebox/docified)。v0.3.0: 新增 source_materials (剧本/大纲导入) + ld_notes (LD 调整建议)。",
+  "version": "0.3.0",
   "applies_to": [
     "POI",
     "gameplay",
@@ -173,6 +173,57 @@
       "type": "string",
       "default": "{style.medium}, {style.art_direction}, {scene}, {subject_action}, {camera}, {lighting}, {mood}, {style.color_palette}, {style.quality_tags}",
       "description": "tools/storyboard_render.py 按本模板 deterministic 拼接 generated_prompt。占位符：{style.<field>} 取自 style_anchor；{scene} {subject_action} {camera} {lighting} {mood} 取自 panel。空字段自动继承 style_anchor（如 panel.lighting 空则用 style.lighting_aesthetic）。"
+    },
+    "source_materials": {
+      "title": "素材导入",
+      "type": "object",
+      "description": "剧本/大纲等参考文本，供分镜设计时查阅。不入 prompt。",
+      "additionalProperties": false,
+      "properties": {
+        "script_text": {
+          "title": "剧本文本",
+          "type": "string",
+          "description": "粘贴的剧本原文或摘要。自由文本。"
+        },
+        "story_outline": {
+          "title": "故事大纲",
+          "type": "string",
+          "description": "故事结构/大纲参考。自由文本。"
+        }
+      }
+    },
+    "ld_notes": {
+      "title": "LD 调整备注",
+      "type": "object",
+      "description": "分镜设计过程中产生的关卡/剧本调整建议，供跨团队讨论。导出为 markdown。",
+      "additionalProperties": false,
+      "properties": {
+        "global_notes": {
+          "title": "整体建议",
+          "type": "string",
+          "description": "全局性的大纲/剧本调整建议。"
+        },
+        "panel_notes": {
+          "title": "逐帧备注",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "panel_id": {
+                "type": "string"
+              },
+              "note": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "panel_id",
+              "note"
+            ]
+          }
+        }
+      }
     },
     "panels": {
       "title": "分镜帧列表",

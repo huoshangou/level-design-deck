@@ -173,6 +173,30 @@ export const api = {
       "/api/workspace/import-docs", { method: "POST" },
     ),
 
+  // ── Storyboard ────────────────────────────────────────────────────────
+  getBeats: (level_id: string) =>
+    request<{ level_id: string; spec_id: string; nodes: Array<{ id: string; type: string; label: string; notes?: string; phase?: string; zone_id?: string }> }>(
+      `/api/storyboard/beats?level_id=${encodeURIComponent(level_id)}`
+    ),
+  composePrompts: (spec_id: string) =>
+    request<{ panels: { panel_id: string; title: string; prompt: string; negative_prompt: string }[] }>(
+      "/api/storyboard/compose-prompts", { method: "POST", body: JSON.stringify({ spec_id }) },
+    ),
+  uploadStoryboardImage: async (spec_id: string, panel_id: string, file: File): Promise<{ relative_path: string; panel_id: string }> => {
+    const form = new FormData();
+    form.append("file", file);
+    const res = await fetch(`/api/storyboard/upload-image?spec_id=${encodeURIComponent(spec_id)}&panel_id=${encodeURIComponent(panel_id)}`, {
+      method: "POST",
+      body: form,
+    });
+    if (!res.ok) {
+      let detail = res.statusText;
+      try { const body = await res.json(); if (body?.detail) detail = typeof body.detail === "string" ? body.detail : JSON.stringify(body.detail); } catch { /* ignore */ }
+      throw new ApiError(res.status, `${res.status} ${detail}`);
+    }
+    return res.json() as Promise<{ relative_path: string; panel_id: string }>;
+  },
+
   // ── Designer profile ─────────────────────────────────────────────────
   getProfile: () => request<DesignerProfile>("/api/profile"),
   updateProfile: (body: DesignerProfile) =>
@@ -181,10 +205,10 @@ export const api = {
     request<{ sessions: SessionRecord[] }>("/api/sessions"),
   endSession: (client_id: string) =>
     request<{ ok: true }>(`/api/sessions/${encodeURIComponent(client_id)}`, { method: "DELETE" }),
-  sendMessage: (client_id: string, text: string) =>
+  sendMessage: (client_id: string, text: string, spec_id?: string) =>
     request<MessageQueued>(`/api/sessions/${encodeURIComponent(client_id)}/messages`, {
       method: "POST",
-      body: JSON.stringify({ text }),
+      body: JSON.stringify({ text, ...(spec_id ? { spec_id } : {}) }),
     }),
 
   uploadFile: async (client_id: string, file: File): Promise<AttachedFile> => {

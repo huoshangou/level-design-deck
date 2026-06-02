@@ -10,9 +10,9 @@ type EditorState = {
   localContent: Record<string, unknown> | null;
   dirty: boolean;
   toast: { kind: "ok" | "err"; msg: string } | null;
-  // 文档模板：设置后预览栏显示该模板，null 时显示 spec 渲染输出
   docTemplateUrl: string | null;
   docTemplateLabel: string | null;
+  _specReloadTrigger: number;
 
   selectSpec: (id: string | null) => void;
   loadContent: (content: Record<string, unknown>) => void;
@@ -22,6 +22,7 @@ type EditorState = {
   clearToast: () => void;
   openDocTemplate: (url: string, label: string) => void;
   closeDocTemplate: () => void;
+  triggerSpecReload: () => void;
 };
 
 export const useEditorStore = create<EditorState>((set, get) => ({
@@ -31,6 +32,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   toast: null,
   docTemplateUrl: null,
   docTemplateLabel: null,
+  _specReloadTrigger: 0,
 
   selectSpec: (id) => set({ currentSpecId: id, localContent: null, dirty: false }),
   loadContent: (content) => set({ localContent: content, dirty: false }),
@@ -53,4 +55,5 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     useChatStore.getState().triggerDocFill(kind, label);
   },
   closeDocTemplate: () => set({ docTemplateUrl: null, docTemplateLabel: null }),
+  triggerSpecReload: () => set((s) => ({ _specReloadTrigger: s._specReloadTrigger + 1 })),
 }));

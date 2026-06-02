@@ -5,6 +5,7 @@ import PreviewPane from "../components/PreviewPane";
 import SchemaForm, { type SchemaFormHandle } from "../components/form/SchemaForm";
 import BubbleDiagramView from "../components/BubbleDiagramView";
 import SpatialLayoutView from "../components/SpatialLayoutView";
+import StoryboardView, { type StoryboardPanel } from "../components/StoryboardView";
 import ChatSidebar from "../components/chat/ChatSidebar";
 import WorkspacePanel from "../components/WorkspacePanel";
 import { useEditorStore } from "../stores/editorStore";
@@ -151,6 +152,20 @@ export default function EditorPage() {
                     setPreviewKey((k) => k + 1);
                   }}
                 />
+              ) : module === "storyboard" ? (
+                <StoryboardSplit
+                  specId={currentSpecId!}
+                  levelId={levelId ?? ""}
+                  panels={(localContent?.panels as StoryboardPanel[]) ?? []}
+                  styleAnchor={(localContent?.style_anchor as Record<string, unknown>) ?? {}}
+                  promptTemplate={String(localContent?.prompt_template ?? "")}
+                  sourceMaterials={(localContent?.source_materials as { script_text?: string; story_outline?: string }) ?? null}
+                  ldNotes={(localContent?.ld_notes as { global_notes?: string; panel_notes?: Array<{ panel_id: string; note: string }> }) ?? null}
+                  schema={schema ?? null}
+                  value={localContent}
+                  onChange={updateField}
+                  formRef={formRef}
+                />
               ) : (
                 <div style={{ flex: 1, overflow: "auto" }}>
                   <SchemaForm
@@ -286,6 +301,87 @@ function BubbleDiagramSplit({ nodes, edges, schema, value, onChange, formRef }: 
       </div>
 
       {/* 下半：SchemaForm */}
+      <div style={{ flex: 1, overflow: "auto" }}>
+        <SchemaForm ref={formRef} schema={schema} value={value} onChange={onChange} />
+      </div>
+    </div>
+  );
+}
+
+// ── StoryboardSplit: 上 分镜卡片序列 + 下 SchemaForm ──────────────────
+
+interface StoryboardSplitProps {
+  specId: string;
+  levelId: string;
+  panels: StoryboardPanel[];
+  styleAnchor: Record<string, unknown>;
+  promptTemplate: string;
+  sourceMaterials: { script_text?: string; story_outline?: string } | null;
+  ldNotes: { global_notes?: string; panel_notes?: Array<{ panel_id: string; note: string }> } | null;
+  schema: Record<string, unknown> | null;
+  value: Record<string, unknown> | null;
+  onChange: (path: string, value: unknown) => void;
+  formRef: RefObject<SchemaFormHandle | null>;
+}
+
+function StoryboardSplit({ specId, levelId, panels, styleAnchor, promptTemplate, sourceMaterials, ldNotes, schema, value, onChange, formRef }: StoryboardSplitProps) {
+  const [topPct, setTopPct] = useState(50);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const dragging = useRef(false);
+
+  const onMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    dragging.current = true;
+  }, []);
+
+  useEffect(() => {
+    function onMove(e: MouseEvent) {
+      if (!dragging.current || !containerRef.current) return;
+      const rect = containerRef.current.getBoundingClientRect();
+      const pct = ((e.clientY - rect.top) / rect.height) * 100;
+      setTopPct(Math.min(80, Math.max(20, pct)));
+    }
+    function onUp() { dragging.current = false; }
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    };
+  }, []);
+
+  function handlePanelClick(idx: number) {
+    formRef.current?.jumpTo(`panels[${idx}]`);
+  }
+
+  return (
+    <div ref={containerRef} style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
+      <div style={{ height: `${topPct}%`, overflow: "hidden", flexShrink: 0 }}>
+        <StoryboardView
+          specId={specId}
+          levelId={levelId}
+          panels={panels}
+          styleAnchor={styleAnchor}
+          promptTemplate={promptTemplate}
+          sourceMaterials={sourceMaterials}
+          ldNotes={ldNotes}
+          onChange={onChange}
+          onPanelClick={handlePanelClick}
+        />
+      </div>
+      <div
+        onMouseDown={onMouseDown}
+        style={{
+          height: 6, flexShrink: 0, cursor: "ns-resize",
+          background: "var(--border)",
+          borderTop: "1px solid var(--border)",
+          borderBottom: "1px solid var(--border)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          userSelect: "none",
+        }}
+      >
+        <div style={{ width: 32, height: 2, background: "var(--text-faint)", borderRadius: 1 }} />
+      </div>
       <div style={{ flex: 1, overflow: "auto" }}>
         <SchemaForm ref={formRef} schema={schema} value={value} onChange={onChange} />
       </div>
