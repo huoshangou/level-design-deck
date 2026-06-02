@@ -1,9 +1,10 @@
-import { useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../api/client";
 import { useEditorStore } from "../stores/editorStore";
 import { useSpecList } from "../hooks/useSpec";
 import SpecPicker from "./SpecPicker";
+import type { ModuleInfo } from "../api/types";
 
 type Props = {
   onPreviewRefresh: () => void;
@@ -102,6 +103,12 @@ export default function Topbar({ onPreviewRefresh, chatOpen, onToggleChat }: Pro
     >
       <strong style={{ fontSize: 13, color: "var(--accent)" }}>level-design-deck</strong>
       <SpecPicker specs={list?.specs ?? []} currentId={currentSpecId} onSelect={selectSpec} />
+      <CreateSpecBtn
+        onCreated={(specId) => {
+          qc.invalidateQueries({ queryKey: ["specs"] });
+          selectSpec(specId);
+        }}
+      />
       {levelId && (
         <span style={{ fontSize: 11, color: "var(--text-faint)", fontFamily: "var(--mono)" }}>
           level={levelId}
@@ -247,6 +254,168 @@ function DirtyBadge({ dirty }: { dirty: boolean }) {
     >
       {dirty ? "● 未保存" : "✓ 已保存"}
     </span>
+  );
+}
+
+// ── 新建 spec ──────────────────────────────────────────────────────────────
+
+function buildSkeleton(schema: Record<string, unknown>, specId: string, levelId: string): Record<string, unknown> {
+  const props = (schema.properties ?? {}) as Record<string, Record<string, unknown>>;
+  const result: Record<string, unknown> = {};
+
+  for (const [key, fieldSchema] of Object.entries(props)) {
+    const fieldType = fieldSchema.type as string;
+    if (fieldType === "object") {
+      const subProps = (fieldSchema.properties ?? {}) as Record<string, Record<string, unknown>>;
+      const subRequired = new Set((fieldSchema.required ?? []) as string[]);
+      const obj: Record<string, unknown> = {};
+      for (const [sk, sv] of Object.entries(subProps)) {
+        if (subRequired.has(sk) || sk === "spec_id" || sk === "level_id" || sk === "version" || sk === "owner") {
+          const st = sv.type as string;
+          if (sk === "spec_id") obj[sk] = specId;
+          else if (sk === "level_id") obj[sk] = levelId;
+          else if (sk === "version") obj[sk] = "0.1.0";
+          else if (sk === "owner") obj[sk] = (sv.default as string) ?? "level";
+          else if (st === "string") obj[sk] = sv.enum ? (sv.enum as string[])[0] : "";
+          else if (st === "number" || st === "integer") obj[sk] = 0;
+          else if (st === "boolean") obj[sk] = false;
+          else if (st === "array") obj[sk] = [];
+          else obj[sk] = "";
+        }
+      }
+      result[key] = obj;
+    } else if (fieldType === "array") {
+      result[key] = [];
+    } else if (fieldType === "string") {
+      result[key] = (fieldSchema.default as string) ?? "";
+    }
+  }
+  return result;
+}
+
+function CreateSpecBtn({ onCreated }: { onCreated: (specId: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const [selectedModule, setSelectedModule] = useState("");
+  const [levelId, setLevelId] = useState("");
+  const [creating, setCreating] = useState(false);
+
+  const { data: modules } = useQuery<{ modules: ModuleInfo[] }>({
+    queryKey: ["modules"],
+    queryFn: () => api.listModules(),
+    staleTime: 60_000,
+  });
+
+  const handleCreate = useCallback(async () => {
+    if (!selectedModule || !levelId.trim()) return;
+    setCreating(true);
+    try {
+      const schema = await api.getModuleSchema(selectedModule);
+      const specId = `${selectedModule}_${levelId.trim().replace(/[^a-z0-9_]/gi, "_").toLowerCase()}`;
+      const skeleton = buildSkeleton(schema, specId, levelId.trim());
+      await api.saveSpec(specId, skeleton);
+      onCreated(specId);
+      setOpen(false);
+      setSelectedModule("");
+      setLevelId("");
+    } catch (e) {
+      alert(`创建失败：${String(e)}`);
+    } finally {
+      setCreating(false);
+    }
+  }, [selectedModule, levelId, onCreated]);
+
+  return (
+    <>
+      <button
+        onClick={() => setOpen(true)}
+        style={{
+          padding: "4px 8px",
+          fontSize: 12,
+          border: "1px solid var(--border)",
+          borderRadius: 3,
+          background: "var(--panel)",
+          color: "var(--accent)",
+          cursor: "pointer",
+          fontWeight: 600,
+        }}
+      >
+        + 新建
+      </button>
+      {open && (
+        <>
+          <div
+            style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.3)", zIndex: 50 }}
+            onClick={() => setOpen(false)}
+          />
+          <div style={{
+            position: "fixed", top: "50%", left: "50%", transform: "translate(-50%, -50%)",
+            zIndex: 51, background: "var(--panel)", border: "1px solid var(--border)",
+            borderRadius: 8, boxShadow: "var(--shadow)", padding: 24, minWidth: 360,
+          }}>
+            <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 16 }}>新建 spec</div>
+
+            <div style={{ marginBottom: 12 }}>
+              <div style={{ fontSize: 11, color: "var(--text-faint)", marginBottom: 4 }}>Module 类型</div>
+              <select
+                value={selectedModule}
+                onChange={(e) => setSelectedModule(e.target.value)}
+                style={{
+                  width: "100%", padding: "6px 8px", fontSize: 12,
+                  border: "1px solid var(--border)", borderRadius: 3,
+                  background: "var(--surface)",
+                }}
+              >
+                <option value="">— 选择 module —</option>
+                {(modules?.modules ?? []).map((m) => (
+                  <option key={m.name} value={m.name}>{m.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ fontSize: 11, color: "var(--text-faint)", marginBottom: 4 }}>Level ID</div>
+              <input
+                value={levelId}
+                onChange={(e) => setLevelId(e.target.value)}
+                placeholder="如 abandoned_temple"
+                style={{
+                  width: "100%", padding: "6px 8px", fontSize: 12,
+                  border: "1px solid var(--border)", borderRadius: 3,
+                  background: "var(--surface)", boxSizing: "border-box",
+                }}
+              />
+            </div>
+
+            {selectedModule && levelId.trim() && (
+              <div style={{ fontSize: 10, color: "var(--text-faint)", marginBottom: 12, fontFamily: "var(--mono)" }}>
+                spec_id: {selectedModule}_{levelId.trim().replace(/[^a-z0-9_]/gi, "_").toLowerCase()}
+              </div>
+            )}
+
+            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+              <button
+                onClick={() => setOpen(false)}
+                style={{ padding: "6px 14px", fontSize: 12, border: "1px solid var(--border)", borderRadius: 3, background: "var(--panel)", cursor: "pointer" }}
+              >
+                取消
+              </button>
+              <button
+                onClick={() => void handleCreate()}
+                disabled={!selectedModule || !levelId.trim() || creating}
+                style={{
+                  padding: "6px 14px", fontSize: 12, border: "none", borderRadius: 3,
+                  background: selectedModule && levelId.trim() ? "var(--accent)" : "var(--border)",
+                  color: selectedModule && levelId.trim() ? "#fff" : "var(--text-faint)",
+                  cursor: selectedModule && levelId.trim() && !creating ? "pointer" : "default",
+                }}
+              >
+                {creating ? "创建中…" : "创建"}
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+    </>
   );
 }
 

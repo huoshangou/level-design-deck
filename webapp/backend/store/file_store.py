@@ -20,7 +20,7 @@ _SPEC_ID_RE = re.compile(r"^[a-zA-Z0-9_]+$")
 # 与 tools/render_level.MODULE_ORDER 同步；放这避免 backend import tools 引入循环风险
 _MODULE_PREFIXES = (
     "level_overview", "spatial_layout", "bubble_diagram", "atmosphere_ref",
-    "lighting_req", "vfx_req", "audio_req", "asset_list", "demo",
+    "lighting_req", "vfx_req", "audio_req", "asset_list", "storyboard", "demo",
 )
 
 
