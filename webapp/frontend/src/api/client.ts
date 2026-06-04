@@ -135,6 +135,28 @@ export const api = {
   renderDeck: (level_id: string) =>
     request<RenderDeckResult>("/api/render-deck", { method: "POST", body: JSON.stringify({ level_id }) }),
 
+  exportSpec: async (spec_id: string) => {
+    const res = await fetch("/api/export", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ spec_id }),
+    });
+    if (!res.ok) {
+      let detail = res.statusText;
+      try { const body = await res.json(); if (body?.detail) detail = typeof body.detail === "string" ? body.detail : JSON.stringify(body.detail); } catch { /* ignore */ }
+      throw new ApiError(res.status, `${res.status} ${detail}`);
+    }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${spec_id}.html`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  },
+
   // ── Chat / Sessions ────────────────────────────────────────────────────
   createSession: (opts?: { client_id?: string; namespace?: string; cc_session_id?: string }) =>
     request<SessionRecord>("/api/sessions", { method: "POST", body: JSON.stringify(opts ?? {}) }),

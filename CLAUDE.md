@@ -91,6 +91,29 @@ Steve 直接指示（2026-05-11）：保留 LevelCraft 2D 编辑器作为 deck s
 
 AI 在原 `tools/` + `editor/` + `cc-skills/` + `lib/` 内**不放宽**任何约束。
 
+### webapp CC session 职责边界（3.1 节，2026-06-03 新增）
+
+webapp 内嵌的 CC session（通过 `local_cc.py` / `remote.py` 调用的 Claude）职责**仅限于 spec 内容层**：
+
+**允许做的**：
+- ✅ 读取 spec.json 内容、分析字段质量
+- ✅ 生成新 spec 内容（generate_spec 流程）
+- ✅ 编辑 spec 字段值（修改 scene / subject_action / mood 等描述性字段）
+- ✅ 跑机械检测 / cross_check / template_diff 并解读结果
+- ✅ 根据 world_anchor / style_anchor 上下文给出 spec 内容建议
+- ✅ 调用 infer_cinematography.py 产出推断 prompt
+
+**禁止做的**：
+- ❌ 诊断或修改 `tools/*.py`、`lib/**/*`、`webapp/**/*` 的代码
+- ❌ 提出代码层面的 bug 修复方案（应报告给 Steve 由 CC CLI 处理）
+- ❌ 修改 schema.json 的字段定义
+- ❌ 修改 CLAUDE.md / PROJECT.md / INHERITANCE.md
+- ❌ 修改 prompt_template / prompt_sanitizer 的规则
+
+发现代码层面问题时，正确行为是：**向 LD 报告"这个 prompt 有重复，可能是 world_anchor 和 panel.scene 内容重叠，建议修改 panel.scene 的描述"**——把问题定位到 spec 内容层，不要跨越到代码层。
+
+`[来源: Steve 直接指示（2026-06-03）]`
+
 ---
 
 ## 4. 思维反污染（L3 防线）

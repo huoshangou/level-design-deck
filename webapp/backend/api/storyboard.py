@@ -95,7 +95,8 @@ def compose_prompts(
     from tools.storyboard_render import PromptComposer
 
     composer = PromptComposer(content)
-    neg = (content.get("style_anchor", {}).get("negative_prompt") or "").strip()
+    from tools.prompt_sanitizer import sanitize_prompt
+    neg = sanitize_prompt((content.get("style_anchor", {}).get("negative_prompt") or "").strip())
     panels = content.get("panels", [])
 
     items = []

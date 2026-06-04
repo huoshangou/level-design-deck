@@ -1,0 +1,301 @@
+{
+  "meta": {
+    "spec_id": "storyboard_main_plot_5h",
+    "level_id": "Main-Plot-5H",
+    "version": "0.4.0",
+    "owner": "level"
+  },
+  "context": {
+    "intent": "通过脱衣舞俱乐部的信息交易、高风险谈判和三角人物互动，强化 Kate 被绑架的紧迫感，同时塑造 X 的决策风格（直接动用金钱力量）和主要情报线索（俄罗斯黑帮藏身处）。关键体验：急迫→碰壁→破局→谈判→交易。",
+    "level_type": "poi"
+  },
+  "characters": [
+    {
+      "char_id": "X",
+      "name": "X (Protagonist)",
+      "appearance": "late 20s, lean athletic build, shoulder-length dark hair with undercut, sharp jawline, dark intense eyes, wearing dark hoodie or casual black button-up over fitted jeans, silver chain necklace, messenger bag slung across chest, understated but precise in movement, carries himself with controlled confidence"
+    },
+    {
+      "char_id": "Sergio",
+      "name": "Sergio",
+      "appearance": "late 40s-early 50s, weathered face with deep creases, graying stubble, cold calculating eyes, muscular build showing age but maintained strength, wearing black tactical jacket over dark pullover, tactical watch, moves with military precision and economy of motion, scars on knuckles visible, grizzled and intimidating presence"
+    },
+    {
+      "char_id": "Elizabeth",
+      "name": "Elizabeth",
+      "appearance": "early-to-mid 20s, statuesque figure with confident posture, long dark wavy hair, sharp cheekbones, dark eyes with intense gaze, wearing elaborate stage costume: black heeled boots, minimal sequined bikini top, strategic body jewelry, stage makeup with sharp eyeliner and bold lips, moves with trained grace and command"
+    },
+    {
+      "char_id": "Tony",
+      "name": "Tony (Stripper with Intel)",
+      "appearance": "mid-20s, petite frame, athletic build, shoulder-length blonde hair with dark roots showing, tired eyes with practiced bedroom gaze, wearing casual stage outfit: black lingerie top, denim shorts, platform heels, minimal makeup backstage, carries street-smart wariness in her posture and eye contact"
+    }
+  ],
+  "style_anchor": {
+    "medium": "photorealistic cinematic screenshot, live-action video game rendering",
+    "art_direction": "dark luxury underworld aesthetic, deep shadows with warm amber accents, gritty urban decay, atmospheric haze from cigarette smoke and humidity, photorealistic character models and environments",
+    "color_palette": "deep blacks, charcoals, dark teals, with amber and gold highlights; warm tungsten on skin tones; cool reflected light on polished surfaces, photorealistic material textures",
+    "lighting_aesthetic": "tungsten key light with minimal colored fill; rim-lit silhouettes in amber/gold; practical light sources (stage lights, backlit shelves, car headlights) create dramatic contrast; volumetric atmospheric haze, dynamic shadows",
+    "design_note": "intentional dark luxury aesthetic emphasizing sophistication over spectacle — inspired by real 2020s underground clubs, not cyberpunk saturation",
+    "negative_prompt": "daytime, bright daylight, overexposed, washed out colors, clean, sterile, family-friendly, cartoon, anime, stylized, painted, illustrated, concept art, neon-saturated, cyberpunk, video game UI",
+    "quality_tags": [
+      "photorealistic cinematic",
+      "professionally color-graded",
+      "high fidelity detail",
+      "in-engine rendering"
+    ],
+    "presentation": {
+      "frame_style": "thin black border",
+      "paper_texture": "white",
+      "aspect_ratio": "16:9"
+    }
+  },
+  "world_anchor": {
+    "game_base": {
+      "era": "2020s contemporary",
+      "locale": "San Libre, fictional metropolitan city (inspired by Latin American urban landscape)",
+      "tech_level": "contemporary smartphone era, rideshare apps, social media, personal digital devices",
+      "cultural_context": "urban Latino-influenced underworld, nocturnal entertainment district, economically stratified metropolitan edge"
+    },
+    "venue_type": "mid-tier strip club in the red light district, two-story establishment with upper VIP area",
+    "architecture": "3.5-4m high ceilings on main floor, industrial exposed ductwork, mezzanine VIP platform overlooking dance floor, backstage dressing rooms, narrow corridor connecting front and rear exits",
+    "material_vocabulary": "black vinyl booths, brushed steel dance poles, polished concrete/tiled flooring, velvet wall coverings, mirror-tiled accent walls, chrome fixtures, upholstered seating",
+    "light_sources": "recessed warm tungsten spots (2700K), minimal amber/gold LED accents on key features, UV blacklight strips on stage surround, backlit liquor shelves in amber/gold tone, subtle neon signage (entrance only, restrained use)",
+    "condition": "well-maintained despite age, 6-7 years since major refit, minor wear on booth seating, stains on velvet from years of service, glass surfaces cleaned nightly but bearing minor scratches",
+    "atmosphere": "heavy haze from fog machine during peak hours, bass-heavy pulsating music (80-120 dB), warm humid air thick with perfume and smoke, occasional applause and whistles from patrons, sensory overload by design",
+    "population_baseline": "Friday night ~11pm approximately 70% capacity, mixed clientele aged 25-60, predominantly male with occasional couples, staff-to-patron ratio ~1:8. Turnover rapid, few regular faces.",
+    "staff_appearance": "Security: black polo shirts with earpieces, tactical posture; Bartenders: black dress pants + fitted colored dress shirts; Dancers: on-stage: elaborate heeled boots and minimal costume; backstage: casual robes, athletic wear, makeup stations. Manager: business casual.",
+    "protagonist_look": "dark hoodie or casual button-up, jeans, messenger bag slung across chest, understated but trying to blend into club environment without appearing like security or law enforcement",
+    "signature_elements": "The main stage with its wraparound chrome pole and dramatic spotlight isolation in tungsten/amber; the high mezzanine VIP platform with clear sightlines to entire floor; the backlit liquor shelves behind main bar in amber/gold tone creating warm reflection across the venue"
+  },
+  "prompt_template": "",
+  "source_materials": {
+    "script_text": "Sergio drives X to their first stop — a strip club deep in the neon-drenched underbelly of San Libre. As they step inside, X gets his first real taste of the city's indulgent side: flashing lights, pulsating music, the air thick with perfume and smoke.\n\nOn stage, ELIZABETH shimmers like a goddess in motion — commanding every gaze in the room. Even from the spotlight, her eyes flicker toward X, a glance that lingers just a second too long. X stands frozen, momentarily distracted.\n\nSERGIO (gruffly): \"We're here for business, lover boy. I need you to clear the girls' dressing room. For comparison.\"\n\nX: \"Clear it out? How?\"\n\nSERGIO (shrugging): \"Not my problem. You figure it out.\"\n\nX waves over the manager, low and confident.\n\nX: \"I wanna throw a party. Big one. I want all the girls — every last one — over at my table.\"\n\nThe manager's face lights up. Moments later, X finds himself surrounded — a brief, ridiculous ten minutes of undeserved luxury, all in the name of a case.\n\nTen minutes later, Sergio returns wearing a look of disappointment. Small shake of the head — nothing here. Time to move on.\n\n---\n\nINT. PRIVATE ROOM – NIGHT\n\nMoody neon flickers across velvet walls. X and Sergio sit across from a STRIPPER — mid-twenties, street-smart, glitter shimmering faintly on her outfit. The same kind of sequin found at the Olive.\n\nX (calm, direct): \"Have you seen any foreign-looking guys lately? Russian, maybe? Real mob types.\"\n\nShe narrows her eyes, sizing him up.\n\nSTRIPPER: \"You're not here for a dance?\"\n\nShe rises to leave. X slaps a twenty on the table. She pauses.\n\nSTRIPPER: \"That's for a dance. Talking's a whole other price.\"\n\nX drops a hundred. She snatches it and leans back.\n\nSTRIPPER: \"Yeah. I've seen them.\"\n\nAnother hundred.\n\nX: \"How many?\"\n\nShe smirks, plucks the bill.\n\nSTRIPPER: \"Three.\"\n\nAnother hundred.\n\nX: \"What'd they look like?\"\n\nShe gives a description — just vague enough, but unmistakably matching Demetri, Grigori, and Andrei.\n\nX: \"What else do you know?\"\n\nShe glances at him. This time, without a word, holds up five fingers. X sighs and forks over five hundred.\n\nShe tucks it away with a wink.\n\nSTRIPPER: \"I know where they're staying. I've been there.\"\n\nX leans forward, eyes sharpened. She stands, grinning.\n\nSTRIPPER: \"You're my favorite customer now. Don't be a stranger.\"",
+    "story_outline": "Sergio驱车带领X来到San Libre（圣里布雷）霓虹闪烁的地下脱衣舞俱乐部进行首轮排查。刚步入这处声色犬马之地，X便被台上耀眼夺目的头牌舞娘Elizabeth短暂地吸引了心神，而对方也敏锐地向他投来意味深长的一瞥。但Sergio迅速将X拉回现实，要求他想办法清空后台的女孩更衣室，以便自己潜入其中寻找与那枚亮片相匹配的物证。\n为了引开所有人，X果断叫来俱乐部经理砸下重金，以“举办大型派对”为由将所有舞娘统统叫到自己桌前，在香艳的包围中逢场作戏了十分钟，成功为Sergio争取到了搜查时间。然而，潜入后台的Sergio返回后却失望地摇头示意不是这一家；X见状只能一边给依依不舍的女孩们大把分发小费，一边起身与Sergio离开，准备前往下一个地点继续追踪。\n\n在第二个脱衣舞俱乐部，X与Sergio如法炮制，终于Sergio找到了一位衣着上带有同款嫌疑亮片的脱衣舞娘，X开门见山地向她打听近期是否有俄罗斯黑帮面孔的人出没。面对舞娘借机连番索要情报费的市侩态度，救人心切的X毫不犹豫地用现金步步加码，成功让她松口，确认了她近期确实见过三名外貌特征完全吻合Demetri、Grigori和Andrea的男人。\n在X最终豪掷五百美元重金的终极诱惑下，这名舞娘终于抛出了最具价值的核心情报：她不仅知道这帮俄罗斯人的确切下落，而且还曾亲自去过他们的藏身处。拿足了钱的舞娘心满意足地将X调侃为“最喜欢的客人”后款款离去，而X也终于通过这番金钱攻势，成功拿到了直捣敌方老巢、营救Kate的关键线索。"
+  },
+  "ld_notes": {
+    "global_notes": "LD拿到剧本后做了如下调整，删掉了第二个脱衣舞俱乐部，并新增了最后一段的驾车+汽车旅馆，具体如下：\n5H · 脱衣舞俱乐部 关卡框架 v0.4\n\n> 三段式：俱乐部（搭话失败 + 撒钱清场 + 观察 + 说服）→ 驾车（三角张力）→ 汽车旅馆（情报交易）\n\n---\n\n## Beat 总览\n\n- **场景**: 脱衣舞俱乐部 → 车内 → 汽车旅馆\n- **时长**: 俱乐部 ~7-8 min / 驾车 ~2-3 min / 旅馆 ~3-4 min\n- **情绪主线**: 急迫 → 碰壁 → 挥金清场 → 高处观察 → 说服交锋 → 三角试探 → 交易谈判\n- **体验核心**: Kate 被绑的紧迫感贯穿，一切行动服务于\"尽快找到藏身处\"\n- **舞女定位**: 风尘中摸爬滚打的生存者，多疑、谨慎，不在意 X 的死活，动机纯粹是钱 + 自保\n- **前序**: 5G 亮片 → Sergio 锁定场所类型\n- **后续**: → 5J 上校情报\n\n---\n\n## 情绪曲线\n\n```\n搭话碰壁    撒钱清场      高处观察      说服舞女      车内        旅馆\n急躁/受挫 → 挥金如土/爽 → 冷静扫视 → 交锋/她不买账 → 三角试探 → 纯粹交易\n```\n\n---\n\n## Part 1 · 俱乐部内\n\n> 📍 脱衣舞俱乐部 | ⏱ ~7-8 min | 体验基调：急迫中碰壁 → 暴力破局 → 艰难说服\n\n### Phase 总览\n\n| Phase | 内容 | 时长 |\n|---|---|---|\n| Phase 1 | 入场与确认 | 45-60s |\n| Phase 2a | 搭话碰壁 | 60-90s |\n| Phase 2b | 撒钱清场 ☆ | 60-90s |\n| Phase 3 | Sergio 搜证 | 15-30s |\n| Phase 4 | 说服舞女 ☆ | 3-4 min |\n\n---\n\n### Phase 1 · 入场与确认（45-60s）\n\n- 进入大厅，环境氛围建立\n- Elizabeth 台上表演，与 X 短暂对视（调性锚点，不推剧情）\n- Sergio 查看后台更衣室，比对亮片物证\n- 发现后台满是人 → Sergio 让 X 想办法清场\n\n---\n\n### Phase 2a · 搭话碰壁（60-90s）\n\nX 在后台自由走动，选择跟 3 个 NPC 搭话。每个人拒绝的方式不同，但结果一样：X 在这个环境里没有身份，没有理由出现在这里。3 次对话全部完成后，Sergio 自动介入。\n\n**NPC A — 正在补妆的舞娘**（15-20s）\n- 化妆台前专注补妆，镜子里看了 X 一眼\n- X 开口，她头都不抬，冷淡地回一句\"客人在外面\"或完全不回应\n- X 对她来说不存在\n\n**NPC B — 后台工作人员**（15-20s）\n- 搬东西或整理设备，看到 X 立刻警觉\n- 直接拦住 X：\"这里不对客人开放\"\n- 态度谈不上恶意，但很明确 — 你不属于这里，对话选项无法改变结果\n\n**NPC C — 休息中的舞娘**（15-20s）\n- 瘫在沙发上玩手机，明显在休息间隙\n- X 搭话，她抬头打量一下：\"你谁啊？\"\n- 没什么敌意，就是真的不在乎，随即低头继续看手机\n\n> 3 次对话全部完成 → Sergio 走过来，拿出一袋美钞：\"试试这个。\" → 进入 Phase 2b\n\n**体验意图**: X 的社交手段在这个场景里失灵，他在这里没有任何身份优势。连续碰壁后才接受 Sergio 的撒钱方案，让这个行为有了\"逼不得已\"的情绪前提。\n\n---\n\n### Phase 2b · 撒钱清场 ☆（撒钱 60-90s + Focus 观察 30-45s）\n\n钱砸进舞池制造骚乱，动静传到后台，后台的人跑出来看热闹/捡钱，后台就空了。\n\n**Step 1 — 上二楼平台**\n- X 拿着 Sergio 给的钱袋上二楼\n- 俯瞰视角建立 — 整个舞池和后台入口尽收眼底\n\n**Step 2 — 撒钱（玩家操作）**\n- 玩家选择往舞池的不同方向抛撒\n- 连续动画播放（make it rain），玩家控制落点方向\n- 舞池 NPC 率先响应：尖叫、争抢、混乱\n- 骚乱声传到后台 → 后台的人陆续跑出来看热闹/捡钱\n- 后台逐渐清空\n\n**Step 3 — Sergio 进场**\n- 后台人走得差不多了，Sergio 抓住时机溜进后台搜证\n\n**Step 4 — Focus 观察 ☆**\n- Sergio 搜证期间，玩家在二楼用 Focus 视角俯瞰全场\n- 舞池里所有人都在骚动 — 抢钱的、围观的、兴奋的\n- 玩家在混乱中标记/注意到几个不为所动的人\n- Sergio 搜证期间玩家不空转，而是在高处做侦察\n\n**Step 5 — Sergio 回来**\n- Sergio 搜证完毕，回到 X 身边\n- 结合 Sergio 的搜证结果 + 玩家高处观察的印象，确认目标\n- X 下楼，进入 Phase 4\n\n**体验意图**: 视觉冲击力强的 GTA 式 moment，同时撒钱后自然过渡到 Focus 观察，Sergio 搜证期间玩家也有事做。一个位置上同时完成清场和侦察。\n\n---\n\n### Phase 3 · Sergio 搜证\n\n> Phase 3 已合并入 Phase 2b 的 Step 3-5 中。Sergio 搜证与玩家 Focus 观察同步进行，不再是独立 Phase。\n\n---\n\n### Phase 4 · 说服舞女 ☆（3-4 min）\n\n- X 根据 Sergio 的信息下去找到目标舞女\n- 舞女的态度：多疑、谨慎、不友善，把 X 当威胁或麻烦\n- 她不关心 X 的处境，只关心：这件事对她有没有风险、有没有钱赚\n\n**对话层次**:\n\n1. **接触** — X 表明来意，舞女本能警惕，试图打发走\n2. **施压** — X 亮出证据，证明他知道她跟俄罗斯人有接触。她无法否认，但不意味着会配合\n3. **谈条件** — 她承认知道一些事，但明确拒绝在俱乐部谈。安全顾虑是真实的。她提出：去她选的地方，按她的规则，先谈价格。否则一个字不说\n4. **X 被迫接受** — 他没有别的选择，时间在流失\n\n**舞女的行为逻辑**: 全程在做风险评估。跟 X 走有钱赚，不跟走没损失但也没收益。她判断 X 大概率不是俄罗斯人的同伙 — 同伙不会费这么大劲来找她。价码到位，风险可控，所以跟走。\n\n---\n\n## Part 2 · 驾车段\n\n> 📍 车内（X 驾驶 / Sergio + 舞女同行）| ⏱ ~2-3 min | 纯对话，无交互机制\n\n### 三角张力\n\n**X ↔ 舞女**\n- 她在评估 X 和 Sergio 是什么人\n- 她的试探带着算计：\"你们怎么找到我的？\"\"你到底想对那些人做什么？\"\n- X 的回答要让她不下车，但不暴露太多\n\n**X ↔ Sergio**\n- Sergio 不喜欢跟陌生人去未知地点，职业本能认为可能是陷阱\n- 低声表达不安，或直接抛出尖锐问题\n- X 需要在不让舞女炸毛的情况下安抚 Sergio\n\n**舞女 ↔ Sergio**\n- 她对 Sergio 的警惕比对 X 更强 — 他身上有执法气质\n- 如果 Sergio 说了让她不舒服的话，她可能要求停车\n- 她的底线：确认 Sergio 不是警察或 FBI\n\n> 车内无交互机制。三角张力通过对话自然推进。舞女指路（\"前面左转\"），间隙穿插试探、讨价还价与沉默。\n\n---\n\n## Part 3 · 汽车旅馆\n\n> 📍 汽车旅馆房间 | ⏱ ~3-4 min | 玩法：对话选择 | 体验基调：纯粹的交易谈判\n\n### 场景逻辑\n\n她选汽车旅馆而非自己的住处 — 便宜、匿名、随时可以走人。懂得保护自己的人会做的选择。\n\n### 对话结构\n\n**Step 1 · 价码（快速）**\n- 到达旅馆，三人进入房间\n- 舞女先谈钱 — 这是她的底线条件\n- 价格在车里已有铺垫，这里是最终确认\n- 快速过渡，钱是门槛不是重心\n\n**Step 2 · 风险评估 ☆**\n- 钱的问题解决，她没有马上开口\n- 她最后的顾虑在安全：\"我说了之后呢？他们会不会找上我？\"\n- X 需要给她一个说法 — 承诺保护她不会信，得让她相信这笔交易不会反噬到她\n- 玩家通过对话选择回应她的顾虑\n\n**Step 3 · 交货**\n- 她做出判断：风险可控，收益足够\n- 给出俄罗斯人藏身处的位置及她所知道的情况\n- 跟信任和共情无关，纯粹因为这笔生意对她来说划算\n- → 衔接 5J（上校情报）/ 5K（营救准备）\n\n---\n\n## 总时长与节奏\n\n| 段落 | 时长 | 调性 | 玩家操作密度 |\n|---|---|---|---|\n| 俱乐部 | ~7-8 min | 焦躁 → 挥金 → 交锋 | 高（搭话、撒钱互动、对话） |\n| 驾车 | ~2-3 min | 封闭空间三角试探 | 无（纯对话演出） |\n| 旅馆 | ~3-4 min | 纯粹交易谈判 | 中低（对话选择） |\n| **合计** | **~12-15 min** | | |\n"
+  },
+  "panels": [
+    {
+      "panel_id": "p01",
+      "beat_id": "5H-club-entry",
+      "title": "入场与确认",
+      "scene": "main entrance view, stage spotlights cutting through smoke, crowded dance floor at peak hours, main stage visible in background with bar and booth area",
+      "subject_action": "protagonist and grizzled companion entering through main entrance, momentarily stopped by sensory overload; environmental detail of crowded floor, bar area, second-floor VIP platform; Sergio scanning the space with tactical awareness",
+      "camera": "medium shot panning across club interior from entrance perspective, establishing wide spatial relationships",
+      "shot_size": "medium",
+      "composition": "depth layering: entrance foreground, crowd midground, stage and VIP platform background",
+      "camera_technique": "slow establishing pan",
+      "lighting": "warm amber stage lights, heavy atmospheric haze, tungsten practical lighting throughout, neon accents on signage",
+      "mood": "sensory overload, urban underworld energy, tactical mission beginning",
+      "player_intent": "建立俱乐部声色犬马的视觉氛围，确认场景空间和出入口，Sergio开始传达任务方向",
+      "player_feels": "被感官刺激淹没，同时接收到任务的紧迫感和这个环境的危险性",
+      "gameplay_moment": "过场动画 + 环境探索开启",
+      "char_ids": [
+        "X",
+        "Sergio"
+      ],
+      "zone_id": "club",
+      "generation_status": "done",
+      "generated_image_url": "storyboard-assets/Main-Plot-5H/storyboard_p01.png"
+    },
+    {
+      "panel_id": "p01b",
+      "beat_id": "5H-elizabeth-gaze",
+      "title": "Elizabeth对视 · 一眼万年",
+      "scene": "main stage, dramatic spotlight isolation with performer in center frame, audience crowd blurred in soft focus foreground, intimate and theatrical framing",
+      "subject_action": "on stage, Elizabeth's gaze locks with protagonist in audience for a charged, lingering beat lasting just long enough to register as intentional; her movement and presence carry the weight of that connection, a personal moment that cuts through the transactional noise of the venue; then Sergio's gruff voice interrupts, pulling protagonist's attention back to mission",
+      "camera": "close-up on performer's eyes and face during gaze lock, then pulling back to medium two-shot capturing both performer and protagonist's reaction in audience",
+      "shot_size": "close-up to medium",
+      "composition": "centered stage performer framed by spotlights, protagonist's silhouette/face reaction in soft focus foreground, intimate framing despite crowded public setting",
+      "camera_technique": "static close-up on eyes (hold 1-2 sec), then slow pull-back revealing wider context",
+      "lighting": "intense tungsten stage spotlight with amber/gold rim-lit halo around performer, dramatic contrast against dark crowd silhouettes, volumetric haze emphasizing isolation and intimacy",
+      "mood": "dangerous magnetism, unexpected personal recognition, brief distraction amid urgent mission, intimate in spite of public theater, subtle electricity between two strangers",
+      "player_intent": "建立Elizabeth的心理第一印象 — 她的存在本身就是一股力量，这一眼接触为后续叙事埋下伏笔",
+      "player_feels": "被舞台人物的魅力吸引且困惑，意识到这不仅仅是任务背景，还有个人维度的牵绊；被Sergio打断的挫折感",
+      "gameplay_moment": "纯叙事时刻，无玩家操作 — 演出驱动",
+      "char_ids": [
+        "Elizabeth",
+        "X"
+      ],
+      "zone_id": "club",
+      "generation_status": "done",
+      "generated_image_url": "storyboard-assets/Main-Plot-5H/storyboard_p01b.png"
+    },
+    {
+      "panel_id": "p02",
+      "beat_id": "5H-backstage-socialfail",
+      "title": "后台走位 · 搭话碰壁",
+      "scene": "backstage dressing area, cramped space with makeup stations and clothing racks, harsh overhead fluorescent lighting contrasting main floor ambiance",
+      "subject_action": "protagonist moving through backstage, attempting conversation with three NPCs — makeup dancer ignores him, staff member blocks him, resting dancer dismisses him; each rejection reinforcing he has no leverage here",
+      "camera": "medium shot, handheld camera feel conveying nervousness, moving through tight spaces",
+      "shot_size": "medium",
+      "composition": "protagonist isolated in frame against indifferent surroundings",
+      "camera_technique": "handheld tracking",
+      "lighting": "harsh practical lighting from makeup mirrors, warm tungsten overhead, stark shadows contrasting with neon bleed from main stage",
+      "mood": "increasingly frustrated, socially out of place, desperation building",
+      "player_intent": "3次搭话全碰壁，体验X在这个环境里没有身份和杠杆",
+      "player_feels": "受挫感和无力感堆积，为后续撒钱破局铺垫情绪",
+      "gameplay_moment": "对话选择互动 × 3（3个不同结局的短对话）",
+      "char_ids": [
+        "X"
+      ],
+      "zone_id": "club",
+      "generated_image_url": "storyboard-assets/Main-Plot-5H/storyboard_p02.png",
+      "generation_status": "done"
+    },
+    {
+      "panel_id": "p03",
+      "beat_id": "5H-sergio-cashoffer",
+      "title": "Sergio介入 · 亮钱",
+      "scene": "backstage area, transition point between social failure and brute-force solution",
+      "subject_action": "grizzled companion stepping forward decisively, producing thick bundle of cash from jacket, handing it to protagonist with a knowing look — pragmatic ruthlessness embodied",
+      "camera": "two-shot between both characters, eye-level, subtle backlighting defining silhouettes",
+      "shot_size": "medium close-up",
+      "composition": "two-shot, cash as visual focal point between figures",
+      "camera_technique": "static",
+      "lighting": "tungsten practical lighting with neon bleed-through, shadows defining facial features, rim lighting on the cash",
+      "mood": "pragmatism, controlled aggression, acceptance of brute-force solution",
+      "player_intent": "Sergio展示直接的金钱力量解法，玩家接受方案上二楼",
+      "player_feels": "权力感与罪恶感的混合，对\"暴力破局\"的心理预期",
+      "gameplay_moment": "过场对话 + 过渡（玩家上二楼）",
+      "char_ids": [
+        "X",
+        "Sergio"
+      ],
+      "zone_id": "club",
+      "generated_image_url": "storyboard-assets/Main-Plot-5H/storyboard_p03.png",
+      "generation_status": "done"
+    },
+    {
+      "panel_id": "p04",
+      "beat_id": "5H-raining-cash",
+      "title": "撒钱清场 · Make it Rain",
+      "scene": "second-floor mezzanine platform overlooking dance floor, money cascading through air, crowd erupting below, backstage area emptying as staff rush toward commotion",
+      "subject_action": "protagonist at elevated vantage throwing money in large arcs across dance floor; below, crowd scrambles and backstage staff abandon posts streaming toward the spectacle, clearing the way for Sergio",
+      "camera": "elevated wide shot with slow motion effect, money filling frame, 360-degree pan of chaos",
+      "shot_size": "wide",
+      "composition": "elevated bird's-eye with depth layering: protagonist on mezzanine, money mid-air, crowd below",
+      "camera_technique": "slow-motion pan",
+      "lighting": "money catches warm stage lighting creating amber light trails, silhouettes of crowd backlit by stage, backstage fluorescents revealing abandoned areas",
+      "mood": "exhilaration, visual excess, controlled chaos, sudden desertion below",
+      "player_intent": "玩家操作抛钱方向制造骚乱，后台人员跑出来看热闹，为Sergio搜证赢得时间窗口",
+      "player_feels": "短暂的爽快感和权力感（Make it Rain），视觉冲击力强",
+      "gameplay_moment": "操作互动 — 玩家选择抛钱方向；Sergio趁机溜入后台",
+      "char_ids": [
+        "X"
+      ],
+      "zone_id": "club",
+      "generated_image_url": "storyboard-assets/Main-Plot-5H/storyboard_p04.png",
+      "generation_status": "done"
+    },
+    {
+      "panel_id": "p05",
+      "beat_id": "5H-focus-recon",
+      "title": "高处观察 · 搜证归来",
+      "scene": "elevated mezzanine vantage point, panoramic view of entire club: scattered money on dance floor, patrons in chaos, a few figures conspicuously unmoved; Sergio emerging from backstage below",
+      "subject_action": "protagonist using Focus perception to scan and tag key individuals in crowd — potential threats, targets, witnesses; Sergio climbs back to platform, leans in close with a decisive head shake indicating no findings, time to move on",
+      "camera": "high bird's-eye perspective with subtle HUD overlay, transitioning to medium two-shot when Sergio returns",
+      "shot_size": "wide to medium",
+      "composition": "panoramic surveillance view narrowing to intimate two-shot",
+      "camera_technique": "slow pan transitioning to static two-shot",
+      "lighting": "stage lighting from below revealing scale, marked individuals with subtle highlight rings; harsh shadows on both figures during debrief",
+      "mood": "cold tactical analysis amidst chaos, then clinical disappointment and tactical reset",
+      "player_intent": "Focus视角标记NPC做侦察，Sergio搜证完毕传达结果（不是这里），确认目标舞女",
+      "player_feels": "从感官刺激转为理性分析，掌握全局；对失败快速接纳转向新目标",
+      "gameplay_moment": "Focus mechanics — 玩家标记NPC获得情报；过场对话过渡到Phase 4",
+      "char_ids": [
+        "X",
+        "Sergio"
+      ],
+      "zone_id": "club",
+      "generated_image_url": "storyboard-assets/Main-Plot-5H/storyboard_p05.png"
+    },
+    {
+      "panel_id": "p06",
+      "beat_id": "5H-persuade-stripper",
+      "title": "说服舞女 · 从对峙到成交",
+      "scene": "secluded private booth in dim corner, intimate amber lighting, cash escalating on table surface; ending at rear exit corridor transitioning to night air",
+      "subject_action": "protagonist confronting target with evidence (sequins), then methodically placing escalating cash on table — $20, $100, $500 — each triggering new information; stripper's resistance eroding from dismissal to grudging acknowledgment to satisfied disclosure of Russians' hideout location; finally both figures exiting through rear door toward waiting vehicle",
+      "camera": "medium close-up two-shot progressing to macro close-up on hands and money, then slow zoom on stripper's face during revelation, ending with medium shot from behind as they exit",
+      "shot_size": "medium close-up to close-up",
+      "composition": "face-to-face confrontation framing, table as visual divider with cash as focal point",
+      "camera_technique": "subtle camera movement following tension arc, macro inserts on cash placement",
+      "lighting": "moody amber booth light with overhead practical creating defined shadows, warm tungsten on skin; transition to cool night air exterior",
+      "mood": "confrontational tension escalating through cold transaction to dangerous triumph, then resolution and transition",
+      "player_intent": "通过证据和逐级金钱施压突破舞女防线，获取核心情报（俄罗斯黑帮确切位置），说服她跟着走",
+      "player_feels": "讯问者的权力感，金钱力量的成就感，对舞女世界的微妙同情；任务推进的满足",
+      "gameplay_moment": "对话选择 — 证据/金钱/威胁策略选择 + 货币系统应用 + 关键情报获取",
+      "char_ids": [
+        "X",
+        "Tony"
+      ],
+      "zone_id": "club",
+      "generated_image_url": "storyboard-assets/Main-Plot-5H/storyboard_p06.png"
+    },
+    {
+      "panel_id": "p07",
+      "beat_id": "5H-car-interior",
+      "title": "车内张力 · 三角试探",
+      "scene": "neon-lit San Libre streets reflecting on wet windshield, rearview mirror framing backseat passenger",
+      "subject_action": "driver navigating traffic with focus; Sergio turning to exchange glances with the stripper in the mirror; stripper leaning forward slightly, studying both men carefully",
+      "camera": "dynamic interior camera angles: driver POV through windshield, side-profile of both men, rear-view mirror capturing stripper's reactions, handheld feel conveying unease",
+      "shot_size": "medium close-up",
+      "composition": "rearview mirror framing, confined space triangulation",
+      "camera_technique": "handheld, alternating angles",
+      "lighting": "practical dashboard glow, passing streetlights creating moving shadows through cabin, signage reflecting off wet streets",
+      "mood": "coiled tension, mutual assessment, dangerous proximity",
+      "player_intent": "纯对话演出；三方通过对话试探彼此身份、意图和风险",
+      "player_feels": "封闭空间的压抑感，三方关系的脆弱平衡",
+      "gameplay_moment": "对话演出 — X和Sergio低声沟通，舞女的试探问题",
+      "char_ids": [
+        "X",
+        "Sergio",
+        "Tony"
+      ],
+      "zone_id": "car",
+      "generated_image_url": "storyboard-assets/Main-Plot-5H/storyboard_p07.png"
+    },
+    {
+      "panel_id": "p08",
+      "beat_id": "5H-motel-negotiate",
+      "title": "汽车旅馆 · 到达与谈判",
+      "scene": "motel exterior with flickering neon vacancy sign and rain-slicked parking lot, transitioning to cramped room interior with three figures in tense triangle arrangement",
+      "subject_action": "protagonist unlocking motel room, holding door for others; inside, stripper seated on bed edge initiating payment discussion with businesslike finality, protagonist standing near door, Sergio in corner with arms crossed",
+      "camera": "wide exterior establishing shot transitioning to interior medium shots alternating between three figures, handheld feel",
+      "shot_size": "wide to medium",
+      "composition": "exterior establishing then interior triangulation of three figures",
+      "camera_technique": "tracking transition from exterior to interior, then handheld alternating",
+      "lighting": "flickering motel sign over wet asphalt, then flat harsh overhead fluorescent creating unflattering shadows, practical bedside lamp adding warm accent",
+      "mood": "ugly pragmatism, nowhere-ness, transactional clarity stripped of pretense",
+      "player_intent": "Part 3场景建立 + 价码快速确认，钱是门槛不是重心",
+      "player_feels": "从城市霓虹奢华坠入现实粗糙；交易本质的明确化",
+      "gameplay_moment": "过场演出 + 对话选择（同意/讨价还价/改条款）",
+      "char_ids": [
+        "X",
+        "Sergio",
+        "Tony"
+      ],
+      "zone_id": "motel",
+      "generated_image_url": "storyboard-assets/Main-Plot-5H/storyboard_p08.png"
+    }
+  ],
+  "scene_anchors": {
+    "club": {
+      "description": "脱衣舞俱乐部主厅 — 霓虹灯、舞台聚光灯、丝绒卡座、雾气弥漫的主舞池与二楼VIP平台",
+      "approved": false,
+      "scene_prompt": "interior of a mid-tier strip club, two-story establishment, main floor with black vinyl booths and brushed steel dance poles, polished concrete flooring, velvet wall coverings, mirror-tiled accent walls, chrome fixtures, backlit liquor shelves in amber tone, recessed warm tungsten spotlights, minimal amber LED accents, heavy atmospheric haze from fog machine, bass-heavy ambient music environment, warm humid air thick with perfume"
+    },
+    "car": {
+      "description": "车内 — 夜间驾车段，封闭空间，仪表盘微光，三角人物张力",
+      "approved": false,
+      "scene_prompt": "interior of a sedan at night, driving through rain-slicked urban streets, dim dashboard glow and passing streetlight reflections on wet glass, enclosed cabin atmosphere, three occupants in confined space"
+    },
+    "motel": {
+      "description": "汽车旅馆房间 — 廉价匿名住所，昏暗灯光，纯粹交易谈判场景",
+      "approved": false,
+      "scene_prompt": "interior of a cheap roadside motel room, worn carpet, dim overhead fluorescent light with warm bedside lamp, two double beds with faded bedspreads, single window with drawn curtains, anonymous utilitarian space chosen for discretion"
+    }
+  }
+}

@@ -18,6 +18,8 @@ export default defineConfig({
       "/tools/levelcraft": BACKEND,
       "/templates/html": BACKEND,
       "/docs": BACKEND,
+      "/storyboard-assets": BACKEND,
+      "/workspace-file": BACKEND,
       "/ws": { target: BACKEND.replace("http", "ws"), ws: true },
     },
   },

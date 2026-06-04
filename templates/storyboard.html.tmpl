@@ -191,7 +191,8 @@ body { font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif; col
     frame.className = 'panel-frame';
     var imgUrl = p.generated_image_url || '';
     if (imgUrl) {
-      var img = document.createElement('img'); img.src = imgUrl; img.alt = p.title || '';
+      var resolvedUrl = imgUrl.startsWith('/') || imgUrl.startsWith('http') || imgUrl.startsWith('data:') ? imgUrl : '/' + imgUrl;
+      var img = document.createElement('img'); img.src = resolvedUrl; img.alt = p.title || '';
       img.onerror = function () { this.style.display = 'none'; renderPlaceholder(frame, p); };
       frame.appendChild(img);
     } else {

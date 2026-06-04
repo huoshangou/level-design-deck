@@ -1,11 +1,13 @@
-"""Render endpoint：单 spec / level 完整文档 / deck 视图。"""
+"""Render endpoint：单 spec / level 完整文档 / deck 视图 / 导出下载。"""
 
 from __future__ import annotations
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
+from backend.config import PROJECT_ROOT
 from backend.deps import get_store
 from backend.services.deck_service import render_deck
 from backend.services.render_service import render_level, render_spec
@@ -56,3 +58,22 @@ def render_deck_endpoint(body: RenderDeckRequest) -> dict[str, Any]:
         return render_deck(body.level_id)
     except ValueError as e:
         raise HTTPException(400, str(e))
+
+
+@router.post("/export")
+def export_spec_endpoint(
+    body: RenderSpecRequest,
+    store: SpecStore = Depends(get_store),
+) -> FileResponse:
+    try:
+        rec = store.get(body.spec_id, body.namespace)
+    except SpecNotFound:
+        raise HTTPException(404, f"spec not found: {body.spec_id}")
+    result = render_spec(rec)
+    out_path = PROJECT_ROOT / result["output_path"]
+    return FileResponse(
+        path=str(out_path),
+        media_type="text/html",
+        filename=f"{body.spec_id}.html",
+        headers={"Content-Disposition": f'attachment; filename="{body.spec_id}.html"'},
+    )

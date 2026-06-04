@@ -2,8 +2,8 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "level-design-deck/schema/storyboard.schema.json",
   "title": "storyboard spec",
-  "description": "关卡分镜 (storyboard) — bubble_diagram 关键 beat 的画面层投影。产出物 = img2img 文字提示词 (generated_prompt)。style_anchor 全局共享保证风格一致；panels[] 每帧只变内容字段。预留 ImageProvider API 接口。M4.1 v0.1.0 M5.4 v0.2.0: meta 加 optional phase 字段 (L0/whitebox/docified)。v0.3.0: 新增 source_materials (剧本/大纲导入) + ld_notes (LD 调整建议)。",
-  "version": "0.3.0",
+  "description": "关卡分镜 (storyboard)。style_anchor 控制画法；world_anchor 控制世界；characters 定义角色；scene_anchors 按 zone 提供稳定场景描述；panels[] 含结构化镜头字段。v0.8.0: camera_position 镜头物理位置入 prompt；char_layout 角色空间布局分段式 Subject；negative_additions 逐帧反向提示。",
+  "version": "0.8.0",
   "applies_to": [
     "POI",
     "gameplay",
@@ -138,6 +138,11 @@
           "minLength": 3,
           "description": "img2img 反向提示词，如 color, painted, photorealistic, low quality, watermark"
         },
+        "lens_and_camera": {
+          "title": "镜头与摄影设备（入 prompt）",
+          "type": "string",
+          "description": "摄影设备 + 镜头模拟。如 ARRI Alexa Mini LF, anamorphic 40mm T2.0, shallow depth of field, subtle lens flare。由 LLM 根据 world_anchor 上下文推断初始值，LD 确认。v0.6.0 新增。"
+        },
         "reference_image_url": {
           "title": "风格锚定参考图",
           "type": "string",
@@ -165,14 +170,186 @@
               "description": "如 16:9 / 2.39:1 / 1:1"
             }
           }
+        },
+        "design_note": {
+          "title": "设计备注",
+          "type": "string",
+          "description": "style_anchor 的自由文本备注。不入 prompt。"
+        }
+      }
+    },
+    "world_anchor": {
+      "title": "世界锚定（画什么世界）",
+      "type": "object",
+      "description": "决定整套 panels 的物理世界一致性。game_base 是游戏级常量（所有 POI 共享），其余字段是 POI 级设定。入 prompt 的字段在拼接时自动注入到每帧 scene 前面。v0.4.0 新增。",
+      "additionalProperties": false,
+      "properties": {
+        "game_base": {
+          "title": "游戏级常量",
+          "type": "object",
+          "description": "所有 POI 共享的世界基底，来自游戏 Bible。新建 storyboard 时应预填，LD 一般不改。",
+          "additionalProperties": false,
+          "properties": {
+            "era": {
+              "title": "时代",
+              "type": "string",
+              "description": "如 2020s / 1980s / near-future 2040s。入 prompt。"
+            },
+            "locale": {
+              "title": "地理",
+              "type": "string",
+              "description": "城市/地区。如 Los Angeles, United States。入 prompt。"
+            },
+            "tech_level": {
+              "title": "科技水平",
+              "type": "string",
+              "description": "可见科技的基线。如 contemporary smartphone era, rideshare apps, social media。入 prompt。"
+            },
+            "cultural_context": {
+              "title": "文化语境",
+              "type": "string",
+              "description": "文化基调。如 multicultural American metropolitan。入 prompt。"
+            }
+          }
+        },
+        "venue_type": {
+          "title": "场所类型+档次（入 prompt）",
+          "type": "string",
+          "description": "POI 的类型与定位。如 mid-tier strip club, two-story converted warehouse。"
+        },
+        "architecture": {
+          "title": "建筑/空间（LD 参考，按需引用）",
+          "type": "string",
+          "description": "POI 主体空间的尺度与建筑特征。不自动注入 prompt——LD 在 panel.scene 中按需引用。不同区域（主厅 vs 后台 vs 走廊）的空间特征可能完全不同。"
+        },
+        "material_vocabulary": {
+          "title": "材质词典（LD 参考，按需引用）",
+          "type": "string",
+          "description": "该场所存在的材料清单。不自动注入 prompt——LD 写 panel.scene 时从中选取本帧相关的材质。如 black vinyl booths, brushed steel poles, polished concrete floor。"
+        },
+        "light_sources": {
+          "title": "光源类型（LD 参考，按需引用）",
+          "type": "string",
+          "description": "POI 主体空间的物理光源。不自动注入 prompt——不同区域光源不同。LD 在 panel.lighting 中写本帧实际光源。"
+        },
+        "condition": {
+          "title": "维护状态（LD 参考，按需引用）",
+          "type": "string",
+          "description": "POI 整体磨损度/清洁度。不自动注入 prompt——LD 按需在 panel.scene 中引用。"
+        },
+        "atmosphere": {
+          "title": "环境氛围（LD 参考，按需引用）",
+          "type": "string",
+          "description": "POI 整体气氛基调。不自动注入 prompt——不同区域和时刻氛围不同。LD 在 panel.scene/mood 中按需引用。"
+        },
+        "population_baseline": {
+          "title": "人口基线（仅供人读）",
+          "type": "string",
+          "description": "默认人流状态与客群画像。中文。不入 prompt。如 周五晚 11 点约 60% 满，以 30-50 岁男性白领为主。"
+        },
+        "staff_appearance": {
+          "title": "员工外观（仅供人读）",
+          "type": "string",
+          "description": "各类员工着装。中文。不入 prompt。如 保安：黑色 polo + 耳麦；调酒师：黑背心白衬衫。"
+        },
+        "protagonist_look": {
+          "title": "主角外观（已由 characters[] 接管）",
+          "type": "string",
+          "description": "v0.5 前用此字段，v0.5+ 改用 characters[] 定义角色外观并通过 char_ids 按帧注入。此字段保留向后兼容，不自动注入 prompt。"
+        },
+        "signature_elements": {
+          "title": "标志性视觉元素（仅供人读）",
+          "type": "string",
+          "description": "该场所最有辨识度的 2-3 个视觉元素。中文。不入 prompt，供 LD 参考确保帧间一致。"
+        }
+      }
+    },
+    "characters": {
+      "title": "角色参考",
+      "type": "array",
+      "description": "本 storyboard 涉及的角色定义。appearance 入 prompt（按 panels[].char_ids 匹配注入）；reference_image_url 供 LD 参考 + 未来作为 img2img anchor。v0.5.0 新增。",
+      "items": {
+        "type": "object",
+        "required": ["char_id", "name", "appearance"],
+        "additionalProperties": false,
+        "properties": {
+          "char_id": {
+            "title": "角色 ID",
+            "type": "string",
+            "pattern": "^[a-z0-9_]+$",
+            "description": "角色短 ID，如 protagonist / elizabeth / boss_chen。panels[].char_ids 引用。"
+          },
+          "name": {
+            "title": "角色名",
+            "type": "string",
+            "minLength": 1,
+            "description": "显示用中文名或英文名。"
+          },
+          "appearance": {
+            "title": "外观描述（入 prompt）",
+            "type": "string",
+            "minLength": 5,
+            "description": "英文外观描述，注入 prompt 的 subject_action 前。如 male, late 20s, athletic build, short dark hair, dark hoodie, jeans, messenger bag。"
+          },
+          "reference_image_url": {
+            "title": "角色参考图",
+            "type": "string",
+            "description": "角色正面照/角色板路径。供 LD 视觉参考 + 未来作 img2img anchor。"
+          },
+          "role": {
+            "title": "角色定位（仅供人读）",
+            "type": "string",
+            "description": "如 protagonist / key_npc / antagonist / background。中文或英文。"
+          },
+          "notes": {
+            "title": "备注（仅供人读）",
+            "type": "string",
+            "description": "任何角色相关的额外说明。"
+          }
+        }
+      }
+    },
+    "scene_anchors": {
+      "title": "场景锚定（按 zone 索引的稳定场景描述 + 环境参考图）",
+      "type": "object",
+      "description": "每个关键 zone 的稳定场景描述与环境参考图。key = zone_id。scene_prompt 是该 zone 的英文场景描述，PromptComposer 自动注入到属于该 zone 的所有 panel 的 {scene} 位置（在 world_anchor 之后、panel.scene 之前），确保同一场景内视觉一致。panel.scene 只写本帧增量，不重复 scene_prompt 已有的内容。v0.7.0: 新增 scene_prompt 入 prompt。",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "scene_prompt": {
+            "title": "场景描述（入 prompt，英文）",
+            "type": "string",
+            "description": "该 zone 的稳定英文场景描述，PromptComposer 自动注入到同 zone 所有 panel 的 {scene} 前。写物理空间、材质、光源、氛围等不随帧变化的环境要素。panel.scene 只写本帧增量。v0.7.0 新增。"
+          },
+          "prompt_used": {
+            "title": "生成 anchor 用的 prompt",
+            "type": "string",
+            "description": "生成这张环境空镜时使用的完整 prompt。留存以便迭代。"
+          },
+          "image_url": {
+            "title": "锚定图路径",
+            "type": "string",
+            "description": "已审批的环境参考图路径。如 assets/Main-Plot-5H/anchor_main_floor.png。"
+          },
+          "description": {
+            "title": "场景描述（中文，供人读）",
+            "type": "string",
+            "description": "该 zone 的视觉特征摘要。"
+          },
+          "approved": {
+            "title": "是否审批",
+            "type": "boolean",
+            "description": "LD 确认该 anchor 图可作为后续 panel 的环境参考。"
+          }
         }
       }
     },
     "prompt_template": {
       "title": "Prompt 拼接模板",
       "type": "string",
-      "default": "{style.medium}, {style.art_direction}, {scene}, {subject_action}, {camera}, {lighting}, {mood}, {style.color_palette}, {style.quality_tags}",
-      "description": "tools/storyboard_render.py 按本模板 deterministic 拼接 generated_prompt。占位符：{style.<field>} 取自 style_anchor；{scene} {subject_action} {camera} {lighting} {mood} 取自 panel。空字段自动继承 style_anchor（如 panel.lighting 空则用 style.lighting_aesthetic）。"
+      "default": "[Style] {style.medium}, {style.art_direction}, {style.lens_and_camera}. [Color] {style.color_palette}. [Shot] {shot_size}, {composition}, {camera_technique}. [Scene] {scene}. [Subject] {subject_action}. [Lighting] {lighting}. [Mood] {mood}. [Quality] {style.quality_tags}",
+      "description": "v0.6.0 起用标签式结构化模板。占位符：{style.X} 取自 style_anchor；{world.X} 取自 world_anchor；{shot_size} {composition} {camera_technique} {scene} {subject_action} 等取自 panel。旧字段 {camera} 在新字段不存在时 fallback。"
     },
     "source_materials": {
       "title": "素材导入",
@@ -239,7 +416,6 @@
           "title",
           "scene",
           "subject_action",
-          "camera",
           "mood"
         ],
         "additionalProperties": false,
@@ -263,10 +439,10 @@
             "description": "中文短标题，便于设计师辨识，不入 prompt"
           },
           "scene": {
-            "title": "场景描述（prompt 原料）",
+            "title": "场景描述（prompt 原料，仅写本帧增量）",
             "type": "string",
             "minLength": 5,
-            "description": "环境/物件描述，英文，img2img 友好。如 \"an abandoned mountain temple gate in dense mist, broken torii-style stone pillars\""
+            "description": "本帧环境/物件描述，英文。只写本帧独有的内容——不要重复 world_anchor 已有的场所类型、材质、氛围等信息（PromptComposer 会自动注入 world_anchor）。如 \"main floor interior, stage spotlights cutting through smoke\" 而非 \"interior of a strip club, neon lighting\"（后者属于 world_anchor 层级）。"
           },
           "subject_action": {
             "title": "主体+动作（prompt 原料）",
@@ -275,10 +451,24 @@
             "description": "画面主体与动作姿态，英文。如 \"lone protagonist standing at stone steps, hand near holstered weapon\""
           },
           "camera": {
-            "title": "镜头语言（prompt 原料）",
+            "title": "镜头语言（v0.5 旧字段，向后兼容）",
             "type": "string",
-            "minLength": 3,
-            "description": "视角/景别/运镜，英文。如 \"wide shot, low angle, slow push-in\""
+            "description": "v0.6 起拆为 shot_size + composition + camera_technique。旧 spec 保留此字段，新 spec 不再使用。PromptComposer 优先用新字段，fallback 到此字段。"
+          },
+          "shot_size": {
+            "title": "景别（入 prompt）",
+            "type": "string",
+            "description": "景别。如 extreme close-up / close-up / medium close-up / medium / medium wide / wide / extreme wide / establishing。v0.6.0 新增。"
+          },
+          "composition": {
+            "title": "构图（入 prompt）",
+            "type": "string",
+            "description": "构图法则。如 centered subject / rule of thirds / leading lines / symmetrical / over-the-shoulder / depth layering (foreground-midground-background)。v0.6.0 新增。"
+          },
+          "camera_technique": {
+            "title": "镜头手法（入 prompt）",
+            "type": "string",
+            "description": "运镜与手法。如 static / dolly-in / slow push / pan left / tracking / handheld / crane down / whip pan。v0.6.0 新增。"
           },
           "lighting": {
             "title": "光线（prompt 原料，可空继承）",
@@ -286,10 +476,10 @@
             "description": "本帧光线描述。留空则拼接时继承 style_anchor.lighting_aesthetic。"
           },
           "mood": {
-            "title": "情绪（prompt 原料）",
+            "title": "情绪（prompt 原料，写可视化表现）",
             "type": "string",
             "minLength": 3,
-            "description": "情绪关键词，英文。如 \"uneasy reverence, threshold-crossing tension\""
+            "description": "情绪的视觉表现，英文。写身体语言/表情/姿态/空间关系，不写抽象叙事概念。如 \"tense shoulders, locked eye contact, jaw clenched\" 而非 \"pragmatism, acceptance of violence\"。AI 不能画概念，只能画动作。"
           },
           "player_intent": {
             "title": "玩家意图（仅供人读）",
@@ -311,6 +501,57 @@
             "type": "string",
             "description": "本帧发生在 spatial_layout 的哪个 zone。可选；填了由 cross_check.py 校验必须命中 spatial_layout.shapes[].label。"
           },
+          "char_ids": {
+            "title": "出场角色",
+            "type": "array",
+            "description": "本帧出场的角色 ID 列表，引用 characters[].char_id。PromptComposer 自动将匹配角色的 appearance 注入 subject_action 前。v0.5.0 新增。",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "char_layout": {
+            "title": "角色空间布局（入 prompt，分段式 Subject）",
+            "type": "array",
+            "description": "每个角色在本帧中的空间位置、朝向和动作。存在时 PromptComposer 用分段式 [Subject] 替代扁平拼接：每角色一个段落含位置+外观+朝向+动作。不存在时回退到 char_ids 扁平拼接。v0.8.0 新增。",
+            "items": {
+              "type": "object",
+              "required": ["char_id", "position", "action"],
+              "additionalProperties": false,
+              "properties": {
+                "char_id": {
+                  "title": "角色 ID",
+                  "type": "string",
+                  "description": "引用 characters[].char_id"
+                },
+                "position": {
+                  "title": "画面位置",
+                  "type": "string",
+                  "description": "角色在画面/场景中的位置。如 driver seat, left foreground / backseat, closest to camera / center frame"
+                },
+                "orientation": {
+                  "title": "朝向（相对于镜头）",
+                  "type": "string",
+                  "description": "角色面朝方向，相对于镜头描述。如 seen from behind / facing camera / three-quarter profile / turned right looking at rearview mirror"
+                },
+                "action": {
+                  "title": "本帧动作",
+                  "type": "string",
+                  "description": "该角色在本帧的具体动作/姿态。覆盖 subject_action 中对该角色的描述。如 navigating traffic with focus, one scarred hand on the steering wheel"
+                }
+              }
+            }
+          },
+          "camera_position": {
+            "title": "镜头物理位置（入 prompt）",
+            "type": "string",
+            "description": "镜头的物理位置和朝向，描述虚拟摄像机在场景中的坐标。如 camera positioned behind and slightly to the right of the female passenger, looking forward between the two front seats。注入 [Shot] 段末尾。v0.8.0 新增。"
+          },
+          "negative_additions": {
+            "title": "本帧额外反向提示",
+            "type": "string",
+            "description": "本帧特有的反向 prompt 补充，追加到 style_anchor.negative_prompt 后。如 front-facing camera angle, camera outside the vehicle。v0.8.0 新增。"
+          },
           "source_image_url": {
             "title": "本帧 img2img 参考图（可空继承）",
             "type": "string",
@@ -331,6 +572,12 @@
             "type": "object",
             "description": "未来接入 img2img API 后回填，含 provider / model / strength / seed / timestamp 等。",
             "additionalProperties": true
+          },
+          "generation_status": {
+            "title": "生成状态",
+            "type": "string",
+            "enum": ["pending", "done", "redo"],
+            "description": "LD 手动标记：pending=待生成 / done=已完成 / redo=需重做。不入 prompt。v0.5.0 新增。"
           }
         }
       }

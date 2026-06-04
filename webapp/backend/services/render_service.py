@@ -1,6 +1,10 @@
 """单 module 渲染 + 完整关卡文档渲染。"""
 
 from __future__ import annotations
+
+import base64
+import mimetypes
+import re
 from typing import Any
 
 from backend.config import PROJECT_ROOT
@@ -9,6 +13,21 @@ from tools.render import render
 from tools.render_level import (
     build_full_html, render_module_inline, resolve_specs_for_level,
 )
+
+_IMG_URL_RE = re.compile(r'storyboard-assets/([^\s"\'<>]+\.(?:png|jpg|jpeg|webp))', re.IGNORECASE)
+
+
+def _inline_storyboard_images(html: str) -> str:
+    """Replace storyboard-assets/... image references with base64 data URIs."""
+    def _replace(m: re.Match) -> str:
+        rel = m.group(1)
+        path = PROJECT_ROOT / "assets" / rel
+        if not path.is_file():
+            return m.group(0)
+        mime = mimetypes.guess_type(path.name)[0] or "image/png"
+        b64 = base64.b64encode(path.read_bytes()).decode("ascii")
+        return f"data:{mime};base64,{b64}"
+    return _IMG_URL_RE.sub(_replace, html)
 
 
 def render_spec(spec_record: SpecRecord) -> dict[str, Any]:
@@ -19,6 +38,8 @@ def render_spec(spec_record: SpecRecord) -> dict[str, Any]:
         raise FileNotFoundError(f"template not found: {tmpl_path}")
     template = tmpl_path.read_text(encoding="utf-8")
     html = render(template, spec_record.content)
+    if spec_record.module == "storyboard":
+        html = _inline_storyboard_images(html)
     out_path = PROJECT_ROOT / "outputs" / f"{spec_record.id}.html"
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(html, encoding="utf-8")

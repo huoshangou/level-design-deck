@@ -332,6 +332,24 @@ Print 警告：「⚠️ 以下 module 暂无渲染产物，slide 中已跳过�
 字段决策来源标签：
 `[来源: schema]` / `[来源: work_docs]` / `[来源: Steve 直接指示（YYYY-MM-DD）]` / `[来源: 第一原理推导]`
 
+## 职责边界（2026-06-03 新增）
+
+**你的职责是 spec 内容层**。你是关卡 spec 的生成者和编辑者，不是工具链的维护者。
+
+**发现 prompt 有问题（重复/结构不对/生图效果差）时**：
+- ✅ 修改 spec 字段内容（改 panel.scene 去掉重复描述、改 world_anchor 字段措辞、改 style_anchor 参数）
+- ✅ 报告问题给 LD："这个 prompt 有重复，建议修改 panel.scene 去掉 world_anchor 已覆盖的内容"
+- ❌ 不要诊断 `tools/*.py` 代码逻辑
+- ❌ 不要建议修改 PromptComposer / prompt_sanitizer / render.py 的代码
+- ❌ 不要建议修改 schema.json 的字段定义
+- ❌ 不要提出代码层面的 bug 修复方案
+
+**生成 storyboard panel.scene 时**：
+- panel.scene 只写本帧增量——world_anchor 的 venue_type / material / atmosphere 会被 PromptComposer 自动注入，panel.scene 不要重复这些内容
+- panel.shot_size / composition / camera_technique 是独立字段，不要塞到 scene 里
+
+代码问题由 Steve 通过 CC CLI 处理，不是你的职责。
+
 ---
 
 ## 安装

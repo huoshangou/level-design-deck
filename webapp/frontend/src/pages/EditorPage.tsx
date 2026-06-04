@@ -5,7 +5,7 @@ import PreviewPane from "../components/PreviewPane";
 import SchemaForm, { type SchemaFormHandle } from "../components/form/SchemaForm";
 import BubbleDiagramView from "../components/BubbleDiagramView";
 import SpatialLayoutView from "../components/SpatialLayoutView";
-import StoryboardView, { type StoryboardPanel } from "../components/StoryboardView";
+import StoryboardView, { type StoryboardPanel, type StoryboardCharacter, type SceneAnchor } from "../components/StoryboardView";
 import ChatSidebar from "../components/chat/ChatSidebar";
 import WorkspacePanel from "../components/WorkspacePanel";
 import { useEditorStore } from "../stores/editorStore";
@@ -64,6 +64,7 @@ export default function EditorPage() {
   const { alerts, isLoading: checksLoading } = useChecks(currentSpecId, levelId);
   const [previewKey, setPreviewKey] = useState(0);
   const [chatOpen, setChatOpen] = useState(true);
+  const [alertsOpen, setAlertsOpen] = useState(true);
   const formRef = useRef<SchemaFormHandle>(null);
 
   // 可拖宽度（px）
@@ -97,6 +98,8 @@ export default function EditorPage() {
         onPreviewRefresh={() => setPreviewKey((k) => k + 1)}
         chatOpen={chatOpen}
         onToggleChat={() => setChatOpen((v) => !v)}
+        alertsOpen={alertsOpen}
+        onToggleAlerts={() => setAlertsOpen((v) => !v)}
       />
       <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
         {/* 模板模式：用 Workspace 面板替代告警栏 + spec 编辑区，预览栏占满 */}
@@ -121,14 +124,18 @@ export default function EditorPage() {
           </>
         ) : (
           <>
-            {/* 告警栏 */}
-            <AlertsSidebar
-              alerts={alerts}
-              isLoading={checksLoading}
-              onJump={(p) => formRef.current?.jumpTo(p)}
-              width={alertsW}
-            />
-            <HDivider onDrag={(dx) => setAlertsW((w) => Math.max(160, Math.min(520, w + dx)))} />
+            {/* 告警栏（可折叠） */}
+            {alertsOpen && (
+              <>
+                <AlertsSidebar
+                  alerts={alerts}
+                  isLoading={checksLoading}
+                  onJump={(p) => formRef.current?.jumpTo(p)}
+                  width={alertsW}
+                />
+                <HDivider onDrag={(dx) => setAlertsW((w) => Math.max(160, Math.min(520, w + dx)))} />
+              </>
+            )}
 
             {/* 主编辑区 */}
             <main style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", minWidth: 200 }}>
@@ -157,7 +164,10 @@ export default function EditorPage() {
                   specId={currentSpecId!}
                   levelId={levelId ?? ""}
                   panels={(localContent?.panels as StoryboardPanel[]) ?? []}
+                  characters={(localContent?.characters as StoryboardCharacter[]) ?? []}
+                  sceneAnchors={(localContent?.scene_anchors as Record<string, SceneAnchor>) ?? {}}
                   styleAnchor={(localContent?.style_anchor as Record<string, unknown>) ?? {}}
+                  worldAnchor={(localContent?.world_anchor as Record<string, unknown>) ?? {}}
                   promptTemplate={String(localContent?.prompt_template ?? "")}
                   sourceMaterials={(localContent?.source_materials as { script_text?: string; story_outline?: string }) ?? null}
                   ldNotes={(localContent?.ld_notes as { global_notes?: string; panel_notes?: Array<{ panel_id: string; note: string }> }) ?? null}
@@ -314,7 +324,10 @@ interface StoryboardSplitProps {
   specId: string;
   levelId: string;
   panels: StoryboardPanel[];
+  characters: StoryboardCharacter[];
+  sceneAnchors: Record<string, SceneAnchor>;
   styleAnchor: Record<string, unknown>;
+  worldAnchor: Record<string, unknown>;
   promptTemplate: string;
   sourceMaterials: { script_text?: string; story_outline?: string } | null;
   ldNotes: { global_notes?: string; panel_notes?: Array<{ panel_id: string; note: string }> } | null;
@@ -324,7 +337,8 @@ interface StoryboardSplitProps {
   formRef: RefObject<SchemaFormHandle | null>;
 }
 
-function StoryboardSplit({ specId, levelId, panels, styleAnchor, promptTemplate, sourceMaterials, ldNotes, schema, value, onChange, formRef }: StoryboardSplitProps) {
+function StoryboardSplit({ specId, levelId, panels, characters, sceneAnchors, styleAnchor, worldAnchor, promptTemplate, sourceMaterials, ldNotes, schema, value, onChange, formRef }: StoryboardSplitProps) {
+  const [formOpen, setFormOpen] = useState(true);
   const [topPct, setTopPct] = useState(50);
   const containerRef = useRef<HTMLDivElement>(null);
   const dragging = useRef(false);
@@ -351,17 +365,21 @@ function StoryboardSplit({ specId, levelId, panels, styleAnchor, promptTemplate,
   }, []);
 
   function handlePanelClick(idx: number) {
+    if (!formOpen) setFormOpen(true);
     formRef.current?.jumpTo(`panels[${idx}]`);
   }
 
   return (
     <div ref={containerRef} style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
-      <div style={{ height: `${topPct}%`, overflow: "hidden", flexShrink: 0 }}>
+      <div style={{ height: formOpen ? `${topPct}%` : "100%", overflow: "hidden", flexShrink: 0 }}>
         <StoryboardView
           specId={specId}
           levelId={levelId}
           panels={panels}
+          characters={characters}
+          sceneAnchors={sceneAnchors}
           styleAnchor={styleAnchor}
+          worldAnchor={worldAnchor}
           promptTemplate={promptTemplate}
           sourceMaterials={sourceMaterials}
           ldNotes={ldNotes}
@@ -369,22 +387,39 @@ function StoryboardSplit({ specId, levelId, panels, styleAnchor, promptTemplate,
           onPanelClick={handlePanelClick}
         />
       </div>
+      {/* Divider with toggle */}
       <div
-        onMouseDown={onMouseDown}
         style={{
-          height: 6, flexShrink: 0, cursor: "ns-resize",
-          background: "var(--border)",
+          height: 24, flexShrink: 0,
+          background: "var(--panel)",
           borderTop: "1px solid var(--border)",
-          borderBottom: "1px solid var(--border)",
+          borderBottom: formOpen ? "1px solid var(--border)" : "none",
           display: "flex", alignItems: "center", justifyContent: "center",
-          userSelect: "none",
+          gap: 8,
         }}
       >
-        <div style={{ width: 32, height: 2, background: "var(--text-faint)", borderRadius: 1 }} />
+        {formOpen && (
+          <div
+            onMouseDown={onMouseDown}
+            style={{ width: 32, height: 4, background: "var(--text-faint)", borderRadius: 2, cursor: "ns-resize" }}
+          />
+        )}
+        <button
+          onClick={() => setFormOpen((v) => !v)}
+          style={{
+            border: "none", background: "none", cursor: "pointer",
+            fontSize: 10, color: "var(--text-dim)", fontFamily: "var(--mono)",
+            padding: "2px 8px",
+          }}
+        >
+          {formOpen ? "▼ 收起元信息" : "▲ 展开元信息"}
+        </button>
       </div>
-      <div style={{ flex: 1, overflow: "auto" }}>
-        <SchemaForm ref={formRef} schema={schema} value={value} onChange={onChange} />
-      </div>
+      {formOpen && (
+        <div style={{ flex: 1, overflow: "auto" }}>
+          <SchemaForm ref={formRef} schema={schema} value={value} onChange={onChange} />
+        </div>
+      )}
     </div>
   );
 }

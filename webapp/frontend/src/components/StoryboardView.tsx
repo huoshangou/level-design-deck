@@ -3,36 +3,159 @@ import { api } from "../api/client";
 
 // ── Prompt composer (TS port of tools/storyboard_render.py PromptComposer) ──
 
-const PLACEHOLDER_RE = /\{(style\.)?([a-zA-Z_][a-zA-Z0-9_]*)\}/g;
+const PLACEHOLDER_RE = /\{(style\.|world\.)?([a-zA-Z_][a-zA-Z0-9_]*)\}/g;
 const INHERIT_MAP: Record<string, string> = { lighting: "lighting_aesthetic" };
 
-function composePrompt(panel: Record<string, unknown>, style: Record<string, unknown>, template: string): string {
+const GAME_BASE_FIELDS = ["era", "locale", "tech_level", "cultural_context"] as const;
+
+function buildGamePrefix(world: Record<string, unknown>): string {
+  const game = (world.game_base ?? {}) as Record<string, unknown>;
+  return GAME_BASE_FIELDS.map((f) => String(game[f] ?? "").trim()).filter(Boolean).join(", ");
+}
+
+function getVenueType(world: Record<string, unknown>): string {
+  return String(world.venue_type ?? "").trim();
+}
+
+type CharLayoutEntry = { char_id: string; position: string; orientation?: string; action: string };
+
+function buildStructuredSubject(panel: Record<string, unknown>, charMap: Record<string, string>): string | null {
+  const layout = panel.char_layout as CharLayoutEntry[] | undefined;
+  if (!layout || !Array.isArray(layout) || layout.length === 0) return null;
+  return layout.map((entry) => {
+    const appearance = charMap[entry.char_id] ?? "";
+    const header = [entry.position, entry.orientation].filter(Boolean).join(", ");
+    const body = [appearance, entry.action].filter(Boolean).join(", ");
+    return header ? `${header}:\n${body}` : body;
+  }).join("\n\n");
+}
+
+function composePrompt(panel: Record<string, unknown>, style: Record<string, unknown>, template: string, gamePrefix: string, venueType: string, world: Record<string, unknown> = {}, charMap: Record<string, string> = {}, scenePromptMap: Record<string, string> = {}): string {
   const styleVal = (field: string): string => {
     const v = style[field];
     if (v == null) return "";
     if (Array.isArray(v)) return v.filter(Boolean).join(", ");
     return String(v).trim();
   };
+  const worldVal = (field: string): string => {
+    let v = world[field];
+    if (v == null) {
+      const game = (world.game_base ?? {}) as Record<string, unknown>;
+      v = game[field];
+    }
+    if (v == null) return "";
+    if (Array.isArray(v)) return (v as unknown[]).filter(Boolean).join(", ");
+    return String(v).trim();
+  };
   const panelVal = (field: string): string => {
     let v = panel[field];
     if (v == null) v = "";
-    const s = String(v).trim();
+    let s = String(v).trim();
+    const hasWorldPh = template.includes("{world.");
+    if (field === "scene") {
+      const zoneId = String(panel.zone_id ?? "").trim();
+      const hasScenePrompt = zoneId && !!scenePromptMap[zoneId];
+      const parts: string[] = [];
+      if (!hasWorldPh) {
+        if (gamePrefix) parts.push(gamePrefix);
+        if (venueType && !hasScenePrompt) parts.push(venueType);
+      }
+      if (hasScenePrompt) parts.push(scenePromptMap[zoneId]);
+      if (s) parts.push(s);
+      return parts.join(", ") || "";
+    }
+    if (field === "subject_action") {
+      const structured = buildStructuredSubject(panel, charMap);
+      if (structured) return structured;
+      const charIds = (panel.char_ids ?? []) as string[];
+      const charParts = charIds.map((id) => charMap[id]).filter(Boolean);
+      if (charParts.length > 0) {
+        const prefix = charParts.join(", ");
+        s = s ? `${prefix}, ${s}` : prefix;
+      }
+    }
+    if (field === "camera_technique") {
+      const camPos = String(panel.camera_position ?? "").trim();
+      if (camPos) s = s ? `${s}\n${camPos}` : camPos;
+    }
+    if (!s && field === "shot_size") s = String(panel.camera ?? "").trim();
     if (!s && field in INHERIT_MAP) return styleVal(INHERIT_MAP[field]);
     return s;
   };
-  const raw = template.replace(PLACEHOLDER_RE, (_m, isStyle: string | undefined, field: string) =>
-    isStyle ? styleVal(field) : panelVal(field),
-  );
+  const raw = template.replace(PLACEHOLDER_RE, (_m, prefix: string | undefined, field: string) => {
+    if (prefix === "style.") return styleVal(field);
+    if (prefix === "world.") return worldVal(field);
+    return panelVal(field);
+  });
   return raw
+    .replace(/\[[A-Za-z]+\]\s*[.,]\s*(?=\[|$)/g, "")
+    .replace(/,\s*[.,]/g, ",")
     .replace(/,\s*,/g, ",")
-    .replace(/\s{2,}/g, " ")
+    .replace(/[ \t]{2,}/g, " ")
     .replace(/,\s*$/, "")
     .trim()
     .replace(/^[, ]+|[, ]+$/g, "");
 }
 
 const DEFAULT_TEMPLATE =
-  "{style.medium}, {style.art_direction}, {scene}, {subject_action}, {camera}, {lighting}, {mood}, {style.color_palette}, {style.quality_tags}";
+  "[Style] {style.medium}, {style.art_direction}, {style.lens_and_camera}.\n\n[Color] {style.color_palette}.\n\n[Shot] {shot_size}, {composition}, {camera_technique}.\n\n[Scene] {scene}.\n\n[Subject]\n{subject_action}\n\n[Lighting] {lighting}.\n\n[Mood] {mood}.\n\n[Quality] {style.quality_tags}";
+
+// ── Prompt sanitizer (TS port of tools/prompt_sanitizer.py) ──────────
+
+const PHRASE_RULES: [string, string][] = [
+  ["strip club", "neon-lit cabaret lounge"], ["strip bar", "nightclub lounge"],
+  ["strip joint", "underground nightclub"], ["red light district", "nocturnal entertainment district"],
+  ["red-light district", "nocturnal entertainment district"],
+  ["sex shop", "adult retail storefront"], ["brothel", "underground establishment"],
+  ["massage parlor", "private wellness parlor"],
+  ["exotic dancer", "cabaret entertainer"], ["pole dancer", "aerial performer"],
+  ["pole dancing", "aerial performance"], ["lap dance", "private performance"],
+  ["go-go dancer", "club performer"], ["female dancer", "performer"],
+  ["male dancer", "performer"], ["stripper", "stage performer"],
+  ["stripping", "performing on stage"], ["call girl", "underworld contact"],
+  ["prostitute", "underworld figure"], ["prostitution", "illicit trade"],
+  ["scantily clad", "in stage costume"], ["scantily dressed", "in performance attire"],
+  ["barely dressed", "in minimal stage attire"], ["revealing outfit", "form-fitting stage costume"],
+  ["revealing clothing", "performance wardrobe"], ["see-through", "sheer-fabric"],
+  ["topless", "backlit silhouette"], ["half-naked", "partially silhouetted"],
+  ["drug deal", "contraband exchange"], ["drug dealer", "contraband supplier"],
+  ["drug den", "underground den"], ["crack pipe", "glass pipe"],
+  ["snorting cocaine", "hunched over table"], ["cocaine", "illicit powder"],
+  ["heroin", "contraband"], ["methamphetamine", "contraband"],
+  ["injecting drugs", "in a compromised state"],
+  ["pool of blood", "dark liquid pooling on floor"], ["blood-soaked", "stain-covered"],
+  ["blood splatter", "dark splatter marks"], ["severed", "damaged"],
+  ["mutilated", "ravaged"], ["corpse", "motionless figure"], ["dead body", "fallen figure"],
+];
+
+const WORD_RULES: [string, string][] = [
+  ["seductive", "captivating"], ["sensual", "graceful"], ["provocative", "striking"],
+  ["erotic", "atmospheric"], ["sultry", "smoky"], ["voluptuous", "statuesque"],
+  ["intoxicating allure", "commanding presence"], ["allure", "presence"],
+  ["lust", "tension"], ["arousing", "compelling"],
+  ["naked", "unclothed silhouette"], ["nude", "figure study"], ["nudity", "exposed form"],
+  ["lingerie", "performance attire"], ["underwear", "stage costume"],
+  ["cleavage", "neckline"], ["busty", "striking figure"],
+];
+
+const REGEX_RULES: [RegExp, string][] = [
+  [/\b(female|woman|girl)\s+(dancer|stripper|performer)/gi, "performer"],
+  [/\bsexy\s+/gi, "stylish "],
+  [/\bhot\s+(woman|girl|dancer|performer|model)\b/gi, "striking $1"],
+];
+
+function sanitizePrompt(text: string): string {
+  for (const [old, rep] of PHRASE_RULES) {
+    text = text.replace(new RegExp(old.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi"), rep);
+  }
+  for (const [old, rep] of WORD_RULES) {
+    text = text.replace(new RegExp(`\\b${old.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "gi"), rep);
+  }
+  for (const [rx, rep] of REGEX_RULES) {
+    text = text.replace(rx, rep);
+  }
+  return text.replace(/,\s*,/g, ",").replace(/\s{2,}/g, " ").trim();
+}
 
 // ── Types ──────────────────────────────────────────────────────────────
 
@@ -49,6 +172,9 @@ export interface StoryboardPanel {
   player_feels?: string;
   gameplay_moment?: string;
   zone_id?: string;
+  camera_position?: string;
+  char_layout?: CharLayoutEntry[];
+  negative_additions?: string;
   generated_prompt?: string;
   generated_image_url?: string;
   source_image_url?: string;
@@ -64,6 +190,23 @@ type BeatNode = {
   zone_id?: string;
 };
 
+export type StoryboardCharacter = {
+  char_id: string;
+  name: string;
+  appearance: string;
+  reference_image_url?: string;
+  role?: string;
+  notes?: string;
+};
+
+export type SceneAnchor = {
+  scene_prompt?: string;
+  prompt_used?: string;
+  image_url?: string;
+  description?: string;
+  approved?: boolean;
+};
+
 type SourceMaterials = { script_text?: string; story_outline?: string } | null;
 type LdNotes = { global_notes?: string; panel_notes?: Array<{ panel_id: string; note: string }> } | null;
 
@@ -71,7 +214,10 @@ interface Props {
   specId: string;
   levelId: string;
   panels: StoryboardPanel[];
+  characters: StoryboardCharacter[];
+  sceneAnchors: Record<string, SceneAnchor>;
   styleAnchor: Record<string, unknown>;
+  worldAnchor: Record<string, unknown>;
   promptTemplate: string;
   sourceMaterials: SourceMaterials;
   ldNotes: LdNotes;
@@ -94,13 +240,22 @@ const BEAT_TYPE_STYLE: Record<string, { bg: string; label: string }> = {
 
 // ── Component ──────────────────────────────────────────────────────────
 
-type TabKey = "materials" | "mapping" | "panels";
+type TabKey = "materials" | "mapping" | "characters" | "panels";
+
+const STATUS_STYLE: Record<string, { color: string; label: string }> = {
+  pending: { color: "var(--text-faint)", label: "待生成" },
+  done: { color: "var(--success)", label: "已完成" },
+  redo: { color: "var(--error)", label: "需重做" },
+};
 
 export default function StoryboardView({
   specId,
   levelId,
   panels,
+  characters,
+  sceneAnchors,
   styleAnchor,
+  worldAnchor,
   promptTemplate,
   sourceMaterials,
   ldNotes,
@@ -108,6 +263,8 @@ export default function StoryboardView({
   onPanelClick,
 }: Props) {
   const [activeTab, setActiveTab] = useState<TabKey>("panels");
+  const [imageBuster, setImageBuster] = useState<Record<string, number>>({});
+  const [groupByZone, setGroupByZone] = useState(false);
   const [expandedPrompt, setExpandedPrompt] = useState<string | null>(null);
   const [uploadingPanel, setUploadingPanel] = useState<string | null>(null);
   const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
@@ -122,11 +279,26 @@ export default function StoryboardView({
   const [selectedBeats, setSelectedBeats] = useState<Set<string>>(new Set());
 
   const template = promptTemplate || DEFAULT_TEMPLATE;
-  const negPrompt = String(styleAnchor.negative_prompt ?? "").trim();
+  const negPrompt = useMemo(() => sanitizePrompt(String(styleAnchor.negative_prompt ?? "").trim()), [styleAnchor]);
+  const gamePrefix = useMemo(() => buildGamePrefix(worldAnchor), [worldAnchor]);
+  const venueType = useMemo(() => getVenueType(worldAnchor), [worldAnchor]);
+  const charMap = useMemo(() => {
+    const m: Record<string, string> = {};
+    for (const c of characters) if (c.char_id && c.appearance) m[c.char_id] = c.appearance.trim();
+    return m;
+  }, [characters]);
+  const scenePromptMap = useMemo(() => {
+    const m: Record<string, string> = {};
+    for (const [zoneId, anchor] of Object.entries(sceneAnchors)) {
+      const sp = String((anchor as Record<string, unknown>).scene_prompt ?? "").trim();
+      if (sp) m[zoneId] = sp;
+    }
+    return m;
+  }, [sceneAnchors]);
 
   const computedPrompts = useMemo(
-    () => panels.map((p) => composePrompt(p as unknown as Record<string, unknown>, styleAnchor, template)),
-    [panels, styleAnchor, template],
+    () => panels.map((p) => sanitizePrompt(composePrompt(p as unknown as Record<string, unknown>, styleAnchor, template, gamePrefix, venueType, worldAnchor, charMap, scenePromptMap))),
+    [panels, styleAnchor, template, gamePrefix, venueType, worldAnchor, charMap, scenePromptMap],
   );
 
   const existingBeatIds = useMemo(() => new Set(panels.map((p) => p.beat_id)), [panels]);
@@ -144,10 +316,23 @@ export default function StoryboardView({
     return () => { cancelled = true; };
   }, [activeTab, levelId]);
 
+  const [includePrevRef, setIncludePrevRef] = useState(false);
+
+  const cycleStatus = useCallback((idx: number) => {
+    const cur = String(panels[idx]?.generation_status ?? "pending");
+    const next = cur === "pending" ? "done" : cur === "done" ? "redo" : "pending";
+    onChange(`panels[${idx}].generation_status`, next);
+  }, [panels, onChange]);
+
   const showCopyFeedback = useCallback((msg: string) => {
     setCopyFeedback(msg);
     setTimeout(() => setCopyFeedback(null), 1500);
   }, []);
+
+  const panelNegative = useCallback((panel: StoryboardPanel) => {
+    const adds = String(panel.negative_additions ?? "").trim();
+    return adds ? `${negPrompt}, ${adds}` : negPrompt;
+  }, [negPrompt]);
 
   const copyAll = useCallback(() => {
     const text = panels.map((p, i) => {
@@ -156,24 +341,41 @@ export default function StoryboardView({
         `[Prompt]`,
         computedPrompts[i],
         `[Negative]`,
-        negPrompt,
+        panelNegative(p),
       ];
       return lines.join("\n");
     }).join("\n\n");
     void navigator.clipboard.writeText(text);
     showCopyFeedback("已复制全部 prompt");
-  }, [panels, computedPrompts, negPrompt, showCopyFeedback]);
+  }, [panels, computedPrompts, panelNegative, showCopyFeedback]);
 
   const copySingle = useCallback((idx: number) => {
-    const text = `${computedPrompts[idx]}\n\n[Negative]\n${negPrompt}`;
-    void navigator.clipboard.writeText(text);
-    showCopyFeedback(`已复制 ${panels[idx].panel_id}`);
-  }, [computedPrompts, negPrompt, panels, showCopyFeedback]);
+    const panel = panels[idx];
+    const lines = [computedPrompts[idx], "", "[Negative]", panelNegative(panel)];
+    const zoneId = panel.zone_id ?? "";
+    const anchor = zoneId ? sceneAnchors[zoneId] : undefined;
+    if (anchor?.approved && anchor.image_url) {
+      lines.push("", `[场景锚定图: ${anchor.image_url}]`);
+    }
+    if (includePrevRef && idx > 0) {
+      const prevImg = panels[idx - 1].generated_image_url;
+      if (prevImg) lines.push("", `[前帧参考图: ${prevImg}]`);
+    }
+    void navigator.clipboard.writeText(lines.join("\n"));
+    showCopyFeedback(`已复制 ${panel.panel_id}`);
+  }, [computedPrompts, panelNegative, panels, sceneAnchors, showCopyFeedback, includePrevRef]);
 
   const exportTxt = useCallback(() => {
+    const charNames = (ids: string[]) => ids.map((id) => {
+      const c = characters.find((ch) => ch.char_id === id);
+      return c ? `${c.name}(${id})` : id;
+    }).join(", ");
     const text = panels.map((p, i) => {
+      const status = STATUS_STYLE[String(p.generation_status ?? "pending")]?.label ?? "待生成";
+      const chars = (p.char_ids as string[] | undefined) ?? [];
       return [
-        `=== ${p.panel_id}: ${p.title} (beat: ${p.beat_id}) ===`,
+        `=== ${p.panel_id}: ${p.title} (beat: ${p.beat_id}) [${status}] ===`,
+        chars.length > 0 ? `[角色] ${charNames(chars)}` : "",
         ``,
         `[Prompt]`,
         computedPrompts[i],
@@ -184,7 +386,7 @@ export default function StoryboardView({
         `[设计意图] ${p.player_intent ?? ""}`,
         `[玩家体验] ${p.player_feels ?? ""}`,
         `[玩法时刻] ${p.gameplay_moment ?? ""}`,
-      ].join("\n");
+      ].filter(Boolean).join("\n");
     }).join("\n\n" + "─".repeat(60) + "\n\n");
 
     const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
@@ -245,6 +447,7 @@ export default function StoryboardView({
     try {
       const res = await api.uploadStoryboardImage(specId, pending.panelId, file);
       onChange(`panels[${pending.idx}].generated_image_url`, res.relative_path);
+      setImageBuster((prev) => ({ ...prev, [pending.panelId]: Date.now() }));
     } catch (err) {
       alert(`上传失败：${String(err)}`);
     } finally {
@@ -262,6 +465,7 @@ export default function StoryboardView({
     try {
       const res = await api.uploadStoryboardImage(specId, panelId, file);
       onChange(`panels[${idx}].generated_image_url`, res.relative_path);
+      setImageBuster((prev) => ({ ...prev, [panelId]: Date.now() }));
     } catch (err) {
       alert(`上传失败：${String(err)}`);
     } finally {
@@ -343,6 +547,7 @@ export default function StoryboardView({
         {([
           ["materials", "素材导入"],
           ["mapping", "节点映射"],
+          ["characters", `参考锚定(${characters.length}角色/${Object.keys(sceneAnchors).length}场景)`],
           ["panels", "分镜面板"],
         ] as [TabKey, string][]).map(([key, label]) => (
           <button
@@ -371,6 +576,20 @@ export default function StoryboardView({
             </button>
             <button onClick={exportTxt} style={{ ...btnStyle, marginLeft: 4 }} title="导出为 .txt 文件">
               导出 .txt
+            </button>
+            <label
+              style={{ display: "inline-flex", alignItems: "center", gap: 4, marginLeft: 8, fontSize: 10, color: "var(--text-dim)", cursor: "pointer" }}
+              title="复制单帧 prompt 时附带前一帧的图片路径，用于 img2img 参考"
+            >
+              <input type="checkbox" checked={includePrevRef} onChange={() => setIncludePrevRef((v) => !v)} style={{ margin: 0 }} />
+              含前帧参考
+            </label>
+            <button
+              onClick={() => setGroupByZone((v) => !v)}
+              style={{ ...btnStyle, marginLeft: 8, background: groupByZone ? "var(--accent-bg)" : "var(--panel)", color: groupByZone ? "var(--accent)" : "var(--text)" }}
+              title={groupByZone ? "切换为时间序列" : "按场景/zone 分组"}
+            >
+              {groupByZone ? "时间序列" : "按场景分组"}
             </button>
           </>
         )}
@@ -412,6 +631,59 @@ export default function StoryboardView({
         />
       )}
 
+      {activeTab === "characters" && (
+        <div style={{ flex: 1, overflow: "auto", padding: 16, background: "var(--bg)" }}>
+          {characters.length === 0 ? (
+            <div style={{ textAlign: "center", padding: 40, color: "var(--text-faint)" }}>
+              <div style={{ fontSize: 24, marginBottom: 8, opacity: 0.3 }}>👤</div>
+              <div style={{ fontSize: 13, marginBottom: 4 }}>暂无角色定义</div>
+              <div style={{ fontSize: 11 }}>在下方 SchemaForm 的 characters 数组中添加角色，定义外观描述后 prompt 会自动注入</div>
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
+              {characters.map((c) => {
+                const usedIn = panels.filter((p) => ((p.char_ids as string[] | undefined) ?? []).includes(c.char_id));
+                return (
+                  <div key={c.char_id} style={{
+                    width: 260, background: "var(--panel)", border: "1px solid var(--border)",
+                    borderRadius: "var(--radius)", overflow: "hidden", boxShadow: "var(--shadow-sm)",
+                  }}>
+                    {c.reference_image_url ? (
+                      <img src={`/${c.reference_image_url}`} alt={c.name} style={{ width: "100%", height: 160, objectFit: "cover", display: "block", background: "var(--surface)" }}
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                    ) : (
+                      <div style={{ width: "100%", height: 160, background: "var(--surface)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-faint)", fontSize: 11 }}>
+                        无参考图
+                      </div>
+                    )}
+                    <div style={{ padding: "10px 12px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+                        <span style={{ fontWeight: 600, fontSize: 13 }}>{c.name}</span>
+                        <span style={{ fontFamily: "var(--mono)", fontSize: 10, color: "var(--text-faint)", padding: "1px 5px", background: "var(--surface)", borderRadius: 3 }}>{c.char_id}</span>
+                        {c.role && <span style={{ fontSize: 10, color: "var(--accent)", padding: "1px 5px", background: "var(--accent-bg)", borderRadius: 8 }}>{c.role}</span>}
+                      </div>
+                      <div style={{ fontSize: 11, color: "var(--text-dim)", fontStyle: "italic", marginBottom: 6, lineHeight: 1.5 }}>{c.appearance}</div>
+                      <div style={{ fontSize: 10, color: "var(--text-faint)" }}>
+                        出场 {usedIn.length} 帧{usedIn.length > 0 && `：${usedIn.map((p) => p.panel_id).join(", ")}`}
+                      </div>
+                      {c.notes && <div style={{ fontSize: 10, color: "var(--text-faint)", marginTop: 4, borderTop: "1px dashed var(--border-faint)", paddingTop: 4 }}>{c.notes}</div>}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          {panels.length > 0 && characters.length === 0 && (
+            <div style={{
+              marginTop: 16, padding: "10px 14px", background: "var(--review-bg)",
+              border: "1px solid var(--review)", borderRadius: "var(--radius)", fontSize: 11, color: "var(--review)",
+            }}>
+              已有 {panels.length} 帧分镜但未定义角色。建议先在 SchemaForm 中添加 characters 数组，确保跨帧角色外观一致性。
+            </div>
+          )}
+        </div>
+      )}
+
       {activeTab === "panels" && (
         <>
           {/* ── Panel Nav ── */}
@@ -444,12 +716,78 @@ export default function StoryboardView({
             ref={scrollRef}
             style={{
               flex: 1, overflowX: "auto", overflowY: "auto",
-              display: "flex", gap: 16, padding: 16,
-              alignItems: "flex-start",
               background: "var(--bg)",
+              ...(groupByZone
+                ? { display: "flex", flexDirection: "column", gap: 0, padding: 0 }
+                : { display: "flex", gap: 16, padding: 16, alignItems: "flex-start" }),
             }}
           >
-            {panels.map((panel, idx) => {
+            {groupByZone ? (() => {
+              const zoneGroups: { zone: string; indices: number[] }[] = [];
+              const zoneMap = new Map<string, number[]>();
+              panels.forEach((p, i) => {
+                const z = p.zone_id || "(未分配)";
+                if (!zoneMap.has(z)) { zoneMap.set(z, []); zoneGroups.push({ zone: z, indices: zoneMap.get(z)! }); }
+                zoneMap.get(z)!.push(i);
+              });
+              return zoneGroups.map(({ zone, indices }) => {
+                const anchor = zone !== "(未分配)" ? sceneAnchors[zone] : undefined;
+                return (
+                  <div key={zone} style={{ borderBottom: "2px solid var(--border)", paddingBottom: 8 }}>
+                    <div style={{
+                      display: "flex", alignItems: "center", gap: 10, padding: "10px 16px",
+                      background: "var(--surface)", borderBottom: "1px solid var(--border-faint)",
+                      position: "sticky", top: 0, zIndex: 2,
+                    }}>
+                      {anchor?.image_url && (
+                        <img src={`/${anchor.image_url}`} alt={zone} style={{ width: 64, height: 36, objectFit: "cover", borderRadius: 3, border: "1px solid var(--border)" }}
+                          onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                      )}
+                      <div>
+                        <div style={{ fontSize: 12, fontWeight: 600 }}>{zone}</div>
+                        {anchor?.description && <div style={{ fontSize: 10, color: "var(--text-dim)" }}>{anchor.description}</div>}
+                      </div>
+                      <span style={{ fontSize: 10, color: "var(--text-faint)", marginLeft: "auto" }}>{indices.length} 帧</span>
+                      {anchor?.approved && <span style={{ fontSize: 9, padding: "1px 6px", borderRadius: 8, background: "var(--success-bg)", color: "var(--success)" }}>锚定</span>}
+                    </div>
+                    <div style={{ display: "flex", gap: 16, padding: 16, overflowX: "auto", alignItems: "flex-start" }}>
+                      {indices.map((idx) => {
+                        const panel = panels[idx];
+                        return renderPanelCard(panel, idx);
+                      })}
+                    </div>
+                  </div>
+                );
+              });
+            })() : panels.map((panel, idx) => renderPanelCard(panel, idx))}
+          </div>
+        </>
+      )}
+
+      {/* Copy feedback toast */}
+      {copyFeedback && (
+        <div style={{
+          position: "fixed", bottom: 20, left: "50%", transform: "translateX(-50%)",
+          padding: "6px 16px", fontSize: 12, color: "#fff",
+          background: "var(--success)", borderRadius: 4,
+          boxShadow: "var(--shadow)", zIndex: 200,
+        }}>
+          {copyFeedback}
+        </div>
+      )}
+
+      {/* Hidden file input */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/png,image/jpeg,image/webp"
+        style={{ display: "none" }}
+        onChange={(e) => void handleFileSelected(e)}
+      />
+    </div>
+  );
+
+  function renderPanelCard(panel: StoryboardPanel, idx: number) {
               const prompt = computedPrompts[idx];
               const isExpanded = expandedPrompt === panel.panel_id;
               const isUploading = uploadingPanel === panel.panel_id;
@@ -496,7 +834,40 @@ export default function StoryboardView({
                         {panel.zone_id}
                       </span>
                     )}
+                    {/* Status badge */}
+                    {(() => {
+                      const st = STATUS_STYLE[String(panel.generation_status ?? "pending")] ?? STATUS_STYLE.pending;
+                      return (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); cycleStatus(idx); }}
+                          title={`${st.label}（点击切换）`}
+                          style={{
+                            width: 10, height: 10, borderRadius: "50%",
+                            background: st.color, border: "1px solid var(--border)",
+                            cursor: "pointer", padding: 0, flexShrink: 0,
+                          }}
+                        />
+                      );
+                    })()}
                   </div>
+
+                  {/* Previous panel thumbnail (P3) */}
+                  {idx > 0 && panels[idx - 1].generated_image_url && (
+                    <div style={{
+                      display: "flex", alignItems: "center", gap: 6,
+                      padding: "3px 12px", background: "var(--surface)",
+                      borderBottom: "1px solid var(--border-faint)", fontSize: 10, color: "var(--text-faint)",
+                    }}>
+                      <span>前帧:</span>
+                      <img
+                        src={`/${panels[idx - 1].generated_image_url}`}
+                        alt="前帧"
+                        style={{ width: 48, height: 27, objectFit: "cover", borderRadius: 2, border: "1px solid var(--border)" }}
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                      />
+                      <span style={{ fontFamily: "var(--mono)" }}>{panels[idx - 1].panel_id}</span>
+                    </div>
+                  )}
 
                   {/* Image Frame (16:9) */}
                   <div
@@ -508,7 +879,7 @@ export default function StoryboardView({
                     }}
                     style={{
                       aspectRatio: "16 / 9",
-                      background: imgUrl ? "var(--text)" : "linear-gradient(135deg, #f3ead4 0%, #e8dcb9 100%)",
+                      background: imgUrl ? "var(--surface)" : "linear-gradient(135deg, #f3ead4 0%, #e8dcb9 100%)",
                       display: "flex", alignItems: "center", justifyContent: "center",
                       position: "relative", overflow: "hidden",
                       cursor: imgUrl ? "default" : "pointer",
@@ -518,7 +889,7 @@ export default function StoryboardView({
                     {imgUrl ? (
                       <>
                         <img
-                          src={`/${imgUrl}`}
+                          src={`/${imgUrl}${imageBuster[panel.panel_id] ? `?t=${imageBuster[panel.panel_id]}` : ""}`}
                           alt={panel.title}
                           style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
                           onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
@@ -606,33 +977,7 @@ export default function StoryboardView({
                   </div>
                 </div>
               );
-            })}
-          </div>
-        </>
-      )}
-
-      {/* Copy feedback toast */}
-      {copyFeedback && (
-        <div style={{
-          position: "fixed", bottom: 20, left: "50%", transform: "translateX(-50%)",
-          padding: "6px 16px", fontSize: 12, color: "#fff",
-          background: "var(--success)", borderRadius: 4,
-          boxShadow: "var(--shadow)", zIndex: 200,
-        }}>
-          {copyFeedback}
-        </div>
-      )}
-
-      {/* Hidden file input */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/png,image/jpeg,image/webp"
-        style={{ display: "none" }}
-        onChange={(e) => void handleFileSelected(e)}
-      />
-    </div>
-  );
+  }
 }
 
 // ── MaterialsTab ──────────────────────────────────────────────────────

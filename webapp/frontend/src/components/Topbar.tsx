@@ -10,9 +10,11 @@ type Props = {
   onPreviewRefresh: () => void;
   chatOpen: boolean;
   onToggleChat: () => void;
+  alertsOpen: boolean;
+  onToggleAlerts: () => void;
 };
 
-export default function Topbar({ onPreviewRefresh, chatOpen, onToggleChat }: Props) {
+export default function Topbar({ onPreviewRefresh, chatOpen, onToggleChat, alertsOpen, onToggleAlerts }: Props) {
   const qc = useQueryClient();
   const { data: list } = useSpecList();
   const {
@@ -87,6 +89,11 @@ export default function Topbar({ onPreviewRefresh, chatOpen, onToggleChat }: Pro
     }
   }
 
+  async function onExport() {
+    if (!currentSpecId) return;
+    await withBusy("导出", () => api.exportSpec(currentSpecId));
+  }
+
   return (
     <header
       style={{
@@ -121,10 +128,12 @@ export default function Topbar({ onPreviewRefresh, chatOpen, onToggleChat }: Pro
       </Btn>
       <Btn onClick={onRecheck} disabled={!currentSpecId || !!busy}>↻ 重跑校验</Btn>
       <Btn onClick={onRender} disabled={!currentSpecId || !!busy}>🎨 渲染</Btn>
+      <Btn onClick={onExport} disabled={!currentSpecId || !!busy}>📥 导出</Btn>
       <Btn onClick={onRenderLevel} disabled={!levelId || !!busy}>📚 完整文档</Btn>
       <Btn onClick={onDeck} disabled={!levelId || !!busy}>🎞 Deck</Btn>
       {busy && <span style={{ fontSize: 11, color: "var(--text-faint)" }}>… {busy}</span>}
       <DocTemplatesBtn />
+      <Btn onClick={onToggleAlerts}>{alertsOpen ? "◀⚠" : "⚠▶"}</Btn>
       <Btn onClick={onToggleChat}>{chatOpen ? "💬▶" : "◀💬"}</Btn>
     </header>
   );
